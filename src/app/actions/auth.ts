@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -45,9 +45,10 @@ export async function signup(formData: FormData) {
     return { error: 'Erro ao criar usuário.' }
   }
 
-  // 2. Criar empresa
+  // 2. Criar empresa e atualizar perfil usando service role (bypassa RLS)
+  const admin = createAdminClient()
   const slug = companyName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-  const { data: company, error: companyError } = await supabase
+  const { data: company, error: companyError } = await admin
     .from('companies')
     .insert({ name: companyName, slug: `${slug}-${Date.now()}` })
     .select('id')
@@ -58,7 +59,7 @@ export async function signup(formData: FormData) {
   }
 
   // 3. Vincular empresa ao perfil e promover para role 'company'
-  const { error: profileError } = await supabase
+  const { error: profileError } = await admin
     .from('profiles')
     .update({ company_id: company.id, role: 'company' })
     .eq('id', authData.user.id)
