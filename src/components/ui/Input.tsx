@@ -26,6 +26,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={id}
+            aria-describedby={error && id ? `${id}-error` : undefined}
+            aria-invalid={!!error}
             className={cn(
               'w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9CA3AF]',
               'focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6]',
@@ -43,7 +45,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
         </div>
-        {error && <p className="text-xs text-[#EF4444]">{error}</p>}
+        {error && <p id={id ? `${id}-error` : undefined} role="alert" className="text-xs text-[#EF4444]">{error}</p>}
       </div>
     )
   }

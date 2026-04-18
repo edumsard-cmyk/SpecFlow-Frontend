@@ -47,7 +47,7 @@ export default function LoginPage() {
         <p className="text-sm text-[#6B7280] mb-6">Acesse sua conta para continuar</p>
 
         {error && (
-          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+          <div role="alert" aria-live="polite" className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
             <svg className="w-4 h-4 text-[#EF4444] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>

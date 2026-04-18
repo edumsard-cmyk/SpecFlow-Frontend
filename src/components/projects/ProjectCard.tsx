@@ -1,10 +1,19 @@
 import Link from 'next/link'
-import { type Project, STATUS_LABELS, STATUS_STEPS } from '@/types'
+import { STATUS_LABELS, STATUS_STEPS, type ProjectStatus } from '@/types'
 import { getStatusColor, formatDate } from '@/lib/utils'
 import Badge from '@/components/ui/Badge'
 
+interface ProjectCardProject {
+  id: string
+  name: string
+  description?: string | null
+  status: ProjectStatus
+  progress: number
+  created_at: string
+}
+
 interface ProjectCardProps {
-  project: Project
+  project: ProjectCardProject
   view?: 'grid' | 'list'
 }
 
@@ -19,7 +28,7 @@ function ProgressBar({ value }: { value: number }) {
   )
 }
 
-function StepDots({ status }: { status: Project['status'] }) {
+function StepDots({ status }: { status: ProjectStatus }) {
   const currentIndex = STATUS_STEPS.indexOf(status)
   return (
     <div className="flex items-center gap-1">
