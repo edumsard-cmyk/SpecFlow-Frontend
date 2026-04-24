@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -788,10 +788,21 @@ const TABS: { id: ProjectStatus | 'briefing'; label: string }[] = [
 ]
 
 export default function ProjetoPage() {
+  const router = useRouter()
   const params = useParams()
   const project = MOCK_PROJECTS.find(p => p.id === params.id) ?? MOCK_PROJECTS[0]
   const [activeTab, setActiveTab] = useState<string>(project.status === 'done' ? 'briefing' : project.status)
   const [projectStatus, setProjectStatus] = useState<ProjectStatus>(project.status)
+  const [projectName, setProjectName] = useState(project.name)
+  const [projectDesc, setProjectDesc] = useState(project.description)
+
+  // Edit modal
+  const [showEdit, setShowEdit] = useState(false)
+  const [editName, setEditName] = useState(project.name)
+  const [editDesc, setEditDesc] = useState(project.description)
+
+  // Delete confirmation
+  const [showDelete, setShowDelete] = useState(false)
 
   const currentTabIndex = TABS.findIndex(t => t.id === activeTab)
   const statusIndex = STATUS_STEPS.indexOf(projectStatus)
@@ -803,11 +814,89 @@ export default function ProjetoPage() {
     if (nextTab) setActiveTab(nextTab.id)
   }
 
+  const saveEdit = () => {
+    if (!editName.trim()) return
+    setProjectName(editName.trim())
+    setProjectDesc((editDesc ?? '').trim())
+    setShowEdit(false)
+  }
+
+  const confirmDelete = () => {
+    router.push('/projetos')
+  }
+
   return (
     <div className="flex flex-col flex-1">
+
+      {/* Edit modal */}
+      {showEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowEdit(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-base font-semibold text-[#111827]">Editar projeto</h3>
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#374151]">Nome do projeto</label>
+                <input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  autoFocus
+                  className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6]"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#374151]">Descrição <span className="text-[#9CA3AF] font-normal">(opcional)</span></label>
+                <textarea
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowEdit(false)}>Cancelar</Button>
+              <Button size="sm" onClick={saveEdit} disabled={!editName.trim()}>Salvar alterações</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDelete(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-[#EF4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-[#111827]">Apagar projeto?</h3>
+                <p className="text-sm text-[#6B7280]">Esta ação não pode ser desfeita.</p>
+              </div>
+            </div>
+            <p className="text-sm text-[#374151] bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-3 py-2">
+              O projeto <span className="font-semibold">"{projectName}"</span> e todo seu conteúdo serão removidos permanentemente.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowDelete(false)}>Cancelar</Button>
+              <button
+                onClick={confirmDelete}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-[#EF4444] hover:bg-red-600 rounded-lg transition-colors"
+              >
+                Sim, apagar projeto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Header
-        title={project.name}
-        subtitle={project.description}
+        title={projectName}
+        subtitle={projectDesc}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/projetos">
@@ -818,6 +907,24 @@ export default function ProjetoPage() {
                 Projetos
               </Button>
             </Link>
+            <button
+              onClick={() => { setEditName(projectName); setEditDesc(projectDesc); setShowEdit(true) }}
+              className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F1F5F9] rounded-lg transition-colors"
+              title="Editar projeto"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setShowDelete(true)}
+              className="p-1.5 text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50 rounded-lg transition-colors"
+              title="Apagar projeto"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
             <Badge className={getStatusColor(projectStatus)}>{STATUS_LABELS[projectStatus]}</Badge>
           </div>
         }
