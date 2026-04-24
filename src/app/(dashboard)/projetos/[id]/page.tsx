@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
@@ -790,7 +790,21 @@ const TABS: { id: ProjectStatus | 'briefing'; label: string }[] = [
 export default function ProjetoPage() {
   const router = useRouter()
   const params = useParams()
-  const project = MOCK_PROJECTS.find(p => p.id === params.id) ?? MOCK_PROJECTS[0]
+  const mockProject = MOCK_PROJECTS.find(p => p.id === params.id) ?? MOCK_PROJECTS[0]
+
+  const [realBriefing, setRealBriefing] = useState<string | null>(null)
+  const [loadingData, setLoadingData] = useState(true)
+
+  useEffect(() => {
+    fetch(`/api/projects/${params.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.briefing?.content) setRealBriefing(data.briefing.content)
+      })
+      .finally(() => setLoadingData(false))
+  }, [params.id])
+
+  const project = mockProject
   const [activeTab, setActiveTab] = useState<string>(project.status === 'done' ? 'briefing' : project.status)
   const [projectStatus, setProjectStatus] = useState<ProjectStatus>(project.status)
   const [projectName, setProjectName] = useState(project.name)
@@ -999,7 +1013,7 @@ export default function ProjetoPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-y-auto">
         {activeTab === 'briefing' && <BriefingTab />}
-        {activeTab === 'refinement' && <RefinamentoTab briefing={MOCK_BRIEFING} />}
+        {activeTab === 'refinement' && <RefinamentoTab briefing={realBriefing ?? MOCK_BRIEFING} />}
         {activeTab === 'specification' && <EspecificacaoTab />}
         {activeTab === 'documentation' && <DocumentacaoTab />}
         {activeTab === 'manual' && <ManualTab />}

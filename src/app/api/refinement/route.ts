@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { NextRequest } from 'next/server'
 
-const client = new Anthropic()
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 const SYSTEM_PROMPT = `Você é o agente de refinamento do SpecFlow — uma plataforma que transforma demandas de negócio em especificações técnicas completas.
 
@@ -31,29 +31,28 @@ export async function POST(req: NextRequest) {
       briefing: string
     }
 
-    // Adiciona o briefing como contexto inicial se não houver mensagens anteriores
     const contextualMessages = messages.length === 0
       ? [{ role: 'user' as const, content: `Briefing recebido:\n\n${briefing}` }]
       : messages
 
-    const stream = await client.messages.stream({
-      model: 'claude-sonnet-4-6',
+    const stream = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: contextualMessages,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...contextualMessages,
+      ],
+      stream: true,
     })
 
-    // Retorna streaming SSE
     const encoder = new TextEncoder()
     const readable = new ReadableStream({
       async start(controller) {
         try {
           for await (const chunk of stream) {
-            if (
-              chunk.type === 'content_block_delta' &&
-              chunk.delta.type === 'text_delta'
-            ) {
-              const data = JSON.stringify({ text: chunk.delta.text })
+            const text = chunk.choices[0]?.delta?.content ?? ''
+            if (text) {
+              const data = JSON.stringify({ text })
               controller.enqueue(encoder.encode(`data: ${data}\n\n`))
             }
           }
