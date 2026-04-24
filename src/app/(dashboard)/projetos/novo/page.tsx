@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
@@ -28,7 +28,6 @@ const INPUT_TYPES = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
       </svg>
     ),
-    badge: 'Em breve',
   },
   {
     id: 'document',
@@ -39,7 +38,6 @@ const INPUT_TYPES = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
       </svg>
     ),
-    badge: 'Em breve',
   },
   {
     id: 'form',
@@ -50,9 +48,290 @@ const INPUT_TYPES = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
       </svg>
     ),
-    badge: 'Em breve',
   },
 ]
+
+const GUIDED_QUESTIONS = [
+  { id: 'goal', label: 'Qual é o principal objetivo do sistema?', placeholder: 'Ex: Permitir que clientes agendem consultas médicas online sem precisar ligar para a clínica.' },
+  { id: 'users', label: 'Quem vai usar o sistema?', placeholder: 'Ex: Pacientes, médicos e secretárias da clínica.' },
+  { id: 'features', label: 'Quais funcionalidades são essenciais?', placeholder: 'Ex: Agendamento online, lembretes por e-mail, painel do médico para gerenciar agenda...' },
+  { id: 'deadline', label: 'Qual é a estimativa de prazo?', placeholder: 'Ex: 3 meses, até dezembro de 2024...' },
+  { id: 'integrations', label: 'Há integrações necessárias com outros sistemas?', placeholder: 'Ex: Sistema de convênios, WhatsApp, Google Calendar... (opcional)' },
+]
+
+/* ── Áudio ───────────────────────────────────────────────────── */
+
+function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
+  const [isRecording, setIsRecording] = useState(false)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    return () => {
+      if (audioUrl) URL.revokeObjectURL(audioUrl)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [audioUrl])
+
+  const startRecording = async () => {
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      chunksRef.current = []
+
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const url = URL.createObjectURL(blob)
+        setAudioUrl(url)
+        onChange(true)
+        stream.getTracks().forEach(t => t.stop())
+      }
+
+      recorder.start()
+      mediaRecorderRef.current = recorder
+      setIsRecording(true)
+      setRecordingTime(0)
+      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+    } catch {
+      setError('Permissão de microfone negada. Verifique as configurações do navegador.')
+    }
+  }
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+  }
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (audioUrl) URL.revokeObjectURL(audioUrl)
+    const url = URL.createObjectURL(file)
+    setAudioUrl(url)
+    onChange(true)
+  }
+
+  const reset = () => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl)
+    setAudioUrl(null)
+    onChange(false)
+    setRecordingTime(0)
+  }
+
+  const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
+  return (
+    <Card padding="lg">
+      <h2 className="text-base font-semibold text-[#111827] mb-1">Briefing em áudio</h2>
+      <p className="text-sm text-[#6B7280] mb-5">Grave sua voz ou envie um arquivo de áudio descrevendo a demanda.</p>
+
+      {error && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#EF4444]">{error}</div>
+      )}
+
+      {!audioUrl ? (
+        <div className="space-y-4">
+          {/* Recorder */}
+          <div className="flex flex-col items-center gap-4 py-6 border-2 border-dashed border-[#E5E7EB] rounded-xl">
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md ${
+                isRecording
+                  ? 'bg-[#EF4444] hover:bg-red-600 animate-pulse'
+                  : 'bg-[#1E3A8A] hover:bg-[#1e40af]'
+              }`}
+            >
+              {isRecording ? (
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <rect x="6" y="6" width="12" height="12" rx="1" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                </svg>
+              )}
+            </button>
+            <div className="text-center">
+              {isRecording ? (
+                <p className="text-sm font-medium text-[#EF4444]">Gravando… {fmt(recordingTime)}</p>
+              ) : (
+                <p className="text-sm text-[#6B7280]">Clique para iniciar a gravação</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-[#E5E7EB]" />
+            <span className="text-xs text-[#9CA3AF]">ou</span>
+            <div className="flex-1 h-px bg-[#E5E7EB]" />
+          </div>
+
+          <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] hover:border-[#93C5FD] hover:text-[#1E3A8A] hover:bg-[#F8FAFC] transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Enviar arquivo de áudio
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg">
+            <svg className="w-5 h-5 text-[#10B981] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <span className="text-sm text-[#065F46] font-medium">Áudio pronto</span>
+          </div>
+          <audio controls src={audioUrl} className="w-full rounded-lg" />
+          <button type="button" onClick={reset} className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors">
+            Remover e gravar novamente
+          </button>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+/* ── Documento ───────────────────────────────────────────────── */
+
+function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
+  const [file, setFile] = useState<File | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt'
+
+  const handleFile = (f: File) => {
+    setFile(f)
+    onChange(true)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const f = e.dataTransfer.files[0]
+    if (f) handleFile(f)
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  const extIcon: Record<string, string> = {
+    pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', txt: '📃',
+  }
+  const ext = file?.name.split('.').pop()?.toLowerCase() ?? ''
+
+  return (
+    <Card padding="lg">
+      <h2 className="text-base font-semibold text-[#111827] mb-1">Importar documento</h2>
+      <p className="text-sm text-[#6B7280] mb-5">Envie um PDF, Word ou planilha com os requisitos do projeto.</p>
+
+      {!file ? (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragging(true) }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`flex flex-col items-center justify-center gap-3 py-10 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+            dragging ? 'border-[#3B82F6] bg-blue-50' : 'border-[#E5E7EB] hover:border-[#93C5FD] hover:bg-[#F8FAFC]'
+          }`}
+        >
+          <svg className="w-10 h-10 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+          <div className="text-center">
+            <p className="text-sm font-medium text-[#374151]">Arraste o arquivo aqui ou clique para selecionar</p>
+            <p className="text-xs text-[#9CA3AF] mt-1">PDF, Word, Excel ou TXT — até 20 MB</p>
+          </div>
+          <input ref={fileInputRef} type="file" accept={accept} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl">
+            <span className="text-2xl">{extIcon[ext] ?? '📎'}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-[#111827] truncate">{file.name}</p>
+              <p className="text-xs text-[#6B7280]">{formatSize(file.size)}</p>
+            </div>
+            <svg className="w-5 h-5 text-[#10B981] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setFile(null); onChange(false) }}
+            className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors"
+          >
+            Remover arquivo
+          </button>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+/* ── Formulário guiado ───────────────────────────────────────── */
+
+function GuidedFormInput({ onChange }: { onChange: (filled: boolean) => void }) {
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+
+  const update = (id: string, value: string) => {
+    const next = { ...answers, [id]: value }
+    setAnswers(next)
+    const required = GUIDED_QUESTIONS.slice(0, 3)
+    onChange(required.every(q => (next[q.id] ?? '').trim().length >= 10))
+  }
+
+  return (
+    <Card padding="lg">
+      <h2 className="text-base font-semibold text-[#111827] mb-1">Formulário guiado</h2>
+      <p className="text-sm text-[#6B7280] mb-5">Responda as perguntas abaixo para estruturar o briefing do projeto.</p>
+
+      <div className="space-y-5">
+        {GUIDED_QUESTIONS.map((q, i) => (
+          <div key={q.id}>
+            <label className="text-sm font-medium text-[#374151] flex items-center gap-1.5 mb-1.5">
+              <span className="w-5 h-5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-xs flex items-center justify-center font-semibold flex-shrink-0">
+                {i + 1}
+              </span>
+              {q.label}
+              {i >= 3 && <span className="text-[10px] text-[#9CA3AF] font-normal ml-1">(opcional)</span>}
+            </label>
+            <textarea
+              value={answers[q.id] ?? ''}
+              onChange={e => update(q.id, e.target.value)}
+              placeholder={q.placeholder}
+              rows={2}
+              className="w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] resize-none leading-relaxed"
+            />
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-[#9CA3AF] mt-4">
+        As 3 primeiras perguntas são obrigatórias (mínimo 10 caracteres cada).
+      </p>
+    </Card>
+  )
+}
+
+/* ── Main page ───────────────────────────────────────────────── */
 
 export default function NovoProjeto() {
   const router = useRouter()
@@ -61,7 +340,18 @@ export default function NovoProjeto() {
   const [description, setDescription] = useState('')
   const [inputType, setInputType] = useState('text')
   const [briefing, setBriefing] = useState('')
+  const [hasAudio, setHasAudio] = useState(false)
+  const [hasDocument, setHasDocument] = useState(false)
+  const [hasForm, setHasForm] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const isStep2Valid = () => {
+    if (inputType === 'text') return briefing.trim().length >= 10
+    if (inputType === 'audio') return hasAudio
+    if (inputType === 'document') return hasDocument
+    if (inputType === 'form') return hasForm
+    return false
+  }
 
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,6 +360,7 @@ export default function NovoProjeto() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isStep2Valid()) return
     setLoading(true)
     setTimeout(() => {
       router.push('/projetos/1')
@@ -176,26 +467,18 @@ export default function NovoProjeto() {
                   <button
                     key={type.id}
                     type="button"
-                    disabled={!!type.badge}
-                    onClick={() => !type.badge && setInputType(type.id)}
+                    onClick={() => setInputType(type.id)}
                     className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
-                      inputType === type.id && !type.badge
+                      inputType === type.id
                         ? 'border-[#1E3A8A] bg-blue-50'
-                        : type.badge
-                        ? 'border-[#E5E7EB] bg-[#FAFAFA] opacity-60 cursor-not-allowed'
                         : 'border-[#E5E7EB] hover:border-[#93C5FD] hover:bg-[#F8FAFC] cursor-pointer'
                     }`}
                   >
-                    {type.badge && (
-                      <span className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 rounded-full bg-[#F1F5F9] text-[#9CA3AF] font-medium">
-                        {type.badge}
-                      </span>
-                    )}
-                    <div className={`${inputType === type.id && !type.badge ? 'text-[#1E3A8A]' : 'text-[#6B7280]'}`}>
+                    <div className={`${inputType === type.id ? 'text-[#1E3A8A]' : 'text-[#6B7280]'}`}>
                       {type.icon}
                     </div>
                     <div>
-                      <p className={`text-sm font-semibold ${inputType === type.id && !type.badge ? 'text-[#1E3A8A]' : 'text-[#374151]'}`}>
+                      <p className={`text-sm font-semibold ${inputType === type.id ? 'text-[#1E3A8A]' : 'text-[#374151]'}`}>
                         {type.label}
                       </p>
                       <p className="text-xs text-[#9CA3AF] mt-0.5 leading-relaxed">{type.description}</p>
@@ -205,7 +488,6 @@ export default function NovoProjeto() {
               </div>
             </Card>
 
-            {/* Briefing input */}
             {inputType === 'text' && (
               <Card padding="lg">
                 <h2 className="text-base font-semibold text-[#111827] mb-1">Briefing inicial</h2>
@@ -221,15 +503,17 @@ export default function NovoProjeto() {
                   required
                 />
                 <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-[#9CA3AF]">
-                    {briefing.length} caracteres
-                  </p>
+                  <p className="text-xs text-[#9CA3AF]">{briefing.length} caracteres</p>
                   {briefing.length < 50 && briefing.length > 0 && (
                     <p className="text-xs text-[#F59E0B]">Quanto mais detalhado, melhor o resultado da IA</p>
                   )}
                 </div>
               </Card>
             )}
+
+            {inputType === 'audio' && <AudioInput onChange={setHasAudio} />}
+            {inputType === 'document' && <DocumentInput onChange={setHasDocument} />}
+            {inputType === 'form' && <GuidedFormInput onChange={setHasForm} />}
 
             <div className="flex items-center justify-between">
               <Button type="button" variant="ghost" onClick={() => setStep(1)}>
@@ -238,12 +522,7 @@ export default function NovoProjeto() {
                 </svg>
                 Voltar
               </Button>
-              <Button
-                type="submit"
-                size="lg"
-                loading={loading}
-                disabled={inputType === 'text' && briefing.trim().length < 10}
-              >
+              <Button type="submit" size="lg" loading={loading} disabled={!isStep2Valid()}>
                 {!loading && (
                   <>
                     Criar projeto e iniciar refinamento
