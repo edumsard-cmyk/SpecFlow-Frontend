@@ -1004,6 +1004,29 @@ export default function ProjetoPage() {
         {activeTab === 'documentation' && <DocumentacaoTab />}
         {activeTab === 'manual' && <ManualTab />}
 
+        {projectStatus === 'done' && (
+          <div className="mt-8 flex flex-col items-center gap-4 py-8 bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] border border-[#BBF7D0] rounded-2xl">
+            <div className="w-14 h-14 rounded-full bg-[#10B981] flex items-center justify-center shadow-lg">
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-[#065F46]">Projeto concluído!</h3>
+              <p className="text-sm text-[#6B7280] mt-1">Todas as etapas foram finalizadas com sucesso.</p>
+            </div>
+            <button
+              onClick={() => router.push('/projetos')}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#10B981] hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+              </svg>
+              Ver todos os projetos
+            </button>
+          </div>
+        )}
+
         <div className="mt-8 flex items-center justify-between border-t border-[#F1F5F9] pt-6">
           <div>
             {currentTabIndex > 0 && (
