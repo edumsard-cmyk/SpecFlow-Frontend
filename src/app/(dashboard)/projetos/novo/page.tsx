@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
+import { createProjectAction } from '@/app/actions/projects'
 
 const INPUT_TYPES = [
   {
@@ -288,12 +289,13 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
 
 /* ── Formulário guiado ───────────────────────────────────────── */
 
-function GuidedFormInput({ onChange }: { onChange: (filled: boolean) => void }) {
+function GuidedFormInput({ onChange, onAnswers }: { onChange: (filled: boolean) => void; onAnswers: (a: Record<string, string>) => void }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
   const update = (id: string, value: string) => {
     const next = { ...answers, [id]: value }
     setAnswers(next)
+    onAnswers(next)
     const required = GUIDED_QUESTIONS.slice(0, 3)
     onChange(required.every(q => (next[q.id] ?? '').trim().length >= 10))
   }
@@ -335,15 +337,17 @@ function GuidedFormInput({ onChange }: { onChange: (filled: boolean) => void }) 
 
 export default function NovoProjeto() {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [inputType, setInputType] = useState('text')
+  const [inputType, setInputType] = useState<'text' | 'audio' | 'document' | 'form'>('text')
   const [briefing, setBriefing] = useState('')
   const [hasAudio, setHasAudio] = useState(false)
   const [hasDocument, setHasDocument] = useState(false)
   const [hasForm, setHasForm] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [formAnswers, setFormAnswers] = useState<Record<string, string>>({})
+  const [error, setError] = useState<string | null>(null)
 
   const isStep2Valid = () => {
     if (inputType === 'text') return briefing.trim().length >= 10
@@ -361,10 +365,27 @@ export default function NovoProjeto() {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
     if (!isStep2Valid()) return
-    setLoading(true)
-    setTimeout(() => {
-      router.push('/projetos/1')
-    }, 1500)
+    setError(null)
+
+    const briefingContent = inputType === 'text'
+      ? briefing
+      : inputType === 'form'
+      ? Object.entries(formAnswers).filter(([, v]) => v.trim()).map(([k, v]) => {
+          const q = GUIDED_QUESTIONS.find(q => q.id === k)
+          return q ? `${q.label}\n${v}` : v
+        }).join('\n\n')
+      : inputType === 'audio'
+      ? '[Briefing enviado por áudio]'
+      : '[Briefing enviado por documento]'
+
+    startTransition(async () => {
+      const result = await createProjectAction({ name, description, inputType, briefingContent })
+      if (result.error) {
+        setError(result.error)
+      } else {
+        router.push(`/projetos/${result.projectId}`)
+      }
+    })
   }
 
   return (
@@ -467,7 +488,7 @@ export default function NovoProjeto() {
                   <button
                     key={type.id}
                     type="button"
-                    onClick={() => setInputType(type.id)}
+                    onClick={() => setInputType(type.id as 'text' | 'audio' | 'document' | 'form')}
                     className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
                       inputType === type.id
                         ? 'border-[#1E3A8A] bg-blue-50'
@@ -513,7 +534,13 @@ export default function NovoProjeto() {
 
             {inputType === 'audio' && <AudioInput onChange={setHasAudio} />}
             {inputType === 'document' && <DocumentInput onChange={setHasDocument} />}
-            {inputType === 'form' && <GuidedFormInput onChange={setHasForm} />}
+            {inputType === 'form' && <GuidedFormInput onChange={setHasForm} onAnswers={setFormAnswers} />}
+
+            {error && (
+              <div role="alert" className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#EF4444]">
+                {error}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <Button type="button" variant="ghost" onClick={() => setStep(1)}>
@@ -522,8 +549,8 @@ export default function NovoProjeto() {
                 </svg>
                 Voltar
               </Button>
-              <Button type="submit" size="lg" loading={loading} disabled={!isStep2Valid()}>
-                {!loading && (
+              <Button type="submit" size="lg" loading={isPending} disabled={!isStep2Valid() || isPending}>
+                {!isPending && (
                   <>
                     Criar projeto e iniciar refinamento
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
