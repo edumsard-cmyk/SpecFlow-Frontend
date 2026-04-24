@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
@@ -8,18 +8,21 @@ import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
 import RefinamentoTab from '@/components/projects/RefinamentoTab'
-import { MOCK_PROJECTS } from '@/lib/mock-data'
 import { type ProjectStatus, STATUS_LABELS, STATUS_STEPS } from '@/types'
 import { getStatusColor } from '@/lib/utils'
+import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, type StoryPayload } from '@/app/actions/projects'
 
 /* ── Briefing ─────────────────────────────────────────────── */
 
-function BriefingTab() {
+function BriefingTab({ briefing }: { briefing: string | null }) {
+  const defaultText = briefing ?? MOCK_BRIEFING
   const [editing, setEditing] = useState(false)
-  const [text, setText] = useState(
-    'Precisamos de um sistema para gerenciar agendamentos de clínicas médicas. O paciente deve conseguir marcar consultas online, receber confirmação por e-mail e lembrete 24h antes. O médico precisa visualizar a agenda do dia e bloquear horários quando necessário. Também é importante ter um painel para a secretária confirmar, remarcar ou cancelar consultas.'
-  )
-  const [draft, setDraft] = useState(text)
+  const [text, setText] = useState(defaultText)
+  const [draft, setDraft] = useState(defaultText)
+
+  useEffect(() => {
+    if (briefing) { setText(briefing); setDraft(briefing) }
+  }, [briefing])
 
   const save = () => { setText(draft); setEditing(false) }
   const cancel = () => { setDraft(text); setEditing(false) }
@@ -250,17 +253,36 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
   )
 }
 
-function EspecificacaoTab() {
-  const [stories, setStories] = useState<Story[]>(INITIAL_STORIES)
+function EspecificacaoTab({ projectId, initialStories }: { projectId: string; initialStories: Story[] }) {
+  const [stories, setStories] = useState<Story[]>(initialStories.length > 0 ? initialStories : INITIAL_STORIES)
   const [addingNew, setAddingNew] = useState(false)
   const [newStory, setNewStory] = useState<Omit<Story, 'id'>>({ title: '', description: '', criteria: [] })
   const [newCriteria, setNewCriteria] = useState('')
+  const [saved, setSaved] = useState(initialStories.length > 0)
+  const [saving, startSaving] = useTransition()
 
-  const updateStory = (index: number, s: Story) =>
+  const updateStory = (index: number, s: Story) => {
     setStories(prev => prev.map((st, i) => i === index ? s : st))
+    setSaved(false)
+  }
 
-  const deleteStory = (index: number) =>
+  const deleteStory = (index: number) => {
     setStories(prev => prev.filter((_, i) => i !== index))
+    setSaved(false)
+  }
+
+  const handleSave = () => {
+    const payload: StoryPayload[] = stories.map(s => ({
+      code: s.id,
+      title: s.title,
+      description: s.description,
+      criteria: s.criteria,
+    }))
+    startSaving(async () => {
+      await saveUserStoriesAction(projectId, payload)
+      setSaved(true)
+    })
+  }
 
   const addNewCriteria = () => {
     if (!newCriteria.trim()) return
@@ -275,18 +297,41 @@ function EspecificacaoTab() {
     setNewStory({ title: '', description: '', criteria: [] })
     setNewCriteria('')
     setAddingNew(false)
+    setSaved(false)
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6B7280]">{stories.length} histórias de usuário</p>
-        <Button variant="outline" size="sm" onClick={() => setAddingNew(true)}>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Nova história
-        </Button>
+        <div className="flex items-center gap-2">
+          {!saved && (
+            <Button size="sm" onClick={handleSave} loading={saving}>
+              {!saving && (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Salvar
+                </>
+              )}
+            </Button>
+          )}
+          {saved && (
+            <span className="flex items-center gap-1 text-xs text-[#10B981]">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Salvo
+            </span>
+          )}
+          <Button variant="outline" size="sm" onClick={() => setAddingNew(true)}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Nova história
+          </Button>
+        </div>
       </div>
 
       {stories.map((story, i) => (
@@ -557,17 +602,49 @@ function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate:
   )
 }
 
-function DocumentacaoTab() {
-  const [sections, setSections] = useState<DocSection[]>(INITIAL_DOC)
+function DocumentacaoTab({ projectId, initialContent }: { projectId: string; initialContent: DocSection[] | null }) {
+  const [sections, setSections] = useState<DocSection[]>(initialContent ?? INITIAL_DOC)
+  const [saved, setSaved] = useState(initialContent !== null)
+  const [saving, startSaving] = useTransition()
+
+  const handleUpdate = (i: number, s: DocSection) => {
+    setSections(prev => prev.map((sec, idx) => idx === i ? s : sec))
+    setSaved(false)
+  }
+
+  const handleSave = () => {
+    startSaving(async () => {
+      await saveDocumentAction(projectId, 'doc', JSON.stringify(sections))
+      setSaved(true)
+    })
+  }
 
   return (
     <Card padding="lg" className="space-y-6">
+      <div className="flex justify-end">
+        {!saved ? (
+          <Button size="sm" onClick={handleSave} loading={saving}>
+            {!saving && (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                Salvar
+              </>
+            )}
+          </Button>
+        ) : (
+          <span className="flex items-center gap-1 text-xs text-[#10B981]">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Salvo
+          </span>
+        )}
+      </div>
       {sections.map((section, i) => (
         <div key={section.id}>
-          <DocSectionBlock
-            section={section}
-            onUpdate={s => setSections(prev => prev.map((sec, idx) => idx === i ? s : sec))}
-          />
+          <DocSectionBlock section={section} onUpdate={s => handleUpdate(i, s)} />
           {i < sections.length - 1 && <div className="border-t border-[#F1F5F9] mt-6" />}
         </div>
       ))}
@@ -708,10 +785,12 @@ function ManualSectionBlock({ section, onUpdate, onDelete }: {
   )
 }
 
-function ManualTab() {
-  const [sections, setSections] = useState<ManualSection[]>(INITIAL_MANUAL)
+function ManualTab({ projectId, initialSections }: { projectId: string; initialSections: ManualSection[] | null }) {
+  const [sections, setSections] = useState<ManualSection[]>(initialSections ?? INITIAL_MANUAL)
   const [addingSection, setAddingSection] = useState(false)
   const [newTitle, setNewTitle] = useState('')
+  const [saved, setSaved] = useState(initialSections !== null)
+  const [saving, startSaving] = useTransition()
 
   const addSection = () => {
     if (!newTitle.trim()) return
@@ -719,6 +798,14 @@ function ManualTab() {
     setSections(prev => [...prev, { id: `s${n}`, title: `${n}. ${newTitle.trim()}`, steps: [] }])
     setNewTitle('')
     setAddingSection(false)
+    setSaved(false)
+  }
+
+  const handleSave = () => {
+    startSaving(async () => {
+      await saveDocumentAction(projectId, 'manual', JSON.stringify(sections))
+      setSaved(true)
+    })
   }
 
   return (
@@ -728,12 +815,33 @@ function ManualTab() {
           <h3 className="text-sm font-semibold text-[#374151]">Manual do Usuário</h3>
           <p className="text-xs text-[#9CA3AF] mt-0.5">Versão 1.0 — Gerado automaticamente pelo SpecFlow</p>
         </div>
-        <Button variant="outline" size="sm">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Exportar PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          {!saved ? (
+            <Button size="sm" onClick={handleSave} loading={saving}>
+              {!saving && (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Salvar
+                </>
+              )}
+            </Button>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-[#10B981]">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Salvo
+            </span>
+          )}
+          <Button variant="outline" size="sm">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Exportar PDF
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-5">
@@ -741,8 +849,8 @@ function ManualTab() {
           <div key={section.id}>
             <ManualSectionBlock
               section={section}
-              onUpdate={s => setSections(prev => prev.map((sec, idx) => idx === i ? s : sec))}
-              onDelete={() => setSections(prev => prev.filter((_, idx) => idx !== i))}
+              onUpdate={s => { setSections(prev => prev.map((sec, idx) => idx === i ? s : sec)); setSaved(false) }}
+              onDelete={() => { setSections(prev => prev.filter((_, idx) => idx !== i)); setSaved(false) }}
             />
             {i < sections.length - 1 && <div className="border-t border-[#F1F5F9] mt-5" />}
           </div>
@@ -790,30 +898,58 @@ const TABS: { id: ProjectStatus | 'briefing'; label: string }[] = [
 export default function ProjetoPage() {
   const router = useRouter()
   const params = useParams()
-  const mockProject = MOCK_PROJECTS.find(p => p.id === params.id) ?? MOCK_PROJECTS[0]
+  const projectId = params.id as string
 
   const [realBriefing, setRealBriefing] = useState<string | null>(null)
+  const [initialStories, setInitialStories] = useState<Story[]>([])
+  const [initialDocSections, setInitialDocSections] = useState<DocSection[] | null>(null)
+  const [initialManualSections, setInitialManualSections] = useState<ManualSection[] | null>(null)
   const [loadingData, setLoadingData] = useState(true)
 
+  const [activeTab, setActiveTab] = useState<string>('briefing')
+  const [projectStatus, setProjectStatus] = useState<ProjectStatus>('briefing')
+  const [projectName, setProjectName] = useState('')
+  const [projectDesc, setProjectDesc] = useState('')
+
   useEffect(() => {
-    fetch(`/api/projects/${params.id}`)
+    fetch(`/api/projects/${projectId}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.briefing?.content) setRealBriefing(data.briefing.content)
+        if (!data) return
+        if (data.project) {
+          setProjectName(data.project.name ?? '')
+          setProjectDesc(data.project.description ?? '')
+          const status: ProjectStatus = data.project.status ?? 'briefing'
+          setProjectStatus(status)
+          setActiveTab(status === 'done' ? 'briefing' : status)
+        }
+        if (data.briefing?.content) setRealBriefing(data.briefing.content)
+        if (Array.isArray(data.stories) && data.stories.length > 0) {
+          setInitialStories(data.stories.map((s: { code: string; title: string; description: string; acceptance_criteria: string[] }) => ({
+            id: s.code,
+            title: s.title,
+            description: s.description,
+            criteria: s.acceptance_criteria ?? [],
+          })))
+        }
+        if (Array.isArray(data.documents)) {
+          const doc = data.documents.find((d: { type: string; content: string }) => d.type === 'doc')
+          const manual = data.documents.find((d: { type: string; content: string }) => d.type === 'manual')
+          if (doc?.content) {
+            try { setInitialDocSections(JSON.parse(doc.content)) } catch { /* ignore */ }
+          }
+          if (manual?.content) {
+            try { setInitialManualSections(JSON.parse(manual.content)) } catch { /* ignore */ }
+          }
+        }
       })
       .finally(() => setLoadingData(false))
-  }, [params.id])
-
-  const project = mockProject
-  const [activeTab, setActiveTab] = useState<string>(project.status === 'done' ? 'briefing' : project.status)
-  const [projectStatus, setProjectStatus] = useState<ProjectStatus>(project.status)
-  const [projectName, setProjectName] = useState(project.name)
-  const [projectDesc, setProjectDesc] = useState(project.description)
+  }, [projectId])
 
   // Edit modal
   const [showEdit, setShowEdit] = useState(false)
-  const [editName, setEditName] = useState(project.name)
-  const [editDesc, setEditDesc] = useState(project.description)
+  const [editName, setEditName] = useState('')
+  const [editDesc, setEditDesc] = useState('')
 
   // Delete confirmation
   const [showDelete, setShowDelete] = useState(false)
@@ -826,6 +962,7 @@ export default function ProjetoPage() {
     const nextStatus = nextTab ? (nextTab.id as ProjectStatus) : 'done'
     setProjectStatus(nextStatus)
     if (nextTab) setActiveTab(nextTab.id)
+    updateProjectStatusAction(projectId, nextStatus)
   }
 
   const saveEdit = () => {
@@ -922,7 +1059,7 @@ export default function ProjetoPage() {
               </Button>
             </Link>
             <button
-              onClick={() => { setEditName(projectName); setEditDesc(projectDesc); setShowEdit(true) }}
+              onClick={() => { setEditName(projectName); setEditDesc(projectDesc ?? ''); setShowEdit(true) }}
               className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F1F5F9] rounded-lg transition-colors"
               title="Editar projeto"
             >
@@ -1012,11 +1149,11 @@ export default function ProjetoPage() {
 
       {/* Content */}
       <div className="flex-1 p-6 overflow-y-auto">
-        {activeTab === 'briefing' && <BriefingTab />}
+        {activeTab === 'briefing' && <BriefingTab briefing={realBriefing} />}
         {activeTab === 'refinement' && <RefinamentoTab briefing={realBriefing ?? MOCK_BRIEFING} />}
-        {activeTab === 'specification' && <EspecificacaoTab />}
-        {activeTab === 'documentation' && <DocumentacaoTab />}
-        {activeTab === 'manual' && <ManualTab />}
+        {!loadingData && activeTab === 'specification' && <EspecificacaoTab projectId={projectId} initialStories={initialStories} />}
+        {!loadingData && activeTab === 'documentation' && <DocumentacaoTab projectId={projectId} initialContent={initialDocSections} />}
+        {!loadingData && activeTab === 'manual' && <ManualTab projectId={projectId} initialSections={initialManualSections} />}
 
         {projectStatus === 'done' && (
           <div className="mt-8 flex flex-col items-center gap-4 py-8 bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] border border-[#BBF7D0] rounded-2xl">
