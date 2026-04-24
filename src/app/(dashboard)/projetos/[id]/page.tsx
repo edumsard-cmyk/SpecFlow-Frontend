@@ -791,13 +791,16 @@ export default function ProjetoPage() {
   const params = useParams()
   const project = MOCK_PROJECTS.find(p => p.id === params.id) ?? MOCK_PROJECTS[0]
   const [activeTab, setActiveTab] = useState<string>(project.status === 'done' ? 'briefing' : project.status)
+  const [projectStatus, setProjectStatus] = useState<ProjectStatus>(project.status)
 
   const currentTabIndex = TABS.findIndex(t => t.id === activeTab)
-  const statusIndex = STATUS_STEPS.indexOf(project.status)
+  const statusIndex = STATUS_STEPS.indexOf(projectStatus)
 
-  const isTabEnabled = (tabId: string) => {
-    const tabIndex = STATUS_STEPS.indexOf(tabId as ProjectStatus)
-    return tabIndex <= statusIndex
+  const advanceStep = () => {
+    const nextTab = TABS[currentTabIndex + 1]
+    const nextStatus = nextTab ? (nextTab.id as ProjectStatus) : 'done'
+    setProjectStatus(nextStatus)
+    if (nextTab) setActiveTab(nextTab.id)
   }
 
   return (
@@ -815,7 +818,7 @@ export default function ProjetoPage() {
                 Projetos
               </Button>
             </Link>
-            <Badge className={getStatusColor(project.status)}>{STATUS_LABELS[project.status]}</Badge>
+            <Badge className={getStatusColor(projectStatus)}>{STATUS_LABELS[projectStatus]}</Badge>
           </div>
         }
       />
@@ -825,8 +828,8 @@ export default function ProjetoPage() {
         <div className="flex items-center gap-3 mb-2">
           {STATUS_STEPS.filter(s => s !== 'done').map((step, i) => {
             const idx = STATUS_STEPS.indexOf(step)
-            const isDone = idx < statusIndex
-            const isCurrent = idx === statusIndex
+            const isDone = idx < statusIndex || projectStatus === 'done'
+            const isCurrent = idx === statusIndex && projectStatus !== 'done'
             return (
               <div key={step} className="flex items-center gap-3 flex-1">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -853,7 +856,7 @@ export default function ProjetoPage() {
         <div className="w-full bg-[#F1F5F9] rounded-full h-1">
           <div
             className="h-1 rounded-full bg-gradient-to-r from-[#1E3A8A] to-[#7C3AED] transition-all duration-500"
-            style={{ width: `${project.progress}%` }}
+            style={{ width: `${projectStatus === 'done' ? 100 : Math.round((statusIndex / (STATUS_STEPS.length - 1)) * 100)}%` }}
           />
         </div>
       </div>
@@ -862,20 +865,23 @@ export default function ProjetoPage() {
       <div className="bg-white border-b border-[#E5E7EB] px-6">
         <div className="flex items-center gap-1">
           {TABS.map(tab => {
-            const enabled = isTabEnabled(tab.id)
+            const tabIdx = STATUS_STEPS.indexOf(tab.id as ProjectStatus)
+            const isDone = tabIdx !== -1 && tabIdx < statusIndex
             return (
               <button
                 key={tab.id}
-                onClick={() => enabled && setActiveTab(tab.id)}
-                disabled={!enabled}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150 ${
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150 flex items-center gap-1.5 ${
                   activeTab === tab.id
                     ? 'border-[#1E3A8A] text-[#1E3A8A]'
-                    : enabled
-                    ? 'border-transparent text-[#6B7280] hover:text-[#374151] hover:border-[#D1D5DB]'
-                    : 'border-transparent text-[#D1D5DB] cursor-not-allowed'
+                    : 'border-transparent text-[#6B7280] hover:text-[#374151] hover:border-[#D1D5DB]'
                 }`}
               >
+                {isDone && (
+                  <svg className="w-3 h-3 text-[#10B981] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                )}
                 {tab.label}
               </button>
             )
@@ -891,16 +897,51 @@ export default function ProjetoPage() {
         {activeTab === 'documentation' && <DocumentacaoTab />}
         {activeTab === 'manual' && <ManualTab />}
 
-        {activeTab !== 'manual' && currentTabIndex < TABS.length - 1 && isTabEnabled(TABS[currentTabIndex + 1].id) && (
-          <div className="mt-6 flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => setActiveTab(TABS[currentTabIndex + 1].id)}>
-              Próximo: {TABS[currentTabIndex + 1].label}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </Button>
+        <div className="mt-8 flex items-center justify-between border-t border-[#F1F5F9] pt-6">
+          <div>
+            {currentTabIndex > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab(TABS[currentTabIndex - 1].id)}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                {TABS[currentTabIndex - 1].label}
+              </Button>
+            )}
           </div>
-        )}
+          <div className="flex items-center gap-3">
+            {currentTabIndex < TABS.length - 1 && (
+              <Button variant="outline" size="sm" onClick={() => setActiveTab(TABS[currentTabIndex + 1].id)}>
+                {TABS[currentTabIndex + 1].label}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Button>
+            )}
+            {(() => {
+              const tabStatus = STATUS_STEPS.indexOf(activeTab as ProjectStatus)
+              const isCurrentStep = tabStatus === statusIndex
+              const isAlreadyDone = tabStatus < statusIndex
+              const isLastTab = currentTabIndex === TABS.length - 1
+              if (isAlreadyDone) return (
+                <span className="flex items-center gap-1.5 text-sm text-[#10B981] font-medium">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  Etapa concluída
+                </span>
+              )
+              if (isCurrentStep) return (
+                <Button size="sm" onClick={advanceStep}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {isLastTab ? 'Concluir projeto' : 'Concluir etapa'}
+                </Button>
+              )
+              return null
+            })()}
+          </div>
+        </div>
       </div>
     </div>
   )
