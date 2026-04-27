@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
-import { updateUserRoleAction, createUserAction, resetUserPasswordAction } from '@/app/actions/admin'
+import { updateUserRoleAction, createUserAction, resetUserPasswordAction, deleteUserAction } from '@/app/actions/admin'
 import { type UserWithStats } from '@/lib/data/admin'
 import { type Database } from '@/lib/supabase/types'
 
@@ -160,6 +160,42 @@ function NovoUsuarioModal({ companies, onClose }: { companies: Company[]; onClos
   )
 }
 
+function DeleteUserButton({ userId, onDeleted }: { userId: string; onDeleted: () => void }) {
+  const [state, setState] = useState<'idle' | 'confirm' | 'deleting'>('idle')
+
+  const handleClick = () => {
+    if (state === 'idle') { setState('confirm'); return }
+    if (state === 'confirm') {
+      setState('deleting')
+      deleteUserAction(userId).then(res => {
+        if (res.error) setState('idle')
+        else onDeleted()
+      })
+    }
+  }
+
+  if (state === 'confirm') return (
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-[#374151]">Excluir?</span>
+      <button onClick={handleClick} className="text-xs text-[#EF4444] font-medium hover:underline">Sim</button>
+      <button onClick={() => setState('idle')} className="text-xs text-[#9CA3AF] hover:underline">Não</button>
+    </div>
+  )
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={state === 'deleting'}
+      className="text-xs text-[#9CA3AF] hover:text-[#EF4444] disabled:opacity-50 flex items-center gap-1 transition-colors"
+    >
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+      </svg>
+      {state === 'deleting' ? 'Excluindo…' : 'Excluir'}
+    </button>
+  )
+}
+
 function ResetPasswordButton({ email }: { email: string }) {
   const [state, setState] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'error'>('idle')
 
@@ -205,7 +241,9 @@ function ResetPasswordButton({ email }: { email: string }) {
   )
 }
 
-export default function UsuariosClient({ users, companies }: { users: UserWithStats[]; companies: Company[] }) {
+export default function UsuariosClient({ users: initialUsers, companies }: { users: UserWithStats[]; companies: Company[] }) {
+  const router = useRouter()
+  const [users, setUsers] = useState(initialUsers)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [showModal, setShowModal] = useState(false)
@@ -228,6 +266,11 @@ export default function UsuariosClient({ users, companies }: { users: UserWithSt
 
   const handleRoleChange = (userId: string, role: UserRole) => {
     startTransition(async () => { await updateUserRoleAction(userId, role) })
+  }
+
+  const handleDelete = (userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId))
+    router.refresh()
   }
 
   return (
@@ -315,17 +358,21 @@ export default function UsuariosClient({ users, companies }: { users: UserWithSt
                   </td>
                   <td className="px-6 py-4 text-center text-sm font-medium text-[#374151]">{user.projects}</td>
                   <td className="px-6 py-4 text-sm text-[#6B7280]">{formatDate(user.created_at)}</td>
-                  <td className="px-6 py-4 text-right">
-                    <select
-                      defaultValue={user.role}
-                      onChange={e => handleRoleChange(user.id, e.target.value as UserRole)}
-                      disabled={isPending}
-                      className="text-xs border border-[#E5E7EB] rounded-lg px-2 py-1 text-[#374151] bg-white focus:outline-none focus:ring-1 focus:ring-[#3B82F6] cursor-pointer disabled:opacity-50"
-                    >
-                      {(Object.keys(ROLE_LABELS) as UserRole[]).map(r => (
-                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                      ))}
-                    </select>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-3">
+                      <ResetPasswordButton email={user.email} />
+                      <select
+                        defaultValue={user.role}
+                        onChange={e => handleRoleChange(user.id, e.target.value as UserRole)}
+                        disabled={isPending}
+                        className="text-xs border border-[#E5E7EB] rounded-lg px-2 py-1 text-[#374151] bg-white focus:outline-none focus:ring-1 focus:ring-[#3B82F6] cursor-pointer disabled:opacity-50"
+                      >
+                        {(Object.keys(ROLE_LABELS) as UserRole[]).map(r => (
+                          <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                        ))}
+                      </select>
+                      <DeleteUserButton userId={user.id} onDeleted={() => handleDelete(user.id)} />
+                    </div>
                   </td>
                 </tr>
               ))}

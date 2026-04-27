@@ -112,6 +112,22 @@ export async function createUserAction(payload: {
   return {}
 }
 
+export async function deleteUserAction(userId: string): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
+  const admin = createAdminClient()
+
+  await admin.from('profiles').delete().eq('id', userId)
+
+  const { error } = await admin.auth.admin.deleteUser(userId)
+  if (error) return { error: 'Erro ao excluir usuário.' }
+
+  revalidatePath('/admin/usuarios')
+  revalidatePath('/admin/empresas')
+  return {}
+}
+
 export async function resetUserPasswordAction(email: string): Promise<{ error?: string }> {
   const denied = await requireAdmin()
   if (denied) return denied
