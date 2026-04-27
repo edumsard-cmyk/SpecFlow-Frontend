@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import OnboardingBanner from '@/components/dashboard/OnboardingBanner'
 import { STATUS_LABELS } from '@/types'
 import { getStatusColor, formatDate } from '@/lib/utils'
 import { getProjects } from '@/lib/data/projects'
@@ -91,6 +92,7 @@ export default async function DashboardPage() {
       />
 
       <div className="flex-1 p-4 md:p-6 space-y-6">
+        <OnboardingBanner />
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATS.map((stat) => (
