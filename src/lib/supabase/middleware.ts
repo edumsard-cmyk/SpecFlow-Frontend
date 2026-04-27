@@ -30,7 +30,8 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/cadastro')
-  const isPublicRoute = pathname === '/' || isAuthRoute
+  const isResetPasswordRoute = pathname.startsWith('/reset-password')
+  const isPublicRoute = pathname === '/' || isAuthRoute || isResetPasswordRoute
 
   // Redireciona para login se não autenticado em rota protegida
   if (!user && !isPublicRoute) {
@@ -39,11 +40,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redireciona para dashboard se já autenticado tentando acessar auth
+  // Redireciona para dashboard se já autenticado tentando acessar auth (exceto recuperação de senha)
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
+  }
+
+  // Apenas administradores acessam /admin
+  const isAdminRoute = pathname.startsWith('/admin')
+  if (user && isAdminRoute) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile?.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

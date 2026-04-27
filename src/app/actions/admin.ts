@@ -1,12 +1,16 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { requireAdmin } from '@/lib/auth/require-admin'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { type Database } from '@/lib/supabase/types'
 
 type UserRole = Database['public']['Tables']['profiles']['Row']['role']
 
 export async function createCompanyAction(name: string): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!name.trim()) return { error: 'Nome obrigatório.' }
 
   const admin = createAdminClient()
@@ -23,6 +27,9 @@ export async function createCompanyAction(name: string): Promise<{ error?: strin
 }
 
 export async function updateCompanyNameAction(id: string, name: string): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!name.trim()) return { error: 'Nome obrigatório.' }
 
   const admin = createAdminClient()
@@ -36,6 +43,9 @@ export async function updateCompanyNameAction(id: string, name: string): Promise
 }
 
 export async function updateUserRoleAction(userId: string, role: UserRole): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const admin = createAdminClient()
   const { error } = await admin.from('profiles').update({ role }).eq('id', userId)
 
@@ -47,6 +57,9 @@ export async function updateUserRoleAction(userId: string, role: UserRole): Prom
 }
 
 export async function removeUserFromCompanyAction(userId: string, companyId: string): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const admin = createAdminClient()
   const { error } = await admin.from('profiles').update({ company_id: null }).eq('id', userId)
 
@@ -64,6 +77,9 @@ export async function createUserAction(payload: {
   role: UserRole
   company_id?: string | null
 }): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!payload.name.trim()) return { error: 'Nome obrigatório.' }
   if (!payload.email.trim()) return { error: 'E-mail obrigatório.' }
   if (payload.password.length < 6) return { error: 'Senha deve ter pelo menos 6 caracteres.' }
@@ -97,6 +113,9 @@ export async function createUserAction(payload: {
 }
 
 export async function resetUserPasswordAction(email: string): Promise<{ error?: string }> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const supabase = await createClient()
   const vercelUrl = process.env.VERCEL_URL
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL

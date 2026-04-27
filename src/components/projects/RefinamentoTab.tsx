@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { appendRefinementMessageAction } from '@/app/actions/refinement'
 import Button from '@/components/ui/Button'
 
 interface Message {
@@ -10,11 +11,16 @@ interface Message {
 }
 
 interface RefinamentoTabProps {
+  projectId: string
   briefing: string
   initialMessages?: Message[]
 }
 
-export default function RefinamentoTab({ briefing, initialMessages = [] }: RefinamentoTabProps) {
+export default function RefinamentoTab({
+  projectId,
+  briefing,
+  initialMessages = [],
+}: RefinamentoTabProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -29,6 +35,13 @@ export default function RefinamentoTab({ briefing, initialMessages = [] }: Refin
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages)
+      setHasStarted(true)
+    }
+  }, [initialMessages])
 
   const sendToAI = useCallback(async (userMessages: Message[]) => {
     setIsLoading(true)
@@ -86,6 +99,10 @@ export default function RefinamentoTab({ briefing, initialMessages = [] }: Refin
         updated[updated.length - 1] = { role: 'ai', content: accumulated, streaming: false }
         return updated
       })
+
+      if (accumulated.trim()) {
+        void appendRefinementMessageAction(projectId, 'ai', accumulated)
+      }
     } catch (err) {
       setMessages(prev => {
         const updated = [...prev]
@@ -99,7 +116,7 @@ export default function RefinamentoTab({ briefing, initialMessages = [] }: Refin
     } finally {
       setIsLoading(false)
     }
-  }, [briefing])
+  }, [briefing, projectId])
 
   const handleStart = useCallback(() => {
     setHasStarted(true)
@@ -115,8 +132,12 @@ export default function RefinamentoTab({ briefing, initialMessages = [] }: Refin
     setMessages(newMessages)
     setInput('')
     textareaRef.current?.focus()
-    sendToAI(newMessages)
-  }, [input, isLoading, messages, sendToAI])
+
+    void appendRefinementMessageAction(projectId, 'user', text).then(res => {
+      if (res.error) console.warn(res.error)
+      sendToAI(newMessages)
+    })
+  }, [input, isLoading, messages, sendToAI, projectId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

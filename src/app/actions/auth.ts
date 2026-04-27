@@ -78,3 +78,20 @@ export async function logout() {
   revalidatePath('/', 'layout')
   redirect('/login')
 }
+
+export async function requestPasswordResetForCurrentUser(): Promise<{ error?: string; ok?: boolean }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return { error: 'Sessão inválida.' }
+
+  const vercelUrl = process.env.VERCEL_URL
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ?? (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000')
+
+  const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+    redirectTo: `${siteUrl}/reset-password`,
+  })
+
+  if (error) return { error: error.message }
+  return { ok: true }
+}

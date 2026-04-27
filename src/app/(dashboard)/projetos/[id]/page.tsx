@@ -1011,6 +1011,9 @@ export default function ProjetoPage() {
   const projectId = params.id as string
 
   const [realBriefing, setRealBriefing] = useState<string | null>(null)
+  const [refinementMessages, setRefinementMessages] = useState<
+    { role: 'ai' | 'user'; content: string }[]
+  >([])
   const [initialStories, setInitialStories] = useState<Story[]>([])
   const [initialDocSections, setInitialDocSections] = useState<DocSection[] | null>(null)
   const [initialManualSections, setInitialManualSections] = useState<ManualSection[] | null>(null)
@@ -1034,6 +1037,16 @@ export default function ProjetoPage() {
           setActiveTab(status === 'done' ? 'briefing' : status)
         }
         if (data.briefing?.content) setRealBriefing(data.briefing.content)
+        if (Array.isArray(data.refinementMessages) && data.refinementMessages.length > 0) {
+          setRefinementMessages(
+            data.refinementMessages.map(
+              (m: { role: string; content: string }) => ({
+                role: m.role === 'user' ? 'user' : 'ai',
+                content: m.content,
+              })
+            )
+          )
+        }
         if (Array.isArray(data.stories) && data.stories.length > 0) {
           setInitialStories(data.stories.map((s: { code: string; title: string; description: string; acceptance_criteria: string[] }) => ({
             id: s.code,
@@ -1274,7 +1287,13 @@ export default function ProjetoPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-y-auto">
         {activeTab === 'briefing' && <BriefingTab briefing={realBriefing} />}
-        {activeTab === 'refinement' && <RefinamentoTab briefing={realBriefing ?? MOCK_BRIEFING} />}
+        <div className={activeTab === 'refinement' ? 'block' : 'hidden'}>
+          <RefinamentoTab
+            projectId={projectId}
+            briefing={realBriefing ?? MOCK_BRIEFING}
+            initialMessages={refinementMessages}
+          />
+        </div>
         {!loadingData && activeTab === 'specification' && <EspecificacaoTab projectId={projectId} initialStories={initialStories} />}
         {!loadingData && activeTab === 'documentation' && <DocumentacaoTab projectId={projectId} initialContent={initialDocSections} />}
         {!loadingData && activeTab === 'manual' && <ManualTab projectId={projectId} projectName={projectName} initialSections={initialManualSections} />}

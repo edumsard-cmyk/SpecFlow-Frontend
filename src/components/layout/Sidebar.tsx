@@ -143,26 +143,28 @@ function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }:
           </Link>
         ))}
 
-        <div className="pt-3 mt-3 border-t border-white/10">
-          <p className="text-[#475569] text-[10px] font-semibold uppercase tracking-wider px-3 mb-2">Admin</p>
-          {adminItems.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40',
-                isActive(item.href)
-                  ? 'bg-[#1D4ED8] text-white'
-                  : 'text-[#94A3B8] hover:bg-[#1E3A8A] hover:text-white'
-              )}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </div>
+        {profile?.role === 'admin' && (
+          <div className="pt-3 mt-3 border-t border-white/10">
+            <p className="text-[#475569] text-[10px] font-semibold uppercase tracking-wider px-3 mb-2">Admin</p>
+            {adminItems.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40',
+                  isActive(item.href)
+                    ? 'bg-[#1D4ED8] text-white'
+                    : 'text-[#94A3B8] hover:bg-[#1E3A8A] hover:text-white'
+                )}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* Bottom */}
