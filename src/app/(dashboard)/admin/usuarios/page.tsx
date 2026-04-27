@@ -2,10 +2,10 @@ import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
 import UsuariosClient from '@/components/admin/UsuariosClient'
-import { getAllUsersWithStats } from '@/lib/data/admin'
+import { getAllUsersWithStats, getCompaniesWithStats } from '@/lib/data/admin'
 
 export default async function UsuariosPage() {
-  const users = await getAllUsersWithStats()
+  const [users, companies] = await Promise.all([getAllUsersWithStats(), getCompaniesWithStats()])
 
   return (
     <div className="flex flex-col flex-1">
@@ -23,7 +23,7 @@ export default async function UsuariosPage() {
           </Link>
         }
       />
-      <UsuariosClient users={users} />
+      <UsuariosClient users={users} companies={companies.map(c => ({ id: c.id, name: c.name }))} />
     </div>
   )
 }
