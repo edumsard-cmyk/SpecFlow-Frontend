@@ -50,6 +50,16 @@ const INPUT_TYPES = [
       </svg>
     ),
   },
+  {
+    id: 'video',
+    label: 'Vídeo',
+    description: 'Grave ou envie um vídeo explicando a demanda',
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+      </svg>
+    ),
+  },
 ]
 
 const GUIDED_QUESTIONS = [
@@ -206,6 +216,158 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
   )
 }
 
+/* ── Vídeo ───────────────────────────────────────────────────── */
+
+function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
+  const [isRecording, setIsRecording] = useState(false)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const previewRef = useRef<HTMLVideoElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    return () => {
+      if (videoUrl) URL.revokeObjectURL(videoUrl)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [videoUrl])
+
+  const startRecording = async () => {
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      if (previewRef.current) { previewRef.current.srcObject = stream; previewRef.current.play() }
+
+      const recorder = new MediaRecorder(stream)
+      chunksRef.current = []
+
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+        const url = URL.createObjectURL(blob)
+        setVideoUrl(url)
+        onChange(true)
+        stream.getTracks().forEach(t => t.stop())
+        if (previewRef.current) previewRef.current.srcObject = null
+      }
+
+      recorder.start()
+      mediaRecorderRef.current = recorder
+      setIsRecording(true)
+      setRecordingTime(0)
+      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+    } catch {
+      setError('Permissão de câmera/microfone negada. Verifique as configurações do navegador.')
+    }
+  }
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+  }
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (videoUrl) URL.revokeObjectURL(videoUrl)
+    const url = URL.createObjectURL(file)
+    setVideoUrl(url)
+    onChange(true)
+  }
+
+  const reset = () => {
+    if (videoUrl) URL.revokeObjectURL(videoUrl)
+    setVideoUrl(null)
+    onChange(false)
+    setRecordingTime(0)
+  }
+
+  const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
+  return (
+    <Card padding="lg">
+      <h2 className="text-base font-semibold text-[#111827] mb-1">Briefing em vídeo</h2>
+      <p className="text-sm text-[#6B7280] mb-5">Grave pela câmera ou envie um arquivo de vídeo explicando a demanda.</p>
+
+      {error && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#EF4444]">{error}</div>
+      )}
+
+      {!videoUrl ? (
+        <div className="space-y-4">
+          <div className="flex flex-col items-center gap-4 py-6 border-2 border-dashed border-[#E5E7EB] rounded-xl">
+            {isRecording && (
+              <video ref={previewRef} muted className="w-full max-w-xs rounded-lg bg-black" />
+            )}
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md ${
+                isRecording
+                  ? 'bg-[#EF4444] hover:bg-red-600 animate-pulse'
+                  : 'bg-[#1E3A8A] hover:bg-[#1e40af]'
+              }`}
+            >
+              {isRecording ? (
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <rect x="6" y="6" width="12" height="12" rx="1" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              )}
+            </button>
+            <div className="text-center">
+              {isRecording ? (
+                <p className="text-sm font-medium text-[#EF4444]">Gravando… {fmt(recordingTime)}</p>
+              ) : (
+                <p className="text-sm text-[#6B7280]">Clique para iniciar a gravação pela câmera</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-[#E5E7EB]" />
+            <span className="text-xs text-[#9CA3AF]">ou</span>
+            <div className="flex-1 h-px bg-[#E5E7EB]" />
+          </div>
+
+          <input ref={fileInputRef} type="file" accept="video/*" className="hidden" onChange={handleUpload} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] hover:border-[#93C5FD] hover:text-[#1E3A8A] hover:bg-[#F8FAFC] transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Enviar arquivo de vídeo
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg">
+            <svg className="w-5 h-5 text-[#10B981] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <span className="text-sm text-[#065F46] font-medium">Vídeo pronto</span>
+          </div>
+          <video controls src={videoUrl} className="w-full rounded-lg bg-black max-h-64" />
+          <button type="button" onClick={reset} className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors">
+            Remover e gravar novamente
+          </button>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 /* ── Documento ───────────────────────────────────────────────── */
 
 function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
@@ -341,11 +503,12 @@ export default function NovoProjeto() {
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [inputType, setInputType] = useState<'text' | 'audio' | 'document' | 'form'>('text')
+  const [inputType, setInputType] = useState<'text' | 'audio' | 'document' | 'form' | 'video'>('text')
   const [briefing, setBriefing] = useState('')
   const [hasAudio, setHasAudio] = useState(false)
   const [hasDocument, setHasDocument] = useState(false)
   const [hasForm, setHasForm] = useState(false)
+  const [hasVideo, setHasVideo] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
 
@@ -354,6 +517,7 @@ export default function NovoProjeto() {
     if (inputType === 'audio') return hasAudio
     if (inputType === 'document') return hasDocument
     if (inputType === 'form') return hasForm
+    if (inputType === 'video') return hasVideo
     return false
   }
 
@@ -376,6 +540,8 @@ export default function NovoProjeto() {
         }).join('\n\n')
       : inputType === 'audio'
       ? '[Briefing enviado por áudio]'
+      : inputType === 'video'
+      ? '[Briefing enviado por vídeo]'
       : '[Briefing enviado por documento]'
 
     startTransition(async () => {
@@ -483,7 +649,7 @@ export default function NovoProjeto() {
             <Card padding="lg">
               <h2 className="text-base font-semibold text-[#111827] mb-1">Como você quer inserir a demanda?</h2>
               <p className="text-sm text-[#6B7280] mb-4">Escolha o formato que melhor se encaixa no seu fluxo</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {INPUT_TYPES.map(type => (
                   <button
                     key={type.id}
@@ -533,6 +699,7 @@ export default function NovoProjeto() {
             )}
 
             {inputType === 'audio' && <AudioInput onChange={setHasAudio} />}
+            {inputType === 'video' && <VideoInput onChange={setHasVideo} />}
             {inputType === 'document' && <DocumentInput onChange={setHasDocument} />}
             {inputType === 'form' && <GuidedFormInput onChange={setHasForm} onAnswers={setFormAnswers} />}
 

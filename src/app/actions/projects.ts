@@ -11,7 +11,7 @@ type ProjectStatus = Database['public']['Tables']['projects']['Row']['status']
 interface CreateProjectPayload {
   name: string
   description: string
-  inputType: 'text' | 'audio' | 'document' | 'form'
+  inputType: 'text' | 'audio' | 'document' | 'form' | 'video'
   briefingContent: string
 }
 

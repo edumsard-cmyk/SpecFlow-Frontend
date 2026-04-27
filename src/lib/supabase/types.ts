@@ -169,7 +169,7 @@ export interface Database {
         Row: {
           id: string
           project_id: string
-          input_type: 'text' | 'audio' | 'document' | 'form'
+          input_type: 'text' | 'audio' | 'document' | 'form' | 'video'
           content: string
           audio_url: string | null
           document_url: string | null
@@ -178,7 +178,7 @@ export interface Database {
         Insert: {
           id?: string
           project_id: string
-          input_type: 'text' | 'audio' | 'document' | 'form'
+          input_type: 'text' | 'audio' | 'document' | 'form' | 'video'
           content: string
           audio_url?: string | null
           document_url?: string | null
