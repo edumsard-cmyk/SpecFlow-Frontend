@@ -3,6 +3,9 @@ import Groq from 'groq-sdk'
 import { getBriefing } from '@/lib/data/briefings'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 const SYSTEM_PROMPT = 'Você é um analista de sistemas especializado em engenharia de software. Responda SEMPRE com um JSON array válido, sem markdown, sem blocos de código, sem explicações adicionais.'

@@ -1,6 +1,9 @@
 import Groq from 'groq-sdk'
 import { NextRequest } from 'next/server'
 
+export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
+
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 const SYSTEM_PROMPT = `Você é o agente de refinamento do SpecFlow — uma plataforma que transforma demandas de negócio em especificações técnicas completas.
