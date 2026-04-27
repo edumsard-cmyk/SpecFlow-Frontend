@@ -1330,6 +1330,14 @@ export default function ProjetoPage() {
               const isLastTab = currentTabIndex === TABS.length - 1
               const currentTabForStatus = TABS.find(t => t.id === projectStatus)
 
+              if (isLastTab && projectStatus !== 'done') return (
+                <Button size="sm" onClick={advanceStep}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  Concluir projeto
+                </Button>
+              )
               if (isAlreadyDone) return (
                 <span className="flex items-center gap-1.5 text-sm text-[#10B981] font-medium">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1343,7 +1351,7 @@ export default function ProjetoPage() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
-                  {isLastTab ? 'Concluir projeto' : 'Concluir etapa'}
+                  Concluir etapa
                 </Button>
               )
               if (isFutureStep && currentTabForStatus) return (
