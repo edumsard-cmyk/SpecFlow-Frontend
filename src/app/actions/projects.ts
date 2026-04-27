@@ -98,6 +98,27 @@ export async function saveUserStoriesAction(
   }
 }
 
+export async function deleteProjectAction(projectId: string): Promise<{ error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    await Promise.all([
+      supabase.from('user_stories').delete().eq('project_id', projectId),
+      supabase.from('documents').delete().eq('project_id', projectId),
+      supabase.from('briefings').delete().eq('project_id', projectId),
+    ])
+
+    const { error } = await supabase.from('projects').delete().eq('id', projectId)
+    if (error) throw new Error(error.message)
+
+    revalidatePath('/projetos')
+    revalidatePath('/dashboard')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Erro ao apagar projeto.' }
+  }
+}
+
 export async function saveDocumentAction(
   projectId: string,
   type: 'doc' | 'manual' | 'spec',

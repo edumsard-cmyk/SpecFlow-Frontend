@@ -10,7 +10,7 @@ import Card from '@/components/ui/Card'
 import RefinamentoTab from '@/components/projects/RefinamentoTab'
 import { type ProjectStatus, STATUS_LABELS, STATUS_STEPS } from '@/types'
 import { getStatusColor } from '@/lib/utils'
-import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, type StoryPayload } from '@/app/actions/projects'
+import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, deleteProjectAction, type StoryPayload } from '@/app/actions/projects'
 
 /* ── Briefing ─────────────────────────────────────────────── */
 
@@ -260,6 +260,28 @@ function EspecificacaoTab({ projectId, initialStories }: { projectId: string; in
   const [newCriteria, setNewCriteria] = useState('')
   const [saved, setSaved] = useState(initialStories.length > 0)
   const [saving, startSaving] = useTransition()
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState('')
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    setGenError('')
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'stories', projectId }),
+      })
+      const json = await res.json()
+      if (json.error) { setGenError(json.error); return }
+      setStories(json.data)
+      setSaved(false)
+    } catch {
+      setGenError('Erro ao gerar histórias.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const updateStory = (index: number, s: Story) => {
     setStories(prev => prev.map((st, i) => i === index ? s : st))
@@ -305,6 +327,17 @@ function EspecificacaoTab({ projectId, initialStories }: { projectId: string; in
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6B7280]">{stories.length} histórias de usuário</p>
         <div className="flex items-center gap-2">
+          {genError && <span className="text-xs text-[#EF4444]">{genError}</span>}
+          <Button variant="outline" size="sm" onClick={handleGenerate} loading={generating}>
+            {!generating && (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+                Gerar com IA
+              </>
+            )}
+          </Button>
           {!saved && (
             <Button size="sm" onClick={handleSave} loading={saving}>
               {!saving && (
@@ -606,6 +639,28 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
   const [sections, setSections] = useState<DocSection[]>(initialContent ?? INITIAL_DOC)
   const [saved, setSaved] = useState(initialContent !== null)
   const [saving, startSaving] = useTransition()
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState('')
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    setGenError('')
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'doc', projectId }),
+      })
+      const json = await res.json()
+      if (json.error) { setGenError(json.error); return }
+      setSections(json.data)
+      setSaved(false)
+    } catch {
+      setGenError('Erro ao gerar documentação.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const handleUpdate = (i: number, s: DocSection) => {
     setSections(prev => prev.map((sec, idx) => idx === i ? s : sec))
@@ -621,7 +676,21 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
 
   return (
     <Card padding="lg" className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {genError && <span className="text-xs text-[#EF4444]">{genError}</span>}
+          <Button variant="outline" size="sm" onClick={handleGenerate} loading={generating}>
+            {!generating && (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+                Gerar com IA
+              </>
+            )}
+          </Button>
+        </div>
+        <div>
         {!saved ? (
           <Button size="sm" onClick={handleSave} loading={saving}>
             {!saving && (
@@ -641,6 +710,7 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
             Salvo
           </span>
         )}
+        </div>
       </div>
       {sections.map((section, i) => (
         <div key={section.id}>
@@ -785,12 +855,34 @@ function ManualSectionBlock({ section, onUpdate, onDelete }: {
   )
 }
 
-function ManualTab({ projectId, initialSections }: { projectId: string; initialSections: ManualSection[] | null }) {
+function ManualTab({ projectId, projectName, initialSections }: { projectId: string; projectName: string; initialSections: ManualSection[] | null }) {
   const [sections, setSections] = useState<ManualSection[]>(initialSections ?? INITIAL_MANUAL)
   const [addingSection, setAddingSection] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [saved, setSaved] = useState(initialSections !== null)
   const [saving, startSaving] = useTransition()
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState('')
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    setGenError('')
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'manual', projectId }),
+      })
+      const json = await res.json()
+      if (json.error) { setGenError(json.error); return }
+      setSections(json.data)
+      setSaved(false)
+    } catch {
+      setGenError('Erro ao gerar manual.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const addSection = () => {
     if (!newTitle.trim()) return
@@ -816,6 +908,17 @@ function ManualTab({ projectId, initialSections }: { projectId: string; initialS
           <p className="text-xs text-[#9CA3AF] mt-0.5">Versão 1.0 — Gerado automaticamente pelo SpecFlow</p>
         </div>
         <div className="flex items-center gap-2">
+          {genError && <span className="text-xs text-[#EF4444]">{genError}</span>}
+          <Button variant="outline" size="sm" onClick={handleGenerate} loading={generating}>
+            {!generating && (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+                Gerar com IA
+              </>
+            )}
+          </Button>
           {!saved ? (
             <Button size="sm" onClick={handleSave} loading={saving}>
               {!saving && (
@@ -835,7 +938,14 @@ function ManualTab({ projectId, initialSections }: { projectId: string; initialS
               Salvo
             </span>
           )}
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const { exportManualPDF } = await import('@/lib/export-pdf')
+              exportManualPDF(projectName, sections)
+            }}
+          >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
@@ -953,6 +1063,8 @@ export default function ProjetoPage() {
 
   // Delete confirmation
   const [showDelete, setShowDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const currentTabIndex = TABS.findIndex(t => t.id === activeTab)
   const statusIndex = STATUS_STEPS.indexOf(projectStatus)
@@ -972,8 +1084,16 @@ export default function ProjetoPage() {
     setShowEdit(false)
   }
 
-  const confirmDelete = () => {
-    router.push('/projetos')
+  const confirmDelete = async () => {
+    setDeleting(true)
+    setDeleteError('')
+    const result = await deleteProjectAction(projectId)
+    if (result.error) {
+      setDeleteError(result.error)
+      setDeleting(false)
+    } else {
+      router.push('/projetos')
+    }
   }
 
   return (
@@ -1032,13 +1152,17 @@ export default function ProjetoPage() {
             <p className="text-sm text-[#374151] bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-3 py-2">
               O projeto <span className="font-semibold">"{projectName}"</span> e todo seu conteúdo serão removidos permanentemente.
             </p>
+            {deleteError && (
+              <p className="text-sm text-[#EF4444]">{deleteError}</p>
+            )}
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowDelete(false)}>Cancelar</Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowDelete(false)} disabled={deleting}>Cancelar</Button>
               <button
                 onClick={confirmDelete}
-                className="px-3 py-1.5 text-sm font-medium text-white bg-[#EF4444] hover:bg-red-600 rounded-lg transition-colors"
+                disabled={deleting}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-[#EF4444] hover:bg-red-600 rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5"
               >
-                Sim, apagar projeto
+                {deleting ? 'Apagando…' : 'Sim, apagar projeto'}
               </button>
             </div>
           </div>
@@ -1153,7 +1277,7 @@ export default function ProjetoPage() {
         {activeTab === 'refinement' && <RefinamentoTab briefing={realBriefing ?? MOCK_BRIEFING} />}
         {!loadingData && activeTab === 'specification' && <EspecificacaoTab projectId={projectId} initialStories={initialStories} />}
         {!loadingData && activeTab === 'documentation' && <DocumentacaoTab projectId={projectId} initialContent={initialDocSections} />}
-        {!loadingData && activeTab === 'manual' && <ManualTab projectId={projectId} initialSections={initialManualSections} />}
+        {!loadingData && activeTab === 'manual' && <ManualTab projectId={projectId} projectName={projectName} initialSections={initialManualSections} />}
 
         {projectStatus === 'done' && (
           <div className="mt-8 flex flex-col items-center gap-4 py-8 bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] border border-[#BBF7D0] rounded-2xl">
