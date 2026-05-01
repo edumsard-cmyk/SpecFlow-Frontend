@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card'
 import { getProfile } from '@/lib/data/profile'
 import ConfiguracoesClient from './ConfiguracoesClient'
 import InviteTeamClient from './InviteTeamClient'
+import MfaSecurityNote from '@/components/configuracoes/MfaSecurityNote'
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
@@ -42,6 +43,8 @@ export default async function ConfiguracoesPage() {
         </Card>
 
         <ConfiguracoesClient />
+
+        <MfaSecurityNote />
 
         {profile.role === 'company' && <InviteTeamClient />}
 

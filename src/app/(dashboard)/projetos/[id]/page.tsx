@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, type Dispatch, type SetStateAction } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
@@ -10,6 +10,7 @@ import Card from '@/components/ui/Card'
 import RefinamentoTab from '@/components/projects/RefinamentoTab'
 import ProjectExportButtons from '@/components/projects/ProjectExportButtons'
 import ProjectNextSteps from '@/components/projects/ProjectNextSteps'
+import StoryCommentsThread, { type StoryCommentRow } from '@/components/projects/StoryCommentsThread'
 import { type ProjectStatus, STATUS_LABELS, STATUS_STEPS } from '@/types'
 import { getStatusColor } from '@/lib/utils'
 import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, deleteProjectAction, type StoryPayload } from '@/app/actions/projects'
@@ -255,7 +256,17 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
   )
 }
 
-function EspecificacaoTab({ projectId, initialStories }: { projectId: string; initialStories: Story[] }) {
+function EspecificacaoTab({
+  projectId,
+  initialStories,
+  storyComments,
+  setStoryComments,
+}: {
+  projectId: string
+  initialStories: Story[]
+  storyComments: StoryCommentRow[]
+  setStoryComments: Dispatch<SetStateAction<StoryCommentRow[]>>
+}) {
   const [stories, setStories] = useState<Story[]>(initialStories.length > 0 ? initialStories : INITIAL_STORIES)
   const [addingNew, setAddingNew] = useState(false)
   const [newStory, setNewStory] = useState<Omit<Story, 'id'>>({ title: '', description: '', criteria: [] })
@@ -370,13 +381,21 @@ function EspecificacaoTab({ projectId, initialStories }: { projectId: string; in
       </div>
 
       {stories.map((story, i) => (
-        <StoryCard
-          key={story.id}
-          story={story}
-          index={i}
-          onUpdate={s => updateStory(i, s)}
-          onDelete={() => deleteStory(i)}
-        />
+        <div key={story.id} className="space-y-0">
+          <StoryCard
+            story={story}
+            index={i}
+            onUpdate={s => updateStory(i, s)}
+            onDelete={() => deleteStory(i)}
+          />
+          <StoryCommentsThread
+            projectId={projectId}
+            storyCode={story.id}
+            comments={storyComments.filter(c => c.story_code === story.id)}
+            onAdded={c => setStoryComments(prev => [...prev, c])}
+            onDeleted={id => setStoryComments(prev => prev.filter(x => x.id !== id))}
+          />
+        </div>
       ))}
 
       {addingNew && (
@@ -1016,6 +1035,7 @@ export default function ProjetoPage() {
   const [refinementMessages, setRefinementMessages] = useState<
     { role: 'ai' | 'user'; content: string }[]
   >([])
+  const [storyComments, setStoryComments] = useState<StoryCommentRow[]>([])
   const [initialStories, setInitialStories] = useState<Story[]>([])
   const [initialDocSections, setInitialDocSections] = useState<DocSection[] | null>(null)
   const [initialManualSections, setInitialManualSections] = useState<ManualSection[] | null>(null)
@@ -1048,6 +1068,9 @@ export default function ProjetoPage() {
               })
             )
           )
+        }
+        if (Array.isArray(data.storyComments)) {
+          setStoryComments(data.storyComments as StoryCommentRow[])
         }
         if (Array.isArray(data.stories) && data.stories.length > 0) {
           setInitialStories(data.stories.map((s: { code: string; title: string; description: string; acceptance_criteria: string[] }) => ({
@@ -1304,7 +1327,14 @@ export default function ProjetoPage() {
             initialMessages={refinementMessages}
           />
         </div>
-        {!loadingData && activeTab === 'specification' && <EspecificacaoTab projectId={projectId} initialStories={initialStories} />}
+        {!loadingData && activeTab === 'specification' && (
+          <EspecificacaoTab
+            projectId={projectId}
+            initialStories={initialStories}
+            storyComments={storyComments}
+            setStoryComments={setStoryComments}
+          />
+        )}
         {!loadingData && activeTab === 'documentation' && <DocumentacaoTab projectId={projectId} initialContent={initialDocSections} />}
         {!loadingData && activeTab === 'manual' && <ManualTab projectId={projectId} projectName={projectName} initialSections={initialManualSections} />}
 

@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/data/profile'
+import { logAudit } from '@/lib/data/audit'
 
 /** Convite por e-mail para usuário `user` na mesma empresa do gestor (role `company`). */
 export async function inviteTeamMemberAction(
@@ -42,6 +43,14 @@ export async function inviteTeamMemberAction(
     .eq('id', data.user.id)
 
   if (profileError) return { error: 'Convite enviado, mas falhou ao vincular o perfil à empresa.' }
+
+  await logAudit({
+    action: 'team.invite',
+    entityType: 'profile',
+    entityId: data.user.id,
+    companyId: profile.company_id,
+    metadata: { email: em, name: n },
+  })
 
   return { ok: true }
 }

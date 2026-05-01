@@ -1,8 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createProject, updateProjectStatus } from '@/lib/data/projects'
+import { createProject, updateProjectStatus, getProject } from '@/lib/data/projects'
 import { saveBriefing } from '@/lib/data/briefings'
+import { logAudit } from '@/lib/data/audit'
 import { createClient } from '@/lib/supabase/server'
 import { type Database } from '@/lib/supabase/types'
 
@@ -30,6 +31,14 @@ export async function createProjectAction(payload: CreateProjectPayload): Promis
       content: payload.briefingContent,
     })
 
+    await logAudit({
+      action: 'project.create',
+      entityType: 'project',
+      entityId: project.id,
+      companyId: project.company_id,
+      metadata: { name: project.name },
+    })
+
     revalidatePath('/projetos')
     return { projectId: project.id }
   } catch (err) {
@@ -50,7 +59,15 @@ export async function updateProjectStatusAction(
     done: 100,
   }
   try {
+    const proj = await getProject(projectId)
     await updateProjectStatus(projectId, status, STATUS_PROGRESS[status])
+    await logAudit({
+      action: 'project.status',
+      entityType: 'project',
+      entityId: projectId,
+      companyId: proj?.company_id ?? null,
+      metadata: { status },
+    })
     revalidatePath(`/projetos/${projectId}`)
     revalidatePath('/projetos')
     revalidatePath('/dashboard')
@@ -91,6 +108,15 @@ export async function saveUserStoriesAction(
       if (error) throw new Error(error.message)
     }
 
+    const proj = await getProject(projectId)
+    await logAudit({
+      action: 'project.stories.save',
+      entityType: 'project',
+      entityId: projectId,
+      companyId: proj?.company_id ?? null,
+      metadata: { count: stories.length },
+    })
+
     revalidatePath(`/projetos/${projectId}`)
     return {}
   } catch (err) {
@@ -101,6 +127,14 @@ export async function saveUserStoriesAction(
 export async function deleteProjectAction(projectId: string): Promise<{ error?: string }> {
   try {
     const supabase = await createClient()
+    const proj = await getProject(projectId)
+    await logAudit({
+      action: 'project.delete',
+      entityType: 'project',
+      entityId: projectId,
+      companyId: proj?.company_id ?? null,
+      metadata: { name: proj?.name },
+    })
 
     await Promise.all([
       supabase.from('user_stories').delete().eq('project_id', projectId),
@@ -146,6 +180,15 @@ export async function saveDocumentAction(
         .insert({ project_id: projectId, type, content, version: 1 })
       if (error) throw new Error(error.message)
     }
+
+    const proj = await getProject(projectId)
+    await logAudit({
+      action: 'document.save',
+      entityType: 'project',
+      entityId: projectId,
+      companyId: proj?.company_id ?? null,
+      metadata: { docType: type },
+    })
 
     revalidatePath(`/projetos/${projectId}`)
     return {}

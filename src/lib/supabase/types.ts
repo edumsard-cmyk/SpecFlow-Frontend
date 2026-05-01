@@ -219,6 +219,66 @@ export interface Database {
         }
         Relationships: Relationship[]
       }
+      audit_logs: {
+        Row: {
+          id: string
+          company_id: string | null
+          user_id: string | null
+          action: string
+          entity_type: string
+          entity_id: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id?: string | null
+          user_id?: string | null
+          action: string
+          entity_type: string
+          entity_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string | null
+          user_id?: string | null
+          action?: string
+          entity_type?: string
+          entity_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: Relationship[]
+      }
+      story_comments: {
+        Row: {
+          id: string
+          project_id: string
+          story_code: string
+          user_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          story_code: string
+          user_id: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          story_code?: string
+          user_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: Relationship[]
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
