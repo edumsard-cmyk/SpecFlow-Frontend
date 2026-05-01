@@ -108,9 +108,14 @@ export default function CadastroPage() {
 
           <p className="text-xs text-[#9CA3AF]">
             Ao se cadastrar, você concorda com os{' '}
-            <a href="#" className="text-[#1D4ED8] hover:underline">Termos de Uso</a>
+            <Link href="/termos" className="text-[#1D4ED8] hover:underline">
+              Termos de Uso
+            </Link>
             {' '}e{' '}
-            <a href="#" className="text-[#1D4ED8] hover:underline">Política de Privacidade</a>.
+            <Link href="/privacidade" className="text-[#1D4ED8] hover:underline">
+              Política de Privacidade
+            </Link>
+            .
           </p>
 
           <Button type="submit" className="w-full" size="lg" loading={isPending}>

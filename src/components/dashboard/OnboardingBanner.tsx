@@ -31,7 +31,7 @@ const STEPS = [
       </svg>
     ),
     title: 'Exporte a especificação',
-    desc: 'Gere histórias, documentação e manual em PDF.',
+    desc: 'Na página do projeto, baixe o pacote completo (.md ou PDF) com tudo que já foi salvo.',
   },
 ]
 

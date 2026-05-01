@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
 import RefinamentoTab from '@/components/projects/RefinamentoTab'
+import ProjectExportButtons from '@/components/projects/ProjectExportButtons'
+import ProjectNextSteps from '@/components/projects/ProjectNextSteps'
 import { type ProjectStatus, STATUS_LABELS, STATUS_STEPS } from '@/types'
 import { getStatusColor } from '@/lib/utils'
 import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, deleteProjectAction, type StoryPayload } from '@/app/actions/projects'
@@ -1214,9 +1216,17 @@ export default function ProjetoPage() {
               </svg>
             </button>
             <Badge className={getStatusColor(projectStatus)}>{STATUS_LABELS[projectStatus]}</Badge>
+            <ProjectExportButtons
+              projectId={projectId}
+              disabled={loadingData}
+            />
           </div>
         }
       />
+
+      <div className="px-6 pt-4">
+        <ProjectNextSteps status={projectStatus} />
+      </div>
 
       {/* Progress strip */}
       <div className="bg-white border-b border-[#E5E7EB] px-6 py-3">

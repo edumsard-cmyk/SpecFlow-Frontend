@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header'
 import Card from '@/components/ui/Card'
 import { getProfile } from '@/lib/data/profile'
 import ConfiguracoesClient from './ConfiguracoesClient'
+import InviteTeamClient from './InviteTeamClient'
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
@@ -42,9 +43,29 @@ export default async function ConfiguracoesPage() {
 
         <ConfiguracoesClient />
 
-        <p className="text-xs text-[#9CA3AF]">
+        {profile.role === 'company' && <InviteTeamClient />}
+
+        {profile.role === 'admin' && (
+          <div className="rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-5 text-sm text-[#64748B]">
+            Como administrador, crie ou vincule usuários no{' '}
+            <Link href="/admin/usuarios" className="text-[#1E3A8A] font-medium hover:underline">
+              Painel Admin · Usuários
+            </Link>
+            .
+          </div>
+        )}
+
+        <p className="text-xs text-[#9CA3AF] flex flex-wrap gap-x-3 gap-y-1">
           <Link href="/dashboard" className="text-[#1E3A8A] hover:underline">
             Voltar ao dashboard
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/termos" className="text-[#1E3A8A] hover:underline">
+            Termos
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/privacidade" className="text-[#1E3A8A] hover:underline">
+            Privacidade
           </Link>
         </p>
       </div>

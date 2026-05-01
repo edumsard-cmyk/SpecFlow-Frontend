@@ -79,6 +79,25 @@ export async function logout() {
   redirect('/login')
 }
 
+export async function requestPasswordResetForEmail(
+  email: string
+): Promise<{ error?: string; ok?: boolean }> {
+  const trimmed = email.trim()
+  if (!trimmed) return { error: 'Informe o e-mail.' }
+
+  const supabase = await createClient()
+  const vercelUrl = process.env.VERCEL_URL
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ?? (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000')
+
+  const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+    redirectTo: `${siteUrl}/reset-password`,
+  })
+
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
 export async function requestPasswordResetForCurrentUser(): Promise<{ error?: string; ok?: boolean }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
