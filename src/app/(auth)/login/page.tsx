@@ -126,6 +126,10 @@ export default function LoginPage() {
         </p>
 
         <p className="text-center text-xs text-[#94A3B8] mt-5 flex flex-wrap justify-center gap-x-3 gap-y-1">
+          <Link href="/ajuda" className="hover:text-white transition-colors">
+            Ajuda
+          </Link>
+          <span aria-hidden="true">·</span>
           <Link href="/termos" className="hover:text-white transition-colors">
             Termos de uso
           </Link>

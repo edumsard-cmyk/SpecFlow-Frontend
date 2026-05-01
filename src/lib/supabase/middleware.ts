@@ -33,12 +33,14 @@ export async function updateSession(request: NextRequest) {
   const isResetPasswordRoute = pathname.startsWith('/reset-password')
   const isLegalRoute = pathname.startsWith('/termos') || pathname.startsWith('/privacidade')
   const isForgotPasswordRoute = pathname.startsWith('/esqueci-senha')
+  const isHelpRoute = pathname.startsWith('/ajuda')
   const isPublicRoute =
     pathname === '/' ||
     isAuthRoute ||
     isResetPasswordRoute ||
     isLegalRoute ||
-    isForgotPasswordRoute
+    isForgotPasswordRoute ||
+    isHelpRoute
 
   // Redireciona para login se não autenticado em rota protegida
   if (!user && !isPublicRoute) {

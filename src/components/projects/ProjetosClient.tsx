@@ -167,9 +167,17 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
               {search ? `Nenhum resultado para "${search}"` : 'Crie seu primeiro projeto para começar'}
             </p>
             {!search && (
-              <Link href="/projetos/novo">
-                <Button>Criar projeto</Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Link href="/projetos/novo">
+                  <Button>Criar projeto</Button>
+                </Link>
+                <Link
+                  href="/ajuda"
+                  className="text-sm text-[#1E3A8A] font-medium hover:underline"
+                >
+                  Ver guia de primeiro uso
+                </Link>
+              </div>
             )}
           </div>
         ) : view === 'grid' ? (

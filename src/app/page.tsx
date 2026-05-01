@@ -16,6 +16,12 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
+              href="/ajuda"
+              className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors px-3 py-2"
+            >
+              Ajuda
+            </Link>
+            <Link
               href="/login"
               className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors px-3 py-2"
             >
@@ -288,6 +294,7 @@ export default function LandingPage() {
           </div>
           <p className="text-sm text-[#9CA3AF]">© {new Date().getFullYear()} SpecFlow. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4 text-sm text-[#9CA3AF]">
+            <Link href="/ajuda" className="hover:text-[#111827] transition-colors">Ajuda</Link>
             <Link href="/login" className="hover:text-[#111827] transition-colors">Entrar</Link>
             <Link href="/cadastro" className="hover:text-[#111827] transition-colors">Cadastrar</Link>
           </div>

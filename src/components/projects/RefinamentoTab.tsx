@@ -16,6 +16,22 @@ interface RefinamentoTabProps {
   initialMessages?: Message[]
 }
 
+async function refinementErrorMessage(res: Response): Promise<string> {
+  if (res.status === 429) {
+    return 'Muitas requisições. Aguarde um instante e tente de novo.'
+  }
+  if (res.status >= 500) {
+    return 'Serviço temporariamente indisponível. Tente novamente em alguns minutos.'
+  }
+  try {
+    const j = (await res.json()) as { error?: unknown }
+    if (typeof j.error === 'string' && j.error.trim()) return j.error
+  } catch {
+    /* corpo pode não ser JSON */
+  }
+  return 'Não foi possível conectar ao refinamento. Verifique sua internet e tente de novo.'
+}
+
 export default function RefinamentoTab({
   projectId,
   briefing,
@@ -61,7 +77,7 @@ export default function RefinamentoTab({
         body: JSON.stringify({ messages: apiMessages, briefing }),
       })
 
-      if (!res.ok) throw new Error('Erro na API')
+      if (!res.ok) throw new Error(await refinementErrorMessage(res))
 
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
@@ -104,11 +120,13 @@ export default function RefinamentoTab({
         void appendRefinementMessageAction(projectId, 'ai', accumulated)
       }
     } catch (err) {
+      const fallback = 'Ocorreu um erro ao processar sua mensagem. Tente novamente.'
+      const text = err instanceof Error && err.message ? err.message : fallback
       setMessages(prev => {
         const updated = [...prev]
         updated[updated.length - 1] = {
           role: 'ai',
-          content: 'Ocorreu um erro ao processar sua mensagem. Tente novamente.',
+          content: text,
           streaming: false,
         }
         return updated

@@ -129,6 +129,20 @@ export default function CadastroPage() {
             Entrar
           </Link>
         </p>
+
+        <p className="text-center text-xs text-[#94A3B8] mt-5 flex flex-wrap justify-center gap-x-3 gap-y-1">
+          <Link href="/ajuda" className="hover:text-[#64748B] transition-colors">
+            Ajuda
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/termos" className="hover:text-[#64748B] transition-colors">
+            Termos
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/privacidade" className="hover:text-[#64748B] transition-colors">
+            Privacidade
+          </Link>
+        </p>
       </div>
     </div>
   )

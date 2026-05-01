@@ -58,9 +58,40 @@ export default async function ConfiguracoesPage() {
           </div>
         )}
 
+        <Card padding="lg" className="space-y-3">
+          <h2 className="text-sm font-semibold text-[#374151]">Suporte e ajuda</h2>
+          <p className="text-sm text-[#6B7280] leading-relaxed">
+            Dúvidas sobre fluxo, exportação ou primeiro acesso? Consulte a{' '}
+            <Link href="/ajuda" className="text-[#1E3A8A] font-medium hover:underline">
+              central de ajuda
+            </Link>
+            .
+          </p>
+          {process.env.NEXT_PUBLIC_SUPPORT_EMAIL ? (
+            <p className="text-sm text-[#374151]">
+              Contato da organização:{' '}
+              <a
+                href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
+                className="text-[#1E3A8A] font-medium hover:underline break-all"
+              >
+                {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+              </a>
+            </p>
+          ) : (
+            <p className="text-xs text-[#9CA3AF]">
+              Para exibir um e-mail de suporte aqui, defina a variável{' '}
+              <code className="text-[#64748B]">NEXT_PUBLIC_SUPPORT_EMAIL</code> no ambiente de deploy.
+            </p>
+          )}
+        </Card>
+
         <p className="text-xs text-[#9CA3AF] flex flex-wrap gap-x-3 gap-y-1">
           <Link href="/dashboard" className="text-[#1E3A8A] hover:underline">
             Voltar ao dashboard
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/ajuda" className="text-[#1E3A8A] hover:underline">
+            Ajuda
           </Link>
           <span aria-hidden="true">·</span>
           <Link href="/termos" className="text-[#1E3A8A] hover:underline">
