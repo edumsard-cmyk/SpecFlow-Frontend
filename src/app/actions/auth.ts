@@ -20,7 +20,9 @@ export async function login(formData: FormData) {
   redirect('/dashboard')
 }
 
-export async function signup(formData: FormData) {
+export async function signup(
+  formData: FormData
+): Promise<{ error: string } | { needsEmailConfirmation: true }> {
   const supabase = await createClient()
 
   const name = formData.get('name') as string
@@ -69,6 +71,12 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
+
+  // Confirmação de e-mail ativa no Supabase → sem sessão até o utilizador confirmar
+  if (!authData.session) {
+    return { needsEmailConfirmation: true }
+  }
+
   redirect('/dashboard')
 }
 

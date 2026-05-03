@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { getBriefing } from '@/lib/data/briefings'
 import { createClient } from '@/lib/supabase/server'
+import { consumeAiRateLimit } from '@/lib/api/ai-rate-limit'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
+
+const GENERATE_TYPES = ['stories', 'doc', 'manual'] as const
+type GenerateType = (typeof GENERATE_TYPES)[number]
+
+function isGenerateType(t: unknown): t is GenerateType {
+  return typeof t === 'string' && (GENERATE_TYPES as readonly string[]).includes(t)
+}
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
@@ -53,14 +61,38 @@ ${storiesText}`
 }
 
 export async function POST(req: NextRequest) {
-  const { type, projectId } = await req.json()
+  const { type, projectId } = await req.json() as { type?: unknown; projectId?: unknown }
 
-  if (!type || !projectId) {
-    return NextResponse.json({ error: 'type e projectId são obrigatórios.' }, { status: 400 })
+  if (!projectId || typeof projectId !== 'string' || !projectId.trim()) {
+    return NextResponse.json({ error: 'projectId é obrigatório.' }, { status: 400 })
+  }
+
+  if (!isGenerateType(type)) {
+    return NextResponse.json(
+      { error: 'type inválido. Use: stories, doc ou manual.' },
+      { status: 400 }
+    )
   }
 
   const supabase = await createClient()
-  const briefing = await getBriefing(projectId)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
+  }
+
+  const rl = consumeAiRateLimit(`generate:${user.id}`, 30, 60_000)
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Muitas requisições. Aguarde um instante.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) },
+      }
+    )
+  }
+
+  const pid = projectId.trim()
+  const briefing = await getBriefing(pid)
 
   if (!briefing?.content) {
     return NextResponse.json({ error: 'Briefing não encontrado.' }, { status: 404 })
@@ -71,7 +103,7 @@ export async function POST(req: NextRequest) {
     const { data: stories } = await supabase
       .from('user_stories')
       .select('code, title, description')
-      .eq('project_id', projectId)
+      .eq('project_id', pid)
     if (stories && stories.length > 0) {
       storiesText = stories.map(s => `${s.code}: ${s.title} — ${s.description}`).join('\n')
     }

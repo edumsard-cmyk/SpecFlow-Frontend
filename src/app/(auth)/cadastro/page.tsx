@@ -8,17 +8,25 @@ import { signup } from '@/app/actions/auth'
 
 export default function CadastroPage() {
   const [error, setError] = useState<string | null>(null)
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
+    setNeedsEmailConfirmation(false)
     const formData = new FormData(e.currentTarget)
 
     startTransition(async () => {
       const result = await signup(formData)
-      if (result?.error) setError(result.error)
+      if (result && 'error' in result) {
+        setError(result.error)
+        return
+      }
+      if (result && 'needsEmailConfirmation' in result) {
+        setNeedsEmailConfirmation(true)
+      }
     })
   }
 
@@ -49,7 +57,25 @@ export default function CadastroPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {needsEmailConfirmation && (
+          <div role="status" aria-live="polite" className="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-2">
+            <svg className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-sm text-emerald-900">
+              <p className="font-medium">Conta e empresa criadas.</p>
+              <p className="mt-1 text-emerald-800">
+                O próximo passo é confirmar o e-mail (caixa de entrada e spam). Depois de confirmar, aceda a{' '}
+                <Link href="/login" className="font-medium text-emerald-900 underline underline-offset-2">
+                  Entrar
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className={`space-y-4 ${needsEmailConfirmation ? 'opacity-60 pointer-events-none' : ''}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input id="name" name="name" label="Nome" placeholder="Seu nome" required autoComplete="given-name" />
             <Input id="company" name="company" label="Empresa" placeholder="Nome da empresa" required />

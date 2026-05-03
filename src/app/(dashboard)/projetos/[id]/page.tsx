@@ -1323,7 +1323,6 @@ export default function ProjetoPage() {
         <div className={activeTab === 'refinement' ? 'block' : 'hidden'}>
           <RefinamentoTab
             projectId={projectId}
-            briefing={realBriefing ?? MOCK_BRIEFING}
             initialMessages={refinementMessages}
           />
         </div>

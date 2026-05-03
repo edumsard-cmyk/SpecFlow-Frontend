@@ -12,7 +12,6 @@ interface Message {
 
 interface RefinamentoTabProps {
   projectId: string
-  briefing: string
   initialMessages?: Message[]
 }
 
@@ -34,7 +33,6 @@ async function refinementErrorMessage(res: Response): Promise<string> {
 
 export default function RefinamentoTab({
   projectId,
-  briefing,
   initialMessages = [],
 }: RefinamentoTabProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
@@ -74,7 +72,8 @@ export default function RefinamentoTab({
       const res = await fetch('/api/refinement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages, briefing }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ messages: apiMessages, projectId }),
       })
 
       if (!res.ok) throw new Error(await refinementErrorMessage(res))
@@ -134,7 +133,7 @@ export default function RefinamentoTab({
     } finally {
       setIsLoading(false)
     }
-  }, [briefing, projectId])
+  }, [projectId])
 
   const handleStart = useCallback(() => {
     setHasStarted(true)

@@ -1,10 +1,16 @@
 import Groq from 'groq-sdk'
 import { NextRequest } from 'next/server'
+import { getBriefing } from '@/lib/data/briefings'
+import { createClient } from '@/lib/supabase/server'
+import { consumeAiRateLimit } from '@/lib/api/ai-rate-limit'
 
-export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
+
+const MAX_MESSAGES = 48
+const MAX_MESSAGE_CHARS = 24_000
 
 const SYSTEM_PROMPT = `Você é o agente de refinamento do SpecFlow — uma plataforma que transforma demandas de negócio em especificações técnicas completas.
 
@@ -27,16 +33,65 @@ Seu papel é fazer perguntas inteligentes e objetivas para extrair as informaç�
 
 Seja conciso. Não explique o que vai perguntar — apenas pergunte.`
 
+function clampMessages(
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+): Array<{ role: 'user' | 'assistant'; content: string }> {
+  const sliced = messages.slice(-MAX_MESSAGES)
+  return sliced.map(m => ({
+    ...m,
+    content:
+      m.content.length > MAX_MESSAGE_CHARS
+        ? `${m.content.slice(0, MAX_MESSAGE_CHARS)}\n…`
+        : m.content,
+  }))
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { messages, briefing } = await req.json() as {
-      messages: Array<{ role: 'user' | 'assistant'; content: string }>
-      briefing: string
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return Response.json({ error: 'Não autenticado.' }, { status: 401 })
     }
 
-    const contextualMessages = messages.length === 0
-      ? [{ role: 'user' as const, content: `Briefing recebido:\n\n${briefing}` }]
-      : messages
+    const rl = consumeAiRateLimit(`refinement:${user.id}`, 40, 60_000)
+    if (!rl.ok) {
+      return Response.json(
+        { error: 'Muitas requisições. Aguarde um instante.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      )
+    }
+
+    const body = (await req.json()) as {
+      messages?: Array<{ role: 'user' | 'assistant'; content: string }>
+      projectId?: string
+    }
+
+    const projectId = typeof body.projectId === 'string' ? body.projectId.trim() : ''
+    if (!projectId) {
+      return Response.json({ error: 'projectId é obrigatório.' }, { status: 400 })
+    }
+
+    const briefingRow = await getBriefing(projectId)
+    if (!briefingRow?.content?.trim()) {
+      return Response.json({ error: 'Briefing não encontrado ou sem permissão.' }, { status: 404 })
+    }
+
+    const canonicalBriefing = briefingRow.content.trim()
+    const rawMessages = Array.isArray(body.messages) ? body.messages : []
+    const messages = clampMessages(
+      rawMessages.filter(
+        m =>
+          m &&
+          (m.role === 'user' || m.role === 'assistant') &&
+          typeof m.content === 'string'
+      )
+    )
+
+    const contextualMessages =
+      messages.length === 0
+        ? [{ role: 'user' as const, content: `Briefing recebido:\n\n${canonicalBriefing}` }]
+        : messages
 
     const stream = await client.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
