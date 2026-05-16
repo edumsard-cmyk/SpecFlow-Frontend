@@ -1,6 +1,6 @@
 'use client'
 
-import { STATUS_STEPS, type ProjectStatus } from '@/types'
+import { STATUS_STEPS, normalizeWorkflowStatus, type ProjectStatus } from '@/types'
 import { useI18n } from '@/components/i18n/I18nProvider'
 
 interface ProjectNextStepsProps {
@@ -13,7 +13,7 @@ export default function ProjectNextSteps({ status }: ProjectNextStepsProps) {
 
   if (status === 'done') return null
 
-  const idx = STATUS_STEPS.indexOf(status)
+  const idx = STATUS_STEPS.indexOf(normalizeWorkflowStatus(status))
   const pending = STATUS_STEPS.filter(s => s !== 'done').filter((_, i) => i > idx)
 
   if (pending.length === 0) return null

@@ -58,7 +58,7 @@ export const MOCK_PROJECTS: Project[] = [
     company_id: '1',
     created_by: '1',
     created_at: '2024-03-14T08:30:00Z',
-    status: 'documentation',
+    status: 'manual',
     progress: 50,
   },
   {

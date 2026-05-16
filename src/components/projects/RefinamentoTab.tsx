@@ -14,6 +14,9 @@ interface Message {
 interface RefinamentoTabProps {
   projectId: string
   initialMessages?: Message[]
+  /** Inicia o chat automaticamente (sem clicar em Iniciar). */
+  autoStart?: boolean
+  onMessagesChange?: (messages: Message[]) => void
 }
 
 async function refinementErrorMessage(
@@ -38,6 +41,8 @@ async function refinementErrorMessage(
 export default function RefinamentoTab({
   projectId,
   initialMessages = [],
+  autoStart = false,
+  onMessagesChange,
 }: RefinamentoTabProps) {
   const { t } = useI18n()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
@@ -55,11 +60,23 @@ export default function RefinamentoTab({
     scrollToBottom()
   }, [messages])
 
+  const lastNotifiedRef = useRef('')
   useEffect(() => {
-    if (initialMessages.length > 0) {
-      setMessages(initialMessages)
-      setHasStarted(true)
-    }
+    if (!onMessagesChange) return
+    const stable = messages.filter(m => !m.streaming)
+    const key = JSON.stringify(stable)
+    if (key === lastNotifiedRef.current) return
+    lastNotifiedRef.current = key
+    onMessagesChange(stable)
+  }, [messages, onMessagesChange])
+
+  const initialSyncedRef = useRef(false)
+  useEffect(() => {
+    if (initialSyncedRef.current || initialMessages.length === 0) return
+    initialSyncedRef.current = true
+    setMessages(initialMessages)
+    setHasStarted(true)
+    lastNotifiedRef.current = JSON.stringify(initialMessages)
   }, [initialMessages])
 
   const sendToAI = useCallback(async (userMessages: Message[]) => {
@@ -139,6 +156,14 @@ export default function RefinamentoTab({
       setIsLoading(false)
     }
   }, [projectId, t])
+
+  const autoStartedRef = useRef(false)
+  useEffect(() => {
+    if (!autoStart || autoStartedRef.current || initialMessages.length > 0) return
+    autoStartedRef.current = true
+    setHasStarted(true)
+    sendToAI([])
+  }, [autoStart, initialMessages.length, sendToAI])
 
   const handleStart = useCallback(() => {
     setHasStarted(true)

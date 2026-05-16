@@ -8,7 +8,8 @@ import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
-import { createProjectAction } from '@/app/actions/projects'
+import { createProjectAction, getProjectQuotaAction } from '@/app/actions/projects'
+import { PROJECT_LIMIT_REACHED_CODE, type ProjectQuota } from '@/lib/projects/quota-constants'
 import { useI18n } from '@/components/i18n/I18nProvider'
 
 type InputTypeId = 'text' | 'audio' | 'document' | 'form' | 'video'
@@ -207,7 +208,7 @@ function AudioInput({ onReady }: { onReady: (file: File | Blob | null) => void }
 
 /* ── Vídeo ───────────────────────────────────────────────────── */
 
-function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
+function VideoInput({ onReady }: { onReady: (file: File | Blob | null) => void }) {
   const { t } = useI18n()
   const [isRecording, setIsRecording] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
@@ -240,7 +241,7 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' })
         const url = URL.createObjectURL(blob)
         setVideoUrl(url)
-        onChange(true)
+        onReady(blob)
         stream.getTracks().forEach(track => track.stop())
         if (previewRef.current) previewRef.current.srcObject = null
       }
@@ -267,13 +268,13 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
     if (videoUrl) URL.revokeObjectURL(videoUrl)
     const url = URL.createObjectURL(file)
     setVideoUrl(url)
-    onChange(true)
+    onReady(file)
   }
 
   const reset = () => {
     if (videoUrl) URL.revokeObjectURL(videoUrl)
     setVideoUrl(null)
-    onChange(false)
+    onReady(null)
     setRecordingTime(0)
   }
 
@@ -360,7 +361,7 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
 
 /* ── Documento ───────────────────────────────────────────────── */
 
-function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
+function DocumentInput({ onReady }: { onReady: (file: File | null) => void }) {
   const { t } = useI18n()
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -370,7 +371,7 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
 
   const handleFile = (f: File) => {
     setFile(f)
-    onChange(true)
+    onReady(f)
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -429,7 +430,7 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
           </div>
           <button
             type="button"
-            onClick={() => { setFile(null); onChange(false) }}
+            onClick={() => { setFile(null); onReady(null) }}
             className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors"
           >
             {t('newProject.removeFile')}
@@ -493,21 +494,29 @@ function GuidedFormInput({
   )
 }
 
+function fillTemplate(template: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce(
+    (acc, [key, value]) => acc.replaceAll(`{{${key}}}`, String(value)),
+    template
+  )
+}
+
 /* ── Main page ───────────────────────────────────────────────── */
 
 export default function NovoProjeto() {
   const router = useRouter()
   const { t } = useI18n()
   const [isPending, startTransition] = useTransition()
+  const [quota, setQuota] = useState<ProjectQuota | null>(null)
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [inputType, setInputType] = useState<InputTypeId>('text')
   const [briefing, setBriefing] = useState('')
   const [audioFile, setAudioFile] = useState<File | Blob | null>(null)
-  const [hasDocument, setHasDocument] = useState(false)
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [videoFile, setVideoFile] = useState<File | Blob | null>(null)
   const [hasForm, setHasForm] = useState(false)
-  const [hasVideo, setHasVideo] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
 
@@ -533,14 +542,22 @@ export default function NovoProjeto() {
 
   useEffect(() => {
     if (inputType !== 'audio') setAudioFile(null)
+    if (inputType !== 'document') setDocumentFile(null)
+    if (inputType !== 'video') setVideoFile(null)
   }, [inputType])
+
+  useEffect(() => {
+    getProjectQuotaAction().then(setQuota)
+  }, [])
+
+  const atProjectLimit = quota != null && !quota.isUnlimited && !quota.canCreate
 
   const isStep2Valid = () => {
     if (inputType === 'text') return briefing.trim().length >= 10
     if (inputType === 'audio') return audioFile !== null
-    if (inputType === 'document') return hasDocument
+    if (inputType === 'document') return documentFile !== null
     if (inputType === 'form') return hasForm
-    if (inputType === 'video') return hasVideo
+    if (inputType === 'video') return videoFile !== null
     return false
   }
 
@@ -552,6 +569,7 @@ export default function NovoProjeto() {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
     if (!isStep2Valid()) return
+    if (atProjectLimit) return
     setError(null)
 
     if (inputType === 'audio') {
@@ -569,14 +587,95 @@ export default function NovoProjeto() {
                 })
           fd.append('audio', upload)
           const res = await fetch('/api/projects/from-audio', { method: 'POST', body: fd })
-          const data = (await res.json()) as { projectId?: string; error?: string }
+          const data = (await res.json()) as {
+            projectId?: string
+            error?: string
+            code?: string
+          }
           if (!res.ok || !data.projectId) {
-            setError(data.error ?? t('newProject.errorAudioCreate'))
+            setError(
+              data.code === PROJECT_LIMIT_REACHED_CODE
+                ? fillTemplate(t('newProject.limitBannerBody'), {
+                    used: String(quota?.used ?? 3),
+                    limit: String(quota?.limit ?? 3),
+                  })
+                : (data.error ?? t('newProject.errorAudioCreate'))
+            )
             return
           }
           router.push(`/projetos/${data.projectId}`)
         } catch {
           setError(t('newProject.errorAudioSend'))
+        }
+      })
+      return
+    }
+
+    if (inputType === 'document') {
+      if (!documentFile) return
+      startTransition(async () => {
+        try {
+          const fd = new FormData()
+          fd.append('name', name.trim())
+          fd.append('description', description.trim())
+          fd.append('document', documentFile)
+          const res = await fetch('/api/projects/from-document', { method: 'POST', body: fd })
+          const data = (await res.json()) as {
+            projectId?: string
+            error?: string
+            code?: string
+          }
+          if (!res.ok || !data.projectId) {
+            setError(
+              data.code === PROJECT_LIMIT_REACHED_CODE
+                ? fillTemplate(t('newProject.limitBannerBody'), {
+                    used: String(quota?.used ?? 3),
+                    limit: String(quota?.limit ?? 3),
+                  })
+                : (data.error ?? t('newProject.errorDocCreate'))
+            )
+            return
+          }
+          router.push(`/projetos/${data.projectId}`)
+        } catch {
+          setError(t('newProject.errorDocSend'))
+        }
+      })
+      return
+    }
+
+    if (inputType === 'video') {
+      if (!videoFile) return
+      startTransition(async () => {
+        try {
+          const fd = new FormData()
+          fd.append('name', name.trim())
+          fd.append('description', description.trim())
+          const upload =
+            videoFile instanceof File
+              ? videoFile
+              : new File([videoFile], 'briefing.webm', { type: videoFile.type || 'video/webm' })
+          fd.append('video', upload)
+          const res = await fetch('/api/projects/from-video', { method: 'POST', body: fd })
+          const data = (await res.json()) as {
+            projectId?: string
+            error?: string
+            code?: string
+          }
+          if (!res.ok || !data.projectId) {
+            setError(
+              data.code === PROJECT_LIMIT_REACHED_CODE
+                ? fillTemplate(t('newProject.limitBannerBody'), {
+                    used: String(quota?.used ?? 3),
+                    limit: String(quota?.limit ?? 3),
+                  })
+                : (data.error ?? t('newProject.errorVideoCreate'))
+            )
+            return
+          }
+          router.push(`/projetos/${data.projectId}`)
+        } catch {
+          setError(t('newProject.errorVideoSend'))
         }
       })
       return
@@ -589,14 +688,19 @@ export default function NovoProjeto() {
           const q = guidedQuestions.find(g => g.id === k)
           return q ? `${q.label}\n${v}` : v
         }).join('\n\n')
-      : inputType === 'video'
-      ? t('newProject.placeholderVideo')
-      : t('newProject.placeholderDoc')
+      : ''
 
     startTransition(async () => {
       const result = await createProjectAction({ name, description, inputType, briefingContent })
       if (result.error) {
-        setError(result.error)
+        setError(
+          result.code === PROJECT_LIMIT_REACHED_CODE
+            ? fillTemplate(t('newProject.limitBannerBody'), {
+                used: String(quota?.used ?? 3),
+                limit: String(quota?.limit ?? 3),
+              })
+            : result.error
+        )
       } else {
         router.push(`/projetos/${result.projectId}`)
       }
@@ -621,6 +725,33 @@ export default function NovoProjeto() {
       />
 
       <div className="flex-1 p-6 max-w-2xl mx-auto w-full">
+        {atProjectLimit && quota && (
+          <Card padding="md" className="mb-6 border border-amber-200 bg-amber-50">
+            <p className="text-sm font-semibold text-amber-900">{t('newProject.limitBannerTitle')}</p>
+            <p className="text-sm text-amber-800 mt-1">
+              {fillTemplate(t('newProject.limitBannerBody'), {
+                used: quota.used,
+                limit: quota.limit,
+              })}
+            </p>
+            <Link
+              href="/projetos"
+              className="text-sm font-medium text-[#1E3A8A] hover:underline mt-3 inline-block"
+            >
+              {t('detail.viewAllProjects')}
+            </Link>
+          </Card>
+        )}
+
+        {quota && !quota.isUnlimited && !atProjectLimit && (
+          <p className="text-xs text-[#9CA3AF] mb-4">
+            {fillTemplate(t('newProject.limitQuotaHint'), {
+              used: quota.used,
+              limit: quota.limit,
+            })}
+          </p>
+        )}
+
         {/* Steps indicator */}
         <div className="flex items-center gap-3 mb-8">
           {[
@@ -682,7 +813,7 @@ export default function NovoProjeto() {
             </Card>
 
             <div className="flex justify-end">
-              <Button type="submit" size="lg" disabled={!name.trim()}>
+              <Button type="submit" size="lg" disabled={!name.trim() || atProjectLimit}>
                 {t('newProject.continue')}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -748,8 +879,8 @@ export default function NovoProjeto() {
             )}
 
             {inputType === 'audio' && <AudioInput onReady={setAudioFile} />}
-            {inputType === 'video' && <VideoInput onChange={setHasVideo} />}
-            {inputType === 'document' && <DocumentInput onChange={setHasDocument} />}
+            {inputType === 'video' && <VideoInput onReady={setVideoFile} />}
+            {inputType === 'document' && <DocumentInput onReady={setDocumentFile} />}
             {inputType === 'form' && (
               <GuidedFormInput questions={guidedQuestions} onChange={setHasForm} onAnswers={setFormAnswers} />
             )}
@@ -767,7 +898,12 @@ export default function NovoProjeto() {
                 </svg>
                 {t('newProject.back')}
               </Button>
-              <Button type="submit" size="lg" loading={isPending} disabled={!isStep2Valid() || isPending}>
+              <Button
+                type="submit"
+                size="lg"
+                loading={isPending}
+                disabled={!isStep2Valid() || isPending || atProjectLimit}
+              >
                 {!isPending && (
                   <>
                     {t('newProject.createSubmit')}

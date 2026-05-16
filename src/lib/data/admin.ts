@@ -76,6 +76,140 @@ export async function getCompanyUsers(companyId: string): Promise<UserWithStats[
   return users
 }
 
+export interface PlatformStats {
+  companies: number
+  users: number
+  projects: number
+  stories: number
+  companiesThisMonth: number
+  usersThisMonth: number
+  projectsThisMonth: number
+  storiesThisMonth: number
+  companiesPrevMonth: number
+  usersPrevMonth: number
+  projectsPrevMonth: number
+  storiesPrevMonth: number
+}
+
+function startOfMonthUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))
+}
+
+function formatMonthChange(thisMonth: number, previousMonth: number): string {
+  if (thisMonth === 0 && previousMonth === 0) return 'Sem novos este mês'
+  if (thisMonth === 0) return 'Nenhum novo este mês'
+  if (previousMonth === 0) return `+${thisMonth} este mês`
+  const diff = thisMonth - previousMonth
+  if (diff > 0) return `+${diff} vs. mês anterior`
+  if (diff < 0) return `${diff} vs. mês anterior`
+  return `${thisMonth} este mês`
+}
+
+/** Totais globais para o painel admin (requer perfil admin via RLS). */
+export async function getPlatformStats(): Promise<PlatformStats | null> {
+  const supabase = await createClient()
+
+  const now = new Date()
+  const thisMonthStart = startOfMonthUTC(now)
+  const prevMonthStart = startOfMonthUTC(
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
+  )
+  const thisMonthIso = thisMonthStart.toISOString()
+  const prevMonthIso = prevMonthStart.toISOString()
+
+  const [
+    companies,
+    users,
+    projects,
+    stories,
+    companiesThisMonth,
+    usersThisMonth,
+    projectsThisMonth,
+    storiesThisMonth,
+    companiesPrevMonth,
+    usersPrevMonth,
+    projectsPrevMonth,
+    storiesPrevMonth,
+  ] = await Promise.all([
+    supabase.from('companies').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('projects').select('*', { count: 'exact', head: true }),
+    supabase.from('user_stories').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('companies')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', thisMonthIso),
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', thisMonthIso),
+    supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', thisMonthIso),
+    supabase
+      .from('user_stories')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', thisMonthIso),
+    supabase
+      .from('companies')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', prevMonthIso)
+      .lt('created_at', thisMonthIso),
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', prevMonthIso)
+      .lt('created_at', thisMonthIso),
+    supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', prevMonthIso)
+      .lt('created_at', thisMonthIso),
+    supabase
+      .from('user_stories')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', prevMonthIso)
+      .lt('created_at', thisMonthIso),
+  ])
+
+  const firstError =
+    companies.error ??
+    users.error ??
+    projects.error ??
+    stories.error ??
+    companiesThisMonth.error ??
+    usersThisMonth.error ??
+    projectsThisMonth.error ??
+    storiesThisMonth.error
+
+  if (firstError) return null
+
+  return {
+    companies: companies.count ?? 0,
+    users: users.count ?? 0,
+    projects: projects.count ?? 0,
+    stories: stories.count ?? 0,
+    companiesThisMonth: companiesThisMonth.count ?? 0,
+    usersThisMonth: usersThisMonth.count ?? 0,
+    projectsThisMonth: projectsThisMonth.count ?? 0,
+    storiesThisMonth: storiesThisMonth.count ?? 0,
+    companiesPrevMonth: companiesPrevMonth.count ?? 0,
+    usersPrevMonth: usersPrevMonth.count ?? 0,
+    projectsPrevMonth: projectsPrevMonth.count ?? 0,
+    storiesPrevMonth: storiesPrevMonth.count ?? 0,
+  }
+}
+
+export function platformStatChangeLabels(stats: PlatformStats) {
+  return {
+    companies: formatMonthChange(stats.companiesThisMonth, stats.companiesPrevMonth),
+    users: formatMonthChange(stats.usersThisMonth, stats.usersPrevMonth),
+    projects: formatMonthChange(stats.projectsThisMonth, stats.projectsPrevMonth),
+    stories: formatMonthChange(stats.storiesThisMonth, stats.storiesPrevMonth),
+  }
+}
+
 export async function getAllUsersWithStats(): Promise<UserWithStats[]> {
   const supabase = await createClient()
 

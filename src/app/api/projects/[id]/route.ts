@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getProjectConclusion } from '@/lib/data/conclusion'
 import { getProject } from '@/lib/data/projects'
 import { getBriefing } from '@/lib/data/briefings'
 import { createClient } from '@/lib/supabase/server'
@@ -9,6 +10,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const [
     project,
+    conclusion,
     briefing,
     { data: stories },
     { data: documents },
@@ -16,6 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     storyCommentsRes,
   ] = await Promise.all([
     getProject(id),
+    getProjectConclusion(id),
     getBriefing(id),
     supabase.from('user_stories').select('*').eq('project_id', id).order('created_at'),
     supabase.from('documents').select('*').eq('project_id', id),
@@ -42,6 +45,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   return NextResponse.json({
     project,
+    conclusion,
     briefing,
     stories: stories ?? [],
     documents: documents ?? [],

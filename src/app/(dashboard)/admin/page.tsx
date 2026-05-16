@@ -1,26 +1,85 @@
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Card from '@/components/ui/Card'
+import { getPlatformStats, platformStatChangeLabels } from '@/lib/data/admin'
 
-const STATS = [
-  { label: 'Empresas ativas', value: '8', icon: '🏢', href: '/admin/empresas', change: '+2 este mês' },
-  { label: 'Usuários totais', value: '34', icon: '👥', href: '/admin/usuarios', change: '+7 este mês' },
-  { label: 'Projetos na plataforma', value: '47', icon: '📁', href: '/projetos', change: '+12 este mês' },
-  { label: 'Histórias geradas', value: '312', icon: '✨', href: '#', change: '+48 esta semana' },
-]
+function formatCount(n: number): string {
+  return new Intl.NumberFormat('pt-BR').format(n)
+}
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const stats = await getPlatformStats()
+  const changes = stats ? platformStatChangeLabels(stats) : null
+
+  const cards = stats
+    ? [
+        {
+          label: 'Empresas ativas',
+          value: formatCount(stats.companies),
+          icon: '🏢',
+          href: '/admin/empresas',
+          change: changes!.companies,
+        },
+        {
+          label: 'Usuários totais',
+          value: formatCount(stats.users),
+          icon: '👥',
+          href: '/admin/usuarios',
+          change: changes!.users,
+        },
+        {
+          label: 'Projetos na plataforma',
+          value: formatCount(stats.projects),
+          icon: '📁',
+          href: '/projetos',
+          change: changes!.projects,
+        },
+        {
+          label: 'Histórias geradas',
+          value: formatCount(stats.stories),
+          icon: '✨',
+          href: '/admin/auditoria',
+          change: changes!.stories,
+        },
+      ]
+    : [
+        {
+          label: 'Empresas ativas',
+          value: '—',
+          icon: '🏢',
+          href: '/admin/empresas',
+          change: 'Sem dados',
+        },
+        {
+          label: 'Usuários totais',
+          value: '—',
+          icon: '👥',
+          href: '/admin/usuarios',
+          change: 'Sem dados',
+        },
+        {
+          label: 'Projetos na plataforma',
+          value: '—',
+          icon: '📁',
+          href: '/projetos',
+          change: 'Sem dados',
+        },
+        {
+          label: 'Histórias geradas',
+          value: '—',
+          icon: '✨',
+          href: '/admin/auditoria',
+          change: 'Sem dados',
+        },
+      ]
+
   return (
     <div className="flex flex-col flex-1">
-      <Header
-        title="Painel Admin"
-        subtitle="Visão global da plataforma SpecFlow"
-      />
+      <Header title="Painel Admin" subtitle="Visão global da plataforma SpecFlow" />
 
       <div className="flex-1 p-6 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-4">
-          {STATS.map(stat => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {cards.map(stat => (
             <Link key={stat.label} href={stat.href}>
               <Card hover padding="md">
                 <div className="text-2xl mb-3">{stat.icon}</div>
@@ -32,8 +91,7 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Quick links */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link href="/admin/empresas">
             <Card hover padding="md" className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">

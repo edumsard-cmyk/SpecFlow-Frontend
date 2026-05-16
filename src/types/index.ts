@@ -1,6 +1,23 @@
 export type UserRole = 'admin' | 'company' | 'user'
 
-export type ProjectStatus = 'briefing' | 'refinement' | 'specification' | 'documentation' | 'manual' | 'done'
+export type ProjectStatus =
+  | 'briefing'
+  | 'refinement'
+  | 'specification'
+  | 'documentation'
+  | 'manual'
+  | 'conclusion'
+  | 'done'
+
+export interface ProjectConclusion {
+  /** Texto explicativo principal — o que fazer e por quê. */
+  narrative: string
+  summary: string
+  highlights: string[]
+  actionItems: string[]
+  readyToFinish: boolean
+  generatedAt: string
+}
 
 export interface User {
   id: string
@@ -50,14 +67,21 @@ export const STATUS_LABELS: Record<ProjectStatus, string> = {
   specification: 'Especificação',
   documentation: 'Documentação',
   manual: 'Manual',
+  conclusion: 'Conclusão',
   done: 'Concluído',
 }
 
+/** Etapas visíveis no fluxo (sem Documentação). */
 export const STATUS_STEPS: ProjectStatus[] = [
   'briefing',
   'specification',
-  'documentation',
   'manual',
   'refinement',
+  'conclusion',
   'done',
 ]
+
+/** Projetos antigos com status `documentation` tratam-se como Manual na UI. */
+export function normalizeWorkflowStatus(status: ProjectStatus): ProjectStatus {
+  return status === 'documentation' ? 'manual' : status
+}

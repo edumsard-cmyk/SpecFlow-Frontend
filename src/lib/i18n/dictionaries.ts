@@ -32,6 +32,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'status.specification': 'Especificação',
     'status.documentation': 'Documentação',
     'status.manual': 'Manual',
+    'status.conclusion': 'Conclusão',
     'status.done': 'Concluído',
 
     'common.cancel': 'Cancelar',
@@ -118,10 +119,26 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.finishStage': 'Concluir etapa',
     'detail.currentStageLabel': 'Etapa atual:',
     'detail.goToCurrentStage': 'Ir para etapa atual',
+    'detail.goToConclusion': 'Ir para conclusão',
+
+    'conclusion.panelTitle': 'Conclusão do refinamento',
+    'conclusion.intro':
+      'Texto gerado a partir do refinamento — leia para entender o pedido e o que precisa ser feito. Se estiver de acordo, conclua o projeto.',
+    'conclusion.narrativeLabel': 'O que precisa ser feito',
+    'conclusion.actionItemsLabel': 'Próximos passos',
+    'conclusion.summaryLabel': 'Resumo',
+    'conclusion.highlightsLabel': 'Pontos já alinhados',
+    'conclusion.recommendationsLabel': 'Recomendações',
+    'conclusion.notReadyHint':
+      'A IA indicou que ainda há pontos a alinhar. Você pode voltar ao refinamento ou concluir mesmo assim.',
+    'conclusion.generating': 'Gerando conclusão…',
+    'conclusion.regenerate': 'Atualizar conclusão',
+    'conclusion.noData': 'Ainda não há conclusão. Gere a partir do refinamento.',
+    'conclusion.errorGenerate': 'Não foi possível gerar a conclusão. Tente novamente.',
 
     'briefing.receivedTitle': 'Briefing recebido',
     'briefing.aiHint':
-      'Este texto é o que a IA usa nas etapas seguintes (especificação, documentação, manual e, por último, refinamento para revisão final). Guarde sempre que alterar.',
+      'Este texto é o que a IA usa nas etapas seguintes (especificação, manual e, por último, refinamento para revisão final). Guarde sempre que alterar.',
     'briefing.audioOriginal': 'Áudio original do briefing',
     'briefing.saveServer': 'Guardar no servidor',
     'briefing.charCount': '{{n}} caracteres (mín. 15)',
@@ -166,7 +183,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'spec.placeholder.para': 'Ex.: encontrar as funções mais rápido sem me perder',
     'spec.editStoryAria': 'Editar história',
     'spec.editorIntro':
-      'Preencha os três blocos — fica organizado para o cliente e é o texto que segue para documentação e manual.',
+      'Preencha os três blocos — fica organizado para o cliente e é o texto que segue para o manual.',
 
     'comments.title': 'Comentários',
     'comments.placeholder': 'Adicionar comentário…',
@@ -245,7 +262,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'refinement.titleStart': 'Iniciar Refinamento com IA',
     'refinement.intro':
-      'Última etapa do fluxo: use a IA para um “pente fino” — clareza, consistência e leitura do que já foi pedido e registrado nas outras abas. O contexto principal é o briefing guardado; mencione no chat o que mudou nas histórias, docs ou manual se precisar de revisão cruzada.',
+      'Última etapa do fluxo: use a IA para um “pente fino” — clareza, consistência e leitura do que já foi pedido e registrado nas outras abas. O contexto principal é o briefing guardado; mencione no chat o que mudou nas histórias ou no manual se precisar de revisão cruzada.',
     'refinement.startButton': 'Iniciar refinamento',
     'refinement.placeholderWait': 'Aguardando resposta da IA...',
     'refinement.placeholderWrite':
@@ -260,22 +277,25 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Ocorreu um erro ao processar sua mensagem. Tente novamente.',
 
     'export.hint':
-      'O arquivo reflete apenas o que já está salvo no servidor (briefing, histórias, documentação, manual e mensagens de refinamento).',
+      'O arquivo reflete apenas o que já está salvo no servidor (briefing, histórias, manual e mensagens de refinamento).',
     'export.titleMd': 'Baixar pacote completo em Markdown (somente dados salvos)',
     'export.titlePdf': 'Baixar pacote completo em PDF (somente dados salvos)',
     'export.loadError':
       'Não foi possível carregar o projeto. Verifique se você ainda tem acesso e tente de novo.',
     'export.fail':
       'Falha ao exportar. Verifique a conexão e tente novamente.',
+    'export.titleJira': 'Baixar histórias em CSV para importar no Jira',
+    'export.titleNotion': 'Baixar pacote em Markdown para o Notion',
+    'export.jiraNeedsStories': 'Gere e salve histórias na especificação antes de exportar para o Jira.',
 
     'onboarding.welcomeTitle': 'Bem-vindo ao SpecFlow!',
     'onboarding.welcomeSubtitle':
       'Em 3 passos você transforma uma demanda em especificação completa. Veja como:',
     'onboarding.step1Title': 'Crie seu primeiro projeto',
     'onboarding.step1Desc': 'Dê um nome e escolha como quer inserir a demanda.',
-    'onboarding.step2Title': 'Especificação e documentação',
+    'onboarding.step2Title': 'Especificação e manual',
     'onboarding.step2Desc':
-      'Gere histórias de usuário, documentação técnica e manual com IA a partir do briefing.',
+      'Gere histórias de usuário e manual com IA a partir do briefing.',
     'onboarding.step3Title': 'Refinar e exportar',
     'onboarding.step3Desc':
       'Na página do projeto, use o refinamento para revisar o conjunto e baixe o pacote (.md ou PDF) com o que já foi salvo.',
@@ -367,6 +387,19 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Não foi possível criar o projeto com este áudio.',
     'newProject.errorAudioSend':
       'Falha ao enviar o áudio. Verifique sua conexão e tente de novo.',
+    'newProject.errorDocCreate':
+      'Não foi possível criar o projeto com este documento.',
+    'newProject.errorDocSend':
+      'Falha ao enviar o documento. Verifique sua conexão e tente de novo.',
+    'newProject.errorVideoCreate':
+      'Não foi possível criar o projeto com este vídeo.',
+    'newProject.errorVideoSend':
+      'Falha ao enviar o vídeo. Verifique sua conexão e tente de novo.',
+    'newProject.limitBannerTitle': 'Limite do plano gratuito atingido',
+    'newProject.limitBannerBody':
+      'Sua empresa já tem {{used}} de {{limit}} projetos. Apague um projeto existente para criar outro.',
+    'newProject.limitQuotaHint': '{{used}}/{{limit}} projetos usados',
+    'projects.limitReachedHint': 'Limite de {{limit}} projetos no plano gratuito',
     'newProject.guided.goal':
       'Qual é o principal objetivo do sistema?',
     'newProject.guided.goalPh':
@@ -419,6 +452,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'status.briefing': 'Briefing',
     'status.refinement': 'Refinement',
+    'status.conclusion': 'Conclusion',
     'status.specification': 'Specification',
     'status.documentation': 'Documentation',
     'status.manual': 'Manual',
@@ -507,10 +541,26 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.finishStage': 'Complete step',
     'detail.currentStageLabel': 'Current step:',
     'detail.goToCurrentStage': 'Go to current step',
+    'detail.goToConclusion': 'Go to conclusion',
+
+    'conclusion.panelTitle': 'Refinement conclusion',
+    'conclusion.intro':
+      'Generated from refinement — read to understand the request and what needs to be done. If it looks good, finish the project.',
+    'conclusion.narrativeLabel': 'What needs to be done',
+    'conclusion.actionItemsLabel': 'Next steps',
+    'conclusion.summaryLabel': 'Summary',
+    'conclusion.highlightsLabel': 'Already aligned',
+    'conclusion.recommendationsLabel': 'Recommendations',
+    'conclusion.notReadyHint':
+      'The AI flagged items that may still need alignment. You can return to refinement or finish anyway.',
+    'conclusion.generating': 'Generating conclusion…',
+    'conclusion.regenerate': 'Refresh conclusion',
+    'conclusion.noData': 'No conclusion yet. Generate it from refinement.',
+    'conclusion.errorGenerate': 'Could not generate the conclusion. Try again.',
 
     'briefing.receivedTitle': 'Briefing received',
     'briefing.aiHint':
-      'This text is what the AI uses in the following steps (specification, documentation, manual, and finally refinement for a last polish). Always save after changes.',
+      'This text is what the AI uses in the following steps (specification, manual, and finally refinement for a last polish). Always save after changes.',
     'briefing.audioOriginal': 'Original briefing audio',
     'briefing.saveServer': 'Save to server',
     'briefing.charCount': '{{n}} characters (min. 15)',
@@ -555,7 +605,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'spec.placeholder.para': 'e.g. find features faster without getting lost',
     'spec.editStoryAria': 'Edit story',
     'spec.editorIntro':
-      'Fill all three blocks — it stays clear for stakeholders and flows into docs and the manual.',
+      'Fill all three blocks — it stays clear for stakeholders and flows into the manual.',
 
     'comments.title': 'Comments',
     'comments.placeholder': 'Add a comment…',
@@ -634,7 +684,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'refinement.titleStart': 'Start AI refinement',
     'refinement.intro':
-      'Last step in the flow: use the AI for a final polish — clarity, consistency and readability of what you already captured in other tabs. The main context is the saved briefing; mention changes in stories, docs or the manual in chat if you want cross-checking.',
+      'Last step in the flow: use the AI for a final polish — clarity, consistency and readability of what you already captured in other tabs. The main context is the saved briefing; mention changes in stories or the manual in chat if you want cross-checking.',
     'refinement.startButton': 'Start refinement',
     'refinement.placeholderWait': 'Waiting for AI reply…',
     'refinement.placeholderWrite':
@@ -649,22 +699,25 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Something went wrong processing your message. Try again.',
 
     'export.hint':
-      'The file only reflects what is already saved on the server (briefing, stories, documentation, manual and refinement messages).',
+      'The file only reflects what is already saved on the server (briefing, stories, manual and refinement messages).',
     'export.titleMd': 'Download full package as Markdown (saved data only)',
     'export.titlePdf': 'Download full package as PDF (saved data only)',
     'export.loadError':
       'Could not load the project. Check that you still have access and try again.',
     'export.fail':
       'Export failed. Check your connection and try again.',
+    'export.titleJira': 'Download stories as CSV for Jira import',
+    'export.titleNotion': 'Download package as Markdown for Notion',
+    'export.jiraNeedsStories': 'Generate and save user stories before exporting to Jira.',
 
     'onboarding.welcomeTitle': 'Welcome to SpecFlow!',
     'onboarding.welcomeSubtitle':
       'In three steps you turn a request into a full specification. Here is how:',
     'onboarding.step1Title': 'Create your first project',
     'onboarding.step1Desc': 'Name it and choose how to capture the request.',
-    'onboarding.step2Title': 'Specification and documentation',
+    'onboarding.step2Title': 'Specification and manual',
     'onboarding.step2Desc':
-      'Generate user stories, technical documentation and the manual from the briefing with AI.',
+      'Generate user stories and the manual from the briefing with AI.',
     'onboarding.step3Title': 'Refine and export',
     'onboarding.step3Desc':
       'On the project page, use refinement to review the package and download the bundle (.md or PDF) with everything saved.',
@@ -752,6 +805,15 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.errorAudioCreate': 'Could not create the project with this audio.',
     'newProject.errorAudioSend':
       'Failed to upload audio. Check your connection and try again.',
+    'newProject.errorDocCreate': 'Could not create the project with this document.',
+    'newProject.errorDocSend': 'Failed to upload the document. Check your connection and try again.',
+    'newProject.errorVideoCreate': 'Could not create the project with this video.',
+    'newProject.errorVideoSend': 'Failed to upload the video. Check your connection and try again.',
+    'newProject.limitBannerTitle': 'Free plan limit reached',
+    'newProject.limitBannerBody':
+      'Your company already has {{used}} of {{limit}} projects. Delete an existing project to create another.',
+    'newProject.limitQuotaHint': '{{used}}/{{limit}} projects used',
+    'projects.limitReachedHint': '{{limit}} project limit on the free plan',
     'newProject.guided.goal': 'What is the main goal of the system?',
     'newProject.guided.goalPh':
       'e.g. Let patients book medical appointments online without calling the clinic.',
@@ -802,6 +864,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'status.briefing': 'Briefing',
     'status.refinement': 'Refinamiento',
+    'status.conclusion': 'Conclusión',
     'status.specification': 'Especificación',
     'status.documentation': 'Documentación',
     'status.manual': 'Manual',
@@ -891,10 +954,26 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.finishStage': 'Completar etapa',
     'detail.currentStageLabel': 'Etapa actual:',
     'detail.goToCurrentStage': 'Ir a la etapa actual',
+    'detail.goToConclusion': 'Ir a la conclusión',
+
+    'conclusion.panelTitle': 'Conclusión del refinamiento',
+    'conclusion.intro':
+      'Generado a partir del refinamiento — lea para entender el pedido y qué hay que hacer. Si está de acuerdo, finalice el proyecto.',
+    'conclusion.narrativeLabel': 'Qué hay que hacer',
+    'conclusion.actionItemsLabel': 'Próximos pasos',
+    'conclusion.summaryLabel': 'Resumen',
+    'conclusion.highlightsLabel': 'Puntos ya alineados',
+    'conclusion.recommendationsLabel': 'Recomendaciones',
+    'conclusion.notReadyHint':
+      'La IA indicó que aún hay puntos por alinear. Puede volver al refinamiento o finalizar igualmente.',
+    'conclusion.generating': 'Generando conclusión…',
+    'conclusion.regenerate': 'Actualizar conclusión',
+    'conclusion.noData': 'Aún no hay conclusión. Genérela desde el refinamiento.',
+    'conclusion.errorGenerate': 'No se pudo generar la conclusión. Inténtelo de nuevo.',
 
     'briefing.receivedTitle': 'Briefing recibido',
     'briefing.aiHint':
-      'Este texto es el que la IA usa en las siguientes etapas (especificación, documentación, manual y, al final, refinamiento para una última revisión). Guarde siempre tras cambiar.',
+      'Este texto es el que la IA usa en las siguientes etapas (especificación, manual y, al final, refinamiento para una última revisión). Guarde siempre tras cambiar.',
     'briefing.audioOriginal': 'Audio original del briefing',
     'briefing.saveServer': 'Guardar en el servidor',
     'briefing.charCount': '{{n}} caracteres (mín. 15)',
@@ -939,7 +1018,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'spec.placeholder.para': 'Ej.: encontrar funciones más rápido sin perderme',
     'spec.editStoryAria': 'Editar historia',
     'spec.editorIntro':
-      'Complete los tres bloques — queda claro para el cliente y es el texto que sigue a documentación y manual.',
+      'Complete los tres bloques — queda claro para el cliente y es el texto que sigue al manual.',
 
     'comments.title': 'Comentarios',
     'comments.placeholder': 'Añadir comentario…',
@@ -1018,7 +1097,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'refinement.titleStart': 'Iniciar refinamiento con IA',
     'refinement.intro':
-      'Última etapa del flujo: use la IA para un «repaso fino» — claridad, coherencia y lectura de lo ya registrado en las demás pestañas. El contexto principal es el briefing guardado; mencione en el chat cambios en historias, documentación o manual si necesita contrastar.',
+      'Última etapa del flujo: use la IA para un «repaso fino» — claridad, coherencia y lectura de lo ya registrado en las demás pestañas. El contexto principal es el briefing guardado; mencione en el chat cambios en historias o manual si necesita contrastar.',
     'refinement.startButton': 'Iniciar refinamiento',
     'refinement.placeholderWait': 'Esperando respuesta de la IA...',
     'refinement.placeholderWrite':
@@ -1034,22 +1113,26 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Ocurrió un error al procesar su mensaje. Inténtelo de nuevo.',
 
     'export.hint':
-      'El archivo solo refleja lo ya guardado en el servidor (briefing, historias, documentación, manual y mensajes de refinamiento).',
+      'El archivo solo refleja lo ya guardado en el servidor (briefing, historias, manual y mensajes de refinamiento).',
     'export.titleMd': 'Descargar paquete completo en Markdown (solo datos guardados)',
     'export.titlePdf': 'Descargar paquete completo en PDF (solo datos guardados)',
     'export.loadError':
       'No se pudo cargar el proyecto. Compruebe que aún tiene acceso.',
     'export.fail':
       'Falló la exportación. Revise la conexión e inténtelo de nuevo.',
+    'export.titleJira': 'Descargar historias en CSV para importar en Jira',
+    'export.titleNotion': 'Descargar paquete en Markdown para Notion',
+    'export.jiraNeedsStories':
+      'Genere y guarde historias en la especificación antes de exportar a Jira.',
 
     'onboarding.welcomeTitle': '¡Bienvenido a SpecFlow!',
     'onboarding.welcomeSubtitle':
       'En 3 pasos convierte una demanda en una especificación completa:',
     'onboarding.step1Title': 'Cree su primer proyecto',
     'onboarding.step1Desc': 'Póngale nombre y elija cómo capturar la demanda.',
-    'onboarding.step2Title': 'Especificación y documentación',
+    'onboarding.step2Title': 'Especificación y manual',
     'onboarding.step2Desc':
-      'Genere historias de usuario, documentación técnica y manual con IA a partir del briefing.',
+      'Genere historias de usuario y manual con IA a partir del briefing.',
     'onboarding.step3Title': 'Refinar y exportar',
     'onboarding.step3Desc':
       'En la página del proyecto, use el refinamiento para revisar el conjunto y descargue el paquete (.md o PDF) con lo guardado.',
@@ -1141,6 +1224,19 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'No se pudo crear el proyecto con este audio.',
     'newProject.errorAudioSend':
       'Error al subir el audio. Revise la conexión e inténtelo de nuevo.',
+    'newProject.errorDocCreate':
+      'No se pudo crear el proyecto con este documento.',
+    'newProject.errorDocSend':
+      'Error al subir el documento. Revise la conexión e inténtelo de nuevo.',
+    'newProject.errorVideoCreate':
+      'No se pudo crear el proyecto con este vídeo.',
+    'newProject.errorVideoSend':
+      'Error al subir el vídeo. Revise la conexión e inténtelo de nuevo.',
+    'newProject.limitBannerTitle': 'Límite del plan gratuito alcanzado',
+    'newProject.limitBannerBody':
+      'Su empresa ya tiene {{used}} de {{limit}} proyectos. Elimine un proyecto existente para crear otro.',
+    'newProject.limitQuotaHint': '{{used}}/{{limit}} proyectos usados',
+    'projects.limitReachedHint': 'Límite de {{limit}} proyectos en el plan gratuito',
     'newProject.guided.goal': '¿Cuál es el objetivo principal del sistema?',
     'newProject.guided.goalPh':
       'Ej.: Permitir que los pacientes pidan cita médica en línea sin llamar a la clínica.',

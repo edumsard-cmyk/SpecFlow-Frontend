@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { assertCanCreateProject } from '@/lib/projects/quota'
 import { type Database } from '@/lib/supabase/types'
 
 type ProjectRow = Database['public']['Tables']['projects']['Row']
@@ -36,11 +37,13 @@ export async function createProject(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, company_id')
+    .select('id, company_id, role')
     .eq('id', (await supabase.auth.getUser()).data.user!.id)
     .single()
 
   if (!profile?.company_id) throw new Error('Usuário sem empresa vinculada.')
+
+  await assertCanCreateProject(profile.role, profile.company_id)
 
   const { data, error } = await supabase
     .from('projects')
@@ -70,3 +73,4 @@ export async function updateProjectStatus(
 
   if (error) throw new Error(error.message)
 }
+

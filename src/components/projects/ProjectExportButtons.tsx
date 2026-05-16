@@ -8,6 +8,8 @@ import {
   specExportBasename,
 } from '@/lib/export/project-spec'
 import { downloadSpecPdf } from '@/lib/export/project-pdf'
+import { downloadJiraCsv } from '@/lib/export/jira-csv'
+import { downloadNotionMarkdown } from '@/lib/export/notion-markdown'
 import { fetchProjectExportInput } from '@/lib/export/fetch-project-export'
 import { useI18n } from '@/components/i18n/I18nProvider'
 
@@ -16,13 +18,15 @@ interface ProjectExportButtonsProps {
   disabled?: boolean
 }
 
+type ExportKind = 'md' | 'pdf' | 'jira' | 'notion'
+
 /** Exporta o pacote completo (briefing, refinamento, histórias, documentação, manual) a partir dos dados salvos. */
 export default function ProjectExportButtons({ projectId, disabled }: ProjectExportButtonsProps) {
   const { t } = useI18n()
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  const run = async (kind: 'md' | 'pdf') => {
+  const run = async (kind: ExportKind) => {
     setErr(null)
     setBusy(true)
     try {
@@ -38,8 +42,16 @@ export default function ProjectExportButtons({ projectId, disabled }: ProjectExp
           buildSpecMarkdown(input),
           'text/markdown;charset=utf-8'
         )
-      } else {
+      } else if (kind === 'pdf') {
         downloadSpecPdf(input, basename)
+      } else if (kind === 'jira') {
+        if (input.stories.length === 0) {
+          setErr(t('export.jiraNeedsStories'))
+          return
+        }
+        downloadJiraCsv(input, basename)
+      } else {
+        downloadNotionMarkdown(input, basename)
       }
     } catch (e) {
       const msg =
@@ -54,10 +66,10 @@ export default function ProjectExportButtons({ projectId, disabled }: ProjectExp
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <p className="text-[10px] text-[#9CA3AF] text-right max-w-[240px] leading-tight mb-0.5">
+      <p className="text-[10px] text-[#9CA3AF] text-right max-w-[280px] leading-tight mb-0.5">
         {t('export.hint')}
       </p>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
         <Button
           type="button"
           variant="outline"
@@ -66,9 +78,6 @@ export default function ProjectExportButtons({ projectId, disabled }: ProjectExp
           onClick={() => run('md')}
           title={t('export.titleMd')}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
           .md
         </Button>
         <Button
@@ -79,13 +88,30 @@ export default function ProjectExportButtons({ projectId, disabled }: ProjectExp
           onClick={() => run('pdf')}
           title={t('export.titlePdf')}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
           PDF
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled || busy}
+          onClick={() => run('jira')}
+          title={t('export.titleJira')}
+        >
+          Jira
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled || busy}
+          onClick={() => run('notion')}
+          title={t('export.titleNotion')}
+        >
+          Notion
+        </Button>
       </div>
-      {err && <p className="text-xs text-[#DC2626] max-w-[220px] text-right">{err}</p>}
+      {err && <p className="text-xs text-[#DC2626] max-w-[260px] text-right">{err}</p>}
     </div>
   )
 }

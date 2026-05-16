@@ -2,6 +2,17 @@
 
 import { revalidatePath } from 'next/cache'
 import { createProject, updateProjectStatus, getProject } from '@/lib/data/projects'
+import { toDatabaseStatus } from '@/lib/projects/workflow-status'
+import {
+  getProjectQuota,
+  ProjectLimitError,
+  PROJECT_LIMIT_REACHED_CODE,
+  type ProjectQuota,
+} from '@/lib/projects/quota'
+
+export async function getProjectQuotaAction(): Promise<ProjectQuota | null> {
+  return getProjectQuota()
+}
 import { saveBriefing, updateBriefingContent } from '@/lib/data/briefings'
 import { logAudit } from '@/lib/data/audit'
 import { createClient } from '@/lib/supabase/server'
@@ -16,7 +27,9 @@ interface CreateProjectPayload {
   briefingContent: string
 }
 
-export async function createProjectAction(payload: CreateProjectPayload): Promise<{ projectId?: string; error?: string }> {
+export async function createProjectAction(
+  payload: CreateProjectPayload
+): Promise<{ projectId?: string; error?: string; code?: string }> {
   try {
     const project = await createProject({
       name: payload.name,
@@ -42,6 +55,12 @@ export async function createProjectAction(payload: CreateProjectPayload): Promis
     revalidatePath('/projetos')
     return { projectId: project.id }
   } catch (err) {
+    if (err instanceof ProjectLimitError) {
+      return {
+        error: err.message,
+        code: PROJECT_LIMIT_REACHED_CODE,
+      }
+    }
     return { error: err instanceof Error ? err.message : 'Erro ao criar projeto.' }
   }
 }
@@ -82,15 +101,20 @@ export async function updateProjectStatusAction(
 ): Promise<{ error?: string }> {
   const STATUS_PROGRESS: Record<ProjectStatus, number> = {
     briefing: 10,
-    specification: 30,
-    documentation: 50,
-    manual: 70,
-    refinement: 85,
+    specification: 35,
+    documentation: 55,
+    manual: 55,
+    refinement: 75,
+    conclusion: 90,
     done: 100,
   }
   try {
     const proj = await getProject(projectId)
-    await updateProjectStatus(projectId, status, STATUS_PROGRESS[status])
+    await updateProjectStatus(
+      projectId,
+      toDatabaseStatus(status),
+      STATUS_PROGRESS[status]
+    )
     await logAudit({
       action: 'project.status',
       entityType: 'project',

@@ -1,7 +1,14 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type UserRole = 'admin' | 'company' | 'user'
-export type ProjectStatus = 'briefing' | 'refinement' | 'specification' | 'documentation' | 'manual' | 'done'
+export type ProjectStatus =
+  | 'briefing'
+  | 'refinement'
+  | 'specification'
+  | 'documentation'
+  | 'manual'
+  | 'conclusion'
+  | 'done'
 export type DocumentType = 'spec' | 'manual' | 'doc'
 
 type Relationship = {
@@ -75,6 +82,7 @@ export interface Database {
           created_by: string
           status: ProjectStatus
           progress: number
+          conclusion: import('@/types').ProjectConclusion | null
           created_at: string
           updated_at: string
         }
@@ -86,6 +94,7 @@ export interface Database {
           created_by: string
           status?: ProjectStatus
           progress?: number
+          conclusion?: import('@/types').ProjectConclusion | null
           created_at?: string
           updated_at?: string
         }
@@ -97,6 +106,7 @@ export interface Database {
           created_by?: string
           status?: ProjectStatus
           progress?: number
+          conclusion?: import('@/types').ProjectConclusion | null
           created_at?: string
           updated_at?: string
         }

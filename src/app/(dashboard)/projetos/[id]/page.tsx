@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition, useMemo, type Dispatch, type SetStateAction } from 'react'
+import { useState, useEffect, useTransition, useMemo, useCallback, type Dispatch, type SetStateAction } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
@@ -8,13 +8,24 @@ import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
 import RefinamentoTab from '@/components/projects/RefinamentoTab'
+import ConclusaoTab from '@/components/projects/ConclusaoTab'
 import ProjectExportButtons from '@/components/projects/ProjectExportButtons'
 import ProjectNextSteps from '@/components/projects/ProjectNextSteps'
 import StoryCommentsThread, { type StoryCommentRow } from '@/components/projects/StoryCommentsThread'
 import { useI18n } from '@/components/i18n/I18nProvider'
 import { type Locale } from '@/lib/i18n/dictionaries'
 import { intlLocaleTag } from '@/lib/i18n/locale-format'
-import { type ProjectStatus, STATUS_STEPS } from '@/types'
+import { parseProjectConclusion } from '@/lib/conclusion/parse'
+import {
+  type ProjectConclusion,
+  type ProjectStatus,
+  STATUS_STEPS,
+  normalizeWorkflowStatus,
+} from '@/types'
+import {
+  defaultProjectTab,
+  resolveWorkflowStatus,
+} from '@/lib/projects/workflow-status'
 import { getStatusColor } from '@/lib/utils'
 import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, deleteProjectAction, saveBriefingContentAction, type StoryPayload } from '@/app/actions/projects'
 
@@ -1592,9 +1603,9 @@ export default function ProjetoPage() {
     (): { id: ProjectStatus | 'briefing'; label: string }[] => [
       { id: 'briefing', label: t('status.briefing') },
       { id: 'specification', label: t('status.specification') },
-      { id: 'documentation', label: t('status.documentation') },
       { id: 'manual', label: t('status.manual') },
       { id: 'refinement', label: t('status.refinement') },
+      { id: 'conclusion', label: t('status.conclusion') },
     ],
     [t]
   )
@@ -1607,11 +1618,13 @@ export default function ProjetoPage() {
   >([])
   const [storyComments, setStoryComments] = useState<StoryCommentRow[]>([])
   const [initialStories, setInitialStories] = useState<Story[]>([])
-  const [initialDocSections, setInitialDocSections] = useState<DocSection[] | null>(null)
   const [initialManualSections, setInitialManualSections] = useState<ManualSection[] | null>(null)
   const [loadingData, setLoadingData] = useState(true)
+  const [projectConclusion, setProjectConclusion] = useState<ProjectConclusion | null>(null)
+  const [conclusionLoading, setConclusionLoading] = useState(false)
+  const [conclusionError, setConclusionError] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState<string>('briefing')
+  const [activeTab, setActiveTab] = useState<string>('refinement')
   const [projectStatus, setProjectStatus] = useState<ProjectStatus>('briefing')
   const [projectName, setProjectName] = useState('')
   const [projectDesc, setProjectDesc] = useState('')
@@ -1624,9 +1637,15 @@ export default function ProjetoPage() {
         if (data.project) {
           setProjectName(data.project.name ?? '')
           setProjectDesc(data.project.description ?? '')
-          const status: ProjectStatus = data.project.status ?? 'briefing'
+          const rawStatus: ProjectStatus = data.project.status ?? 'briefing'
+          const parsed =
+            parseProjectConclusion(data.conclusion) ??
+            parseProjectConclusion(data.project?.conclusion)
+          if (parsed) setProjectConclusion(parsed)
+          const hasConclusion = !!parsed
+          const status = resolveWorkflowStatus(rawStatus, hasConclusion)
           setProjectStatus(status)
-          setActiveTab(status === 'done' ? 'briefing' : status)
+          setActiveTab(defaultProjectTab(status, hasConclusion))
         }
         if (data.briefing) {
           setRealBriefing(data.briefing.content ?? null)
@@ -1660,11 +1679,7 @@ export default function ProjetoPage() {
           })))
         }
         if (Array.isArray(data.documents)) {
-          const doc = data.documents.find((d: { type: string; content: string }) => d.type === 'doc')
           const manual = data.documents.find((d: { type: string; content: string }) => d.type === 'manual')
-          if (doc?.content) {
-            try { setInitialDocSections(JSON.parse(doc.content)) } catch { /* ignore */ }
-          }
           if (manual?.content) {
             try { setInitialManualSections(JSON.parse(manual.content)) } catch { /* ignore */ }
           }
@@ -1684,14 +1699,59 @@ export default function ProjetoPage() {
   const [deleteError, setDeleteError] = useState('')
 
   const currentTabIndex = tabs.findIndex(tab => tab.id === activeTab)
-  const statusIndex = STATUS_STEPS.indexOf(projectStatus)
+  const statusIndex = STATUS_STEPS.indexOf(normalizeWorkflowStatus(projectStatus))
 
-  const advanceStep = () => {
+  const handleRefinementMessagesChange = useCallback(
+    (msgs: { role: 'ai' | 'user'; content: string }[]) => {
+      setRefinementMessages(prev => {
+        const next = JSON.stringify(msgs)
+        const prevKey = JSON.stringify(prev)
+        return next === prevKey ? prev : msgs
+      })
+    },
+    []
+  )
+
+  const generateConclusion = async (): Promise<boolean> => {
+    setConclusionLoading(true)
+    setConclusionError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/conclusion`, {
+        method: 'POST',
+        credentials: 'same-origin',
+      })
+      const body = (await res.json()) as { conclusion?: ProjectConclusion; error?: string }
+      if (!res.ok) {
+        setConclusionError(body.error ?? t('conclusion.errorGenerate'))
+        return false
+      }
+      if (body.conclusion) {
+        setProjectConclusion(body.conclusion)
+      }
+      return true
+    } catch {
+      setConclusionError(t('conclusion.errorGenerate'))
+      return false
+    } finally {
+      setConclusionLoading(false)
+    }
+  }
+
+  const advanceStep = async () => {
+    if (activeTab === 'refinement') {
+      const ok = await generateConclusion()
+      if (!ok) return
+      setProjectStatus('conclusion')
+      setActiveTab('conclusion')
+      void updateProjectStatusAction(projectId, 'conclusion')
+      return
+    }
+
     const nextTab = tabs[currentTabIndex + 1]
     const nextStatus = nextTab ? (nextTab.id as ProjectStatus) : 'done'
     setProjectStatus(nextStatus)
     if (nextTab) setActiveTab(nextTab.id)
-    updateProjectStatusAction(projectId, nextStatus)
+    void updateProjectStatusAction(projectId, nextStatus)
   }
 
   const saveEdit = () => {
@@ -1911,8 +1971,19 @@ export default function ProjetoPage() {
           <RefinamentoTab
             projectId={projectId}
             initialMessages={refinementMessages}
+            autoStart={refinementMessages.length === 0}
+            onMessagesChange={handleRefinementMessagesChange}
           />
         </div>
+        {!loadingData && activeTab === 'conclusion' && (
+          <ConclusaoTab
+            conclusion={projectConclusion}
+            loading={conclusionLoading}
+            error={conclusionError}
+            regenerating={conclusionLoading}
+            onRegenerate={() => void generateConclusion()}
+          />
+        )}
         {!loadingData && activeTab === 'specification' && (
           <EspecificacaoTab
             projectId={projectId}
@@ -1921,7 +1992,6 @@ export default function ProjetoPage() {
             setStoryComments={setStoryComments}
           />
         )}
-        {!loadingData && activeTab === 'documentation' && <DocumentacaoTab projectId={projectId} initialContent={initialDocSections} />}
         {!loadingData && activeTab === 'manual' && <ManualTab projectId={projectId} projectName={projectName} initialSections={initialManualSections} />}
 
         {projectStatus === 'done' && (
@@ -1976,7 +2046,7 @@ export default function ProjetoPage() {
               const currentTabForStatus = tabs.find(tab => tab.id === projectStatus)
 
               if (isLastTab && projectStatus !== 'done') return (
-                <Button size="sm" onClick={advanceStep}>
+                <Button size="sm" onClick={() => void advanceStep()} disabled={conclusionLoading}>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
@@ -1991,12 +2061,42 @@ export default function ProjetoPage() {
                   {t('detail.stageDone')}
                 </span>
               )
+              const hasRefinementReply = refinementMessages.some(
+                m => m.role === 'ai' && m.content.trim()
+              )
+              if (
+                activeTab === 'refinement' &&
+                projectStatus !== 'done' &&
+                projectStatus !== 'conclusion' &&
+                hasRefinementReply
+              ) {
+                return (
+                  <Button
+                    size="sm"
+                    onClick={() => void advanceStep()}
+                    disabled={conclusionLoading}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    {t('detail.goToConclusion')}
+                  </Button>
+                )
+              }
               if (isCurrentStep) return (
-                <Button size="sm" onClick={advanceStep}>
+                <Button
+                  size="sm"
+                  onClick={() => void advanceStep()}
+                  disabled={
+                    conclusionLoading ||
+                    (activeTab === 'refinement' &&
+                      !refinementMessages.some(m => m.role === 'ai' && m.content.trim()))
+                  }
+                >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
-                  {t('detail.finishStage')}
+                  {activeTab === 'refinement' ? t('detail.goToConclusion') : t('detail.finishStage')}
                 </Button>
               )
               if (isFutureStep && currentTabForStatus) return (

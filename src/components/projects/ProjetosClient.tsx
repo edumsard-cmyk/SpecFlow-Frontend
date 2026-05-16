@@ -9,13 +9,27 @@ import ProjectCard from '@/components/projects/ProjectCard'
 import { useI18n } from '@/components/i18n/I18nProvider'
 import { type ProjectStatus } from '@/types'
 import { type Database } from '@/lib/supabase/types'
+import { type ProjectQuota } from '@/lib/projects/quota-constants'
 
 type ProjectRow = Database['public']['Tables']['projects']['Row']
 
 type ViewMode = 'grid' | 'list'
 type SortOption = 'recent' | 'name' | 'progress'
 
-export default function ProjetosClient({ projects }: { projects: ProjectRow[] }) {
+function fillTemplate(template: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce(
+    (acc, [key, value]) => acc.replaceAll(`{{${key}}}`, String(value)),
+    template
+  )
+}
+
+export default function ProjetosClient({
+  projects,
+  projectQuota,
+}: {
+  projects: ProjectRow[]
+  projectQuota: ProjectQuota | null
+}) {
   const { t } = useI18n()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all')
@@ -66,6 +80,9 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
     return c
   }, [projects])
 
+  const atProjectLimit =
+    projectQuota != null && !projectQuota.isUnlimited && !projectQuota.canCreate
+
   return (
     <div className="flex flex-col flex-1">
       <Header
@@ -76,14 +93,25 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
             : t('projects.subtitleMany').replace('{{n}}', String(projects.length))
         }
         actions={
-          <Link href="/projetos/novo">
-            <Button>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              {t('projects.newProject')}
-            </Button>
-          </Link>
+          atProjectLimit ? (
+            <span
+              className="text-sm text-[#B45309] font-medium max-w-[14rem] text-right leading-snug"
+              title={fillTemplate(t('projects.limitReachedHint'), {
+                limit: projectQuota!.limit,
+              })}
+            >
+              {fillTemplate(t('projects.limitReachedHint'), { limit: projectQuota!.limit })}
+            </span>
+          ) : (
+            <Link href="/projetos/novo">
+              <Button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                {t('projects.newProject')}
+              </Button>
+            </Link>
+          )
         }
       />
 

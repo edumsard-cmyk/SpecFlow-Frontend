@@ -127,8 +127,11 @@ Garante que o build passa antes de deploy.
 ## 8. Funcionalidades e limitações atuais
 
 - **Fluxo principal**: projetos, briefing, especificação, documentação, manual, refinamento, exportação — com IA via Groq.
+- **Plano gratuito**: até **3 projetos por empresa** (admin da plataforma isento); contagem na criação e na API de áudio.
 - **Briefing em áudio**: requer migração `004` aplicada e bucket `briefing-media` com as policies da migração.
-- **Briefing em vídeo / documento** (fora do fluxo só-áudio): o registo na base de dados suporta `input_type` incluindo **`video`** após a migração `005`; o conteúdo pode ser texto placeholder até existir pipeline de upload/transcrição dedicado.
+- **Briefing em documento**: PDF, DOCX, XLS/XLSX e TXT — extração de texto na criação do projeto (`/api/projects/from-document`).
+- **Briefing em vídeo**: upload ou gravação — extração de áudio (ffmpeg) + transcrição Groq (`/api/projects/from-video`). Em ambientes sem ffmpeg, tenta transcrição direta do ficheiro.
+- **Exportação Jira / Notion**: CSV para importação no Jira e Markdown estruturado para o Notion (botões no projeto).
 
 ---
 

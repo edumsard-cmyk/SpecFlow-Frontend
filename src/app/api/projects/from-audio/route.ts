@@ -5,6 +5,7 @@ import { consumeAiRateLimit } from '@/lib/api/ai-rate-limit'
 import { logAudit } from '@/lib/data/audit'
 import { saveBriefing } from '@/lib/data/briefings'
 import { createProject } from '@/lib/data/projects'
+import { ProjectLimitError, PROJECT_LIMIT_REACHED_CODE } from '@/lib/projects/quota'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
@@ -171,6 +172,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ projectId: project.id })
   } catch (error) {
+    if (error instanceof ProjectLimitError) {
+      return NextResponse.json(
+        { error: error.message, code: PROJECT_LIMIT_REACHED_CODE },
+        { status: 403 }
+      )
+    }
     console.error('from-audio route:', error)
     return NextResponse.json({ error: 'Erro ao criar projeto com áudio.' }, { status: 500 })
   }

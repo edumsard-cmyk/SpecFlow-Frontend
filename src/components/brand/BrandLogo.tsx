@@ -4,11 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
-/** Arte da marca na sidebar (`public/brand`). */
+/** Arte da marca na sidebar (`public/brand`) — fundo transparente. */
 export const SPEC_FLOW_LOGO_SIDEBAR_SRC = '/brand/specflow-sidebar-logo.png'
-
-/** Fundo da arte na PNG (amostrado nas bordas do ficheiro). */
-export const SPEC_FLOW_BRAND_SURFACE_HEX = '#09194a'
 
 type BrandLogoProps = {
   href?: string | null
@@ -26,16 +23,16 @@ export default function BrandLogo({
   const resolvedHref = href === null ? null : href
 
   const inner = (
-    <span className="inline-flex items-center justify-start bg-transparent min-w-0 w-full px-0 py-0.5">
+    <span className="inline-flex items-center justify-start bg-transparent min-w-0 w-full">
       <Image
         src={SPEC_FLOW_LOGO_SIDEBAR_SRC}
-        alt="SpecFlow"
-        width={1024}
-        height={1024}
+        alt="SpecFlow — Da ideia ao uso, sem ruído"
+        width={695}
+        height={592}
         unoptimized
-        className="object-contain object-left h-auto max-h-[100px] w-auto max-w-[210px]"
+        className="object-contain object-left h-auto w-auto max-h-[4.5rem] max-w-[13rem]"
         priority={priority}
-        sizes="(max-width: 1024px) 210px, 210px"
+        sizes="208px"
       />
     </span>
   )

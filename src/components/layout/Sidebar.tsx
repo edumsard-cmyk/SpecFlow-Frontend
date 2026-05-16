@@ -8,7 +8,7 @@ import { logout } from '@/app/actions/auth'
 import { getProfileInitials } from '@/lib/utils'
 import { type Database } from '@/lib/supabase/types'
 import { useI18n } from '@/components/i18n/I18nProvider'
-import BrandLogo, { SPEC_FLOW_BRAND_SURFACE_HEX } from '@/components/brand/BrandLogo'
+import BrandLogo from '@/components/brand/BrandLogo'
 type Profile = Database['public']['Tables']['profiles']['Row']
 
 interface SidebarProps {
@@ -169,11 +169,8 @@ function SidebarContent({
 
   return (
     <aside aria-label="Navegação principal" className="h-full w-60 bg-[#0F2460] flex flex-col border-r border-white/[0.07]">
-      <div
-        className="px-4 py-4 border-b border-white/10 flex items-center justify-between gap-2"
-        style={{ backgroundColor: SPEC_FLOW_BRAND_SURFACE_HEX }}
-      >
-        <BrandLogo href="/dashboard" onNavigate={onClose} priority linkClassName="flex-1 min-w-0" />
+      <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-2">
+        <BrandLogo href="/dashboard" onNavigate={onClose} priority linkClassName="flex-1 min-w-0 w-full" />
         {onClose && (
           <button type="button" onClick={onClose} aria-label="Fechar menu" className="lg:hidden text-[#94A3B8] hover:text-white transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-white/40">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">

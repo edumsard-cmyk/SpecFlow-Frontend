@@ -6,12 +6,15 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur border-b border-[#E5E7EB]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-[5.5rem] flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center outline-none rounded-md focus-visible:ring-2 focus-visible:ring-[#1E3A8A] focus-visible:ring-offset-2"
+            className="flex items-center min-w-0 outline-none rounded-md focus-visible:ring-2 focus-visible:ring-[#1E3A8A] focus-visible:ring-offset-2"
           >
-            <LandingLogo priority imageClassName="max-h-12 max-w-[min(100vw-8rem,280px)]" />
+            <LandingLogo
+              priority
+              imageClassName="max-h-16 sm:max-h-[5rem] w-auto max-w-[min(100vw-11rem,380px)] sm:max-w-[440px]"
+            />
           </Link>
           <div className="flex items-center gap-3">
             <Link
@@ -37,7 +40,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 sm:px-6">
+      <section className="pt-36 sm:pt-40 pb-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs font-medium text-[#1E3A8A] mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" />
@@ -93,7 +96,7 @@ export default function LandingPage() {
             {/* Content preview */}
             <div className="bg-[#F8FAFC] p-6">
               <div className="flex gap-4 mb-4 overflow-x-auto pb-1">
-                {['Briefing', 'Especificação', 'Documentação', 'Manual', 'Refinamento'].map((tab, i) => (
+                {['Briefing', 'Especificação', 'Manual', 'Refinamento', 'Conclusão'].map((tab, i) => (
                   <div
                     key={tab}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
@@ -132,7 +135,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-[#111827] mb-3">Como funciona</h2>
-            <p className="text-[#6B7280] max-w-xl mx-auto">Seis etapas que transformam uma ideia bruta em documentação pronta para o time de desenvolvimento.</p>
+            <p className="text-[#6B7280] max-w-xl mx-auto">Cinco etapas que transformam uma ideia bruta em entregáveis prontos para o time de desenvolvimento.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
@@ -160,17 +163,6 @@ export default function LandingPage() {
               },
               {
                 step: '03',
-                title: 'Documentação técnica',
-                desc: 'Visão geral do sistema, módulos principais e regras de negócio geradas automaticamente.',
-                color: 'from-cyan-500 to-cyan-600',
-                icon: (
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                ),
-              },
-              {
-                step: '04',
                 title: 'Manual do usuário',
                 desc: 'Passo a passo em linguagem simples para o usuário final, exportável em PDF.',
                 color: 'from-emerald-500 to-emerald-600',
@@ -181,7 +173,7 @@ export default function LandingPage() {
                 ),
               },
               {
-                step: '05',
+                step: '04',
                 title: 'Refinamento final com IA',
                 desc: 'Última revisão: clareza e consistência do que já foi produzido — um “pente fino” antes da entrega.',
                 color: 'from-violet-500 to-violet-600',
@@ -192,9 +184,9 @@ export default function LandingPage() {
                 ),
               },
               {
-                step: '06',
+                step: '05',
                 title: 'Exportação',
-                desc: 'PDF pronto para entregar ao cliente ou ao time. Jira e Notion em breve.',
+                desc: 'PDF, Markdown, CSV para Jira e pacote estruturado para o Notion — prontos para entregar.',
                 color: 'from-rose-500 to-rose-600',
                 icon: (
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -284,7 +276,7 @@ export default function LandingPage() {
       <footer className="border-t border-[#E5E7EB] py-8 px-4 sm:px-6 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center outline-none rounded-md focus-visible:ring-2 focus-visible:ring-[#1E3A8A] focus-visible:ring-offset-2">
-            <LandingLogo imageClassName="max-h-10 max-w-[240px]" />
+            <LandingLogo imageClassName="max-h-14 sm:max-h-16 max-w-[300px] sm:max-w-[340px]" />
           </Link>
           <p className="text-sm text-[#9CA3AF]">© {new Date().getFullYear()} SpecFlow. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4 text-sm text-[#9CA3AF]">

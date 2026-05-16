@@ -12,9 +12,9 @@ const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 const MAX_MESSAGES = 48
 const MAX_MESSAGE_CHARS = 24_000
 
-const SYSTEM_PROMPT = `Você é o agente de refinamento final do SpecFlow — plataforma que transforma demandas em especificação, documentação e manual.
+const SYSTEM_PROMPT = `Você é o agente de refinamento final do SpecFlow — plataforma que transforma demandas em especificação e manual.
 
-No fluxo atual, esta etapa vem depois da especificação, documentação técnica e manual. É o “pente fino”: revisar clareza, consistência e leitura do que já foi pedido e produzido, para quem implementa ou revisa o pacote.
+No fluxo atual, esta etapa vem depois do briefing (e, quando existir, das histórias e do manual). É o “pente fino”: revisar clareza, consistência e leitura do que já foi pedido e produzido, para quem implementa ou revisa o pacote.
 
 Trabalhe apenas sobre o produto/sistema descrito no briefing deste projeto — não substitua por outro domínio nem invente uma demanda diferente.
 
