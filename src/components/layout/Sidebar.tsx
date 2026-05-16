@@ -8,7 +8,7 @@ import { logout } from '@/app/actions/auth'
 import { getProfileInitials } from '@/lib/utils'
 import { type Database } from '@/lib/supabase/types'
 import { useI18n } from '@/components/i18n/I18nProvider'
-
+import BrandLogo, { SPEC_FLOW_BRAND_SURFACE_HEX } from '@/components/brand/BrandLogo'
 type Profile = Database['public']['Tables']['profiles']['Row']
 
 interface SidebarProps {
@@ -33,6 +33,15 @@ const navItems = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/projetos/novo',
+    tKey: 'nav.newProject',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
     ),
   },
@@ -131,7 +140,13 @@ function SvgFlagEs(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }: {
+function SidebarContent({
+  profile,
+  onClose,
+  isActive,
+  handleLogout,
+  isPending,
+}: {
   profile: Profile | null
   onClose?: () => void
   isActive: (href: string) => boolean
@@ -144,23 +159,23 @@ function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }:
   const roleKey = profile?.role ? `role.${profile.role}` : 'role.user'
   const roleLabel = t(roleKey)
 
+  const linkClass = (href: string) =>
+    cn(
+      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-white/40',
+      isActive(href)
+        ? 'bg-[#1D4ED8] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]'
+        : 'text-[#94A3B8] hover:bg-[#1E3A8A]/90 hover:text-white'
+    )
+
   return (
-    <aside aria-label="Navegação principal" className="h-full w-60 bg-[#0F2460] flex flex-col">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#7C3AED] flex items-center justify-center flex-shrink-0">
-            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-            </svg>
-          </div>
-          <div>
-            <span className="text-white font-bold text-lg leading-none">SpecFlow</span>
-            <p className="text-[#64748B] text-[10px] mt-0.5">{t('brand.tagline')}</p>
-          </div>
-        </div>
+    <aside aria-label="Navegação principal" className="h-full w-60 bg-[#0F2460] flex flex-col border-r border-white/[0.07]">
+      <div
+        className="px-4 py-4 border-b border-white/10 flex items-center justify-between gap-2"
+        style={{ backgroundColor: SPEC_FLOW_BRAND_SURFACE_HEX }}
+      >
+        <BrandLogo href="/dashboard" onNavigate={onClose} priority linkClassName="flex-1 min-w-0" />
         {onClose && (
-          <button onClick={onClose} aria-label="Fechar menu" className="lg:hidden text-[#94A3B8] hover:text-white transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-white/40">
+          <button type="button" onClick={onClose} aria-label="Fechar menu" className="lg:hidden text-[#94A3B8] hover:text-white transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-white/40">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -168,66 +183,53 @@ function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }:
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menu principal">
+      <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto" aria-label="Menu principal">
         <p className="text-[#475569] text-[10px] font-semibold uppercase tracking-wider px-3 mb-2">{t('nav.menu')}</p>
-        {navItems.map((item) => (
+        {navItems.map(item => (
           <Link
             key={item.href}
             href={item.href}
             onClick={onClose}
             aria-current={isActive(item.href) ? 'page' : undefined}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40',
-              isActive(item.href)
-                ? 'bg-[#1D4ED8] text-white'
-                : 'text-[#94A3B8] hover:bg-[#1E3A8A] hover:text-white'
-            )}
+            className={linkClass(item.href)}
           >
             {item.icon}
             {t(item.tKey)}
-            {isActive(item.href) && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#60A5FA]" aria-hidden="true" />}
+            {isActive(item.href) && item.href !== '/projetos/novo' && (
+              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#60A5FA]" aria-hidden="true" />
+            )}
           </Link>
         ))}
 
         {profile?.role === 'admin' && (
-          <div className="pt-3 mt-3 border-t border-white/10">
-            <p className="text-[#475569] text-[10px] font-semibold uppercase tracking-wider px-3 mb-2">{t('nav.adminSection')}</p>
-            {adminItems.map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                aria-current={isActive(item.href) ? 'page' : undefined}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40',
-                  isActive(item.href)
-                    ? 'bg-[#1D4ED8] text-white'
-                    : 'text-[#94A3B8] hover:bg-[#1E3A8A] hover:text-white'
-                )}
-              >
-                {item.icon}
-                {t(item.tKey)}
-              </Link>
-            ))}
+          <div className="pt-3 mt-3 border-t border-white/10 space-y-2">
+            <p className="text-[#475569] text-[10px] font-semibold uppercase tracking-wider px-3">{t('nav.adminSection')}</p>
+            <div className="flex flex-col gap-2">
+              {adminItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  className={linkClass(item.href)}
+                >
+                  {item.icon}
+                  {t(item.tKey)}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-3 py-4 border-t border-white/10 space-y-1">
-        {bottomNavItems.map((item) => (
+      <div className="px-3 py-4 border-t border-white/10 space-y-2">
+        {bottomNavItems.map(item => (
           <Link
             key={item.href}
             href={item.href}
             onClick={onClose}
             aria-current={isActive(item.href) ? 'page' : undefined}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40',
-              isActive(item.href)
-                ? 'bg-[#1D4ED8] text-white'
-                : 'text-[#94A3B8] hover:bg-[#1E3A8A] hover:text-white'
-            )}
+            className={linkClass(item.href)}
           >
             {item.icon}
             {t(item.tKey)}
@@ -291,6 +293,7 @@ function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }:
             <p className="text-[#64748B] text-[10px] truncate">{roleLabel}</p>
           </div>
           <button
+            type="button"
             onClick={handleLogout}
             disabled={isPending}
             aria-label={t('logout.aria')}
@@ -310,25 +313,30 @@ export default function Sidebar({ open = false, onClose, profile }: SidebarProps
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
 
-  const handleLogout = () => { startTransition(async () => { await logout() }) }
+  const handleLogout = () => {
+    startTransition(async () => {
+      await logout()
+    })
+  }
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard'
+    if (href === '/projetos') {
+      return pathname === '/projetos' || (pathname.startsWith('/projetos/') && !pathname.startsWith('/projetos/novo'))
+    }
     return pathname.startsWith(href)
   }
   const props = { profile, onClose, isActive, handleLogout, isPending }
 
   return (
     <>
-      {/* Desktop: fixed sidebar */}
-      <div className="hidden lg:block fixed left-0 top-0 h-screen w-60 z-40">
+      <div className="hidden lg:block fixed left-0 top-0 h-screen w-60 z-40 shadow-[4px_0_28px_-10px_rgba(15,36,96,0.35)]">
         <SidebarContent {...props} />
       </div>
 
-      {/* Mobile: drawer + overlay */}
       {open && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-          <div className="relative w-60 flex-shrink-0">
+          <div className="fixed inset-0 bg-black/50" onClick={onClose} role="presentation" aria-hidden="true" />
+          <div className="relative w-60 flex-shrink-0 shadow-xl">
             <SidebarContent {...props} onClose={onClose} />
           </div>
         </div>

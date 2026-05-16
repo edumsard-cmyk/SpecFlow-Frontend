@@ -34,9 +34,13 @@
 }
 
 body {
-  background-color: #F8FAFC;
-  color: #111827;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-primary-hover) 22%, transparent);
+  color: var(--color-text);
 }
 
 /* Custom scrollbar */

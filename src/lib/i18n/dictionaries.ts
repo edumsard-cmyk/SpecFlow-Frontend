@@ -6,6 +6,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
   pt: {
     'brand.tagline': 'Gestão de Demandas',
     'nav.menu': 'Menu',
+    'nav.workspace': 'Área de trabalho',
+    'nav.newProject': 'Nova demanda',
+    'nav.workflowPipeline': 'Fluxo por projeto',
     'nav.dashboard': 'Dashboard',
     'nav.projects': 'Projetos',
     'nav.settings': 'Configurações',
@@ -393,6 +396,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
   en: {
     'brand.tagline': 'Demand management',
     'nav.menu': 'Menu',
+    'nav.workspace': 'Workspace',
+    'nav.newProject': 'New project',
+    'nav.workflowPipeline': 'Project pipeline',
     'nav.dashboard': 'Dashboard',
     'nav.projects': 'Projects',
     'nav.settings': 'Settings',
@@ -773,6 +779,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
   es: {
     'brand.tagline': 'Gestión de demandas',
     'nav.menu': 'Menú',
+    'nav.workspace': 'Espacio de trabajo',
+    'nav.newProject': 'Nueva demanda',
+    'nav.workflowPipeline': 'Flujo por proyecto',
     'nav.dashboard': 'Panel',
     'nav.projects': 'Proyectos',
     'nav.settings': 'Configuración',

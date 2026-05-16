@@ -15,10 +15,10 @@ export default function DashboardShell({ children, profile }: DashboardShellProp
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Mobile topbar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#0F2460] flex items-center px-4 z-30">
+    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#EEF2FF] flex">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#0F2460] flex items-center px-4 z-30 shadow-md shadow-[#0F2460]/25 border-b border-white/10">
         <button
+          type="button"
           onClick={() => setSidebarOpen(true)}
           aria-label="Abrir menu de navegação"
           className="text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
