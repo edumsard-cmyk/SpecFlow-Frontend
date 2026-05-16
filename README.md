@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SpecFlow — Gestão de especificações
 
-## Getting Started
+Aplicação **Next.js** com **Supabase** (auth, Postgres, storage) e **Groq** para geração/refinamento com IA.
 
-First, run the development server:
+Este README foca em **colocar o sistema utilizável em produção**. O template genérico do `create-next-app` foi substituído por este guia.
+
+---
+
+## Pré-requisitos
+
+- Node.js 20+ (recomendado)
+- Conta [Supabase](https://supabase.com)
+- Conta [Groq](https://console.groq.com) (API key para IA)
+- (Opcional) Conta [Vercel](https://vercel.com) ou outro host para Next.js
+
+---
+
+## 1. Clonar e instalar
+
+```bash
+git clone <seu-repositorio> specflow
+cd specflow
+npm install
+```
+
+Copie variáveis de ambiente:
+
+```bash
+cp .env.example .env.local
+```
+
+Preencha `.env.local` (ver secção **Variáveis de ambiente**).
+
+---
+
+## 2. Supabase — projeto e migrações
+
+1. Crie um projeto no Supabase.
+2. Em **SQL Editor**, execute **por ordem** os ficheiros em `supabase/migrations/`:
+   - `001_initial_schema.sql`
+   - `002_rls_policies.sql`
+   - `003_audit_and_story_comments.sql`
+   - `004_briefing_audio_storage.sql`
+   - `005_input_type_video.sql`
+
+   Ou use a CLI Supabase (`supabase db push`) se o projeto estiver ligado ao mesmo repositório de migrações.
+
+3. Confirme que extensões/tabelas/policies foram criadas sem erro.
+
+---
+
+## 3. Variáveis de ambiente
+
+| Variável | Onde obter | Notas |
+|----------|------------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | URL do projeto |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Idem | Chave **anon**, segura no cliente |
+| `SUPABASE_SERVICE_ROLE_KEY` | Idem | **Só servidor**. Nunca expor no browser ou commits |
+| `NEXT_PUBLIC_SITE_URL` | O teu domínio | Ex.: `https://app.teudominio.com`. Em dev: `http://localhost:3000` |
+| `GROQ_API_KEY` | Groq Console | Obrigatória para gerar/refinar com IA |
+
+Na **Vercel**, define as mesmas variáveis em **Settings → Environment Variables**. Define `NEXT_PUBLIC_SITE_URL` para o URL público definitivo (a `VERCEL_URL` pode servir de fallback em alguns fluxos, mas o domínio customizado deve estar correto para emails de auth).
+
+---
+
+## 4. Auth Supabase — redirects e email
+
+1. **Authentication → URL configuration**
+   - **Site URL**: o mesmo valor que `NEXT_PUBLIC_SITE_URL` em produção.
+   - **Redirect URLs**: inclui pelo menos:
+     - `http://localhost:3000/**` (desenvolvimento)
+     - `https://teu-dominio.com/**` (produção)
+     - `https://teu-projeto.vercel.app/**` (preview Vercel, se aplicável)
+
+2. **Confirmação de email / reset de senha**  
+   Se “Confirm email” estiver ativo, os utilizadores precisam de caixa de correio funcional. Configure **SMTP custom** ou use o provedor do Supabase conforme o teu plano.
+
+3. Templates de email (opcional): alinhar links com `NEXT_PUBLIC_SITE_URL`.
+
+---
+
+## 5. Primeiro utilizador administrador
+
+O registo em `/cadastro` cria utilizador com role **company** e empresa associada.
+
+Para ter um **admin** global (painel admin, empresas, etc.):
+
+1. Regista-te normalmente ou cria utilizador em **Authentication** no Supabase.
+2. No **SQL Editor**:
+
+```sql
+update public.profiles
+set role = 'admin'
+where email = 'teu-email@dominio.com';
+```
+
+3. Volta a iniciar sessão se necessário.
+
+---
+
+## 6. Desenvolvimento local
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000). Rotas protegidas redirecionam para `/login` sem sessão.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Garante que o build passa antes de deploy.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 7. Deploy (ex.: Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Liga o repositório à Vercel.
+2. Framework: **Next.js**.
+3. Variáveis de ambiente: iguais a `.env.local` (incluindo `SUPABASE_SERVICE_ROLE_KEY` apenas em ambiente servidor).
+4. `NEXT_PUBLIC_SITE_URL` = URL produção final.
+5. Após deploy, atualiza **Redirect URLs** no Supabase com o domínio Vercel/produção.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 8. Funcionalidades e limitações atuais
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Fluxo principal**: projetos, briefing, especificação, documentação, manual, refinamento, exportação — com IA via Groq.
+- **Briefing em áudio**: requer migração `004` aplicada e bucket `briefing-media` com as policies da migração.
+- **Briefing em vídeo / documento** (fora do fluxo só-áudio): o registo na base de dados suporta `input_type` incluindo **`video`** após a migração `005`; o conteúdo pode ser texto placeholder até existir pipeline de upload/transcrição dedicado.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 9. Checklist rápido antes de abrir a equipa
+
+- [ ] Migrações `001`–`005` aplicadas
+- [ ] `.env.local` / Vercel com todas as chaves
+- [ ] `NEXT_PUBLIC_SITE_URL` correto
+- [ ] Redirect URLs no Supabase Auth
+- [ ] Email (confirmação / reset) testado
+- [ ] Pelo menos um perfil `admin` definido
+- [ ] `npm run build` sem erros
+- [ ] Teste: cadastro → confirmação email → login → criar projeto → guardar → exportar
+
+---
+
+## 10. Suporte no código
+
+- Exemplo de envs: `.env.example`
+- Regras do agente / Next.js: `AGENTS.md`, `CLAUDE.md`
+
+---
+
+## Licença
+
+Conforme definido pelo repositório do projeto.

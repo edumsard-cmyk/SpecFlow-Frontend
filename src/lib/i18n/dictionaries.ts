@@ -118,7 +118,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'briefing.receivedTitle': 'Briefing recebido',
     'briefing.aiHint':
-      'Este texto é o que a IA usa nas etapas seguintes (refinamento, especificação, documentação e manual). Guarde sempre que alterar.',
+      'Este texto é o que a IA usa nas etapas seguintes (especificação, documentação, manual e, por último, refinamento para revisão final). Guarde sempre que alterar.',
     'briefing.audioOriginal': 'Áudio original do briefing',
     'briefing.saveServer': 'Guardar no servidor',
     'briefing.charCount': '{{n}} caracteres (mín. 15)',
@@ -170,6 +170,33 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'comments.delete': 'Excluir',
 
     'doc.genError': 'Erro ao gerar documentação.',
+    'doc.panelTitle': 'Documentação técnica',
+    'doc.helpLead':
+      'Descreva o sistema para quem vai construir ou revisar: visão geral, partes principais e regras de negócio. Pode gerar um rascunho com IA e ajustar tudo aqui.',
+    'doc.helpBoxTitle': 'O que fazer nesta página',
+    'doc.helpStep1':
+      'Use Gerar com IA para montar um primeiro texto com base no briefing e nas histórias — ou edite direto nos blocos abaixo.',
+    'doc.helpStep2': 'Em cada bloco, clique em Editar para mudar o título, o formato e o conteúdo.',
+    'doc.helpStep3':
+      'Em listas e grades, escreva no campo tracejado e pressione Enter (ou Adicionar) para incluir mais uma linha.',
+    'doc.helpStep4':
+      'Quando terminar, clique em Guardar — só o que está guardado no servidor entra na exportação (.md / PDF).',
+    'doc.addSectionText': '+ Texto',
+    'doc.addSectionList': '+ Lista',
+    'doc.addSectionGrid': '+ Grade',
+    'doc.addSectionHint': 'Acrescente secções extras (ex.: integrações, requisitos não funcionais, glossário).',
+    'doc.sectionTypeLabel': 'Formato',
+    'doc.sectionTypeText': 'Parágrafo',
+    'doc.sectionTypeList': 'Lista numerada',
+    'doc.sectionTypeGrid': 'Grade de cartões',
+    'doc.editSection': 'Editar',
+    'doc.deleteSection': 'Remover',
+    'doc.confirmDeleteSection':
+      'Remover esta secção? Para ficar gravado, confirme depois em Guardar.',
+    'doc.newSectionTitle': 'Nova secção',
+    'doc.addItemButton': 'Adicionar',
+    'doc.sectionBodyPlaceholder': 'Escreva aqui o conteúdo desta secção para o time técnico.',
+    'doc.emptyHint': '(Sem itens — use Editar para adicionar)',
     'doc.placeholderModule': 'Adicionar módulo (Enter)',
     'doc.placeholderRule': 'Adicionar regra (Enter)',
     'doc.seed.overviewTitle': 'Visão geral do sistema',
@@ -215,7 +242,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'refinement.titleStart': 'Iniciar Refinamento com IA',
     'refinement.intro':
-      'A IA usa o texto do briefing guardado na aba Briefing e faz perguntas para cobrir lacunas antes da especificação. Se alterar o briefing, guarde-o nessa aba antes de gerar histórias ou documentação.',
+      'Última etapa do fluxo: use a IA para um “pente fino” — clareza, consistência e leitura do que já foi pedido e registrado nas outras abas. O contexto principal é o briefing guardado; mencione no chat o que mudou nas histórias, docs ou manual se precisar de revisão cruzada.',
     'refinement.startButton': 'Iniciar refinamento',
     'refinement.placeholderWait': 'Aguardando resposta da IA...',
     'refinement.placeholderWrite':
@@ -230,7 +257,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Ocorreu um erro ao processar sua mensagem. Tente novamente.',
 
     'export.hint':
-      'O arquivo reflete apenas o que já está salvo no servidor (briefing, refinamento, histórias, docs).',
+      'O arquivo reflete apenas o que já está salvo no servidor (briefing, histórias, documentação, manual e mensagens de refinamento).',
     'export.titleMd': 'Baixar pacote completo em Markdown (somente dados salvos)',
     'export.titlePdf': 'Baixar pacote completo em PDF (somente dados salvos)',
     'export.loadError':
@@ -243,11 +270,12 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Em 3 passos você transforma uma demanda em especificação completa. Veja como:',
     'onboarding.step1Title': 'Crie seu primeiro projeto',
     'onboarding.step1Desc': 'Dê um nome e escolha como quer inserir a demanda.',
-    'onboarding.step2Title': 'Refine com a IA',
-    'onboarding.step2Desc': 'Responda as perguntas da IA para detalhar o briefing.',
-    'onboarding.step3Title': 'Exporte a especificação',
+    'onboarding.step2Title': 'Especificação e documentação',
+    'onboarding.step2Desc':
+      'Gere histórias de usuário, documentação técnica e manual com IA a partir do briefing.',
+    'onboarding.step3Title': 'Refinar e exportar',
     'onboarding.step3Desc':
-      'Na página do projeto, baixe o pacote completo (.md ou PDF) com tudo que já foi salvo.',
+      'Na página do projeto, use o refinamento para revisar o conjunto e baixe o pacote (.md ou PDF) com o que já foi salvo.',
     'onboarding.cta': 'Criar primeiro projeto',
     'onboarding.dismissAria': 'Fechar',
 
@@ -305,7 +333,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.charactersHint': '{{n}} caracteres',
     'newProject.detailHint': 'Quanto mais detalhado, melhor o resultado da IA',
     'newProject.back': 'Voltar',
-    'newProject.createSubmit': 'Criar projeto e iniciar refinamento',
+    'newProject.createSubmit': 'Criar projeto e continuar',
     'newProject.audioTitle': 'Briefing em áudio',
     'newProject.audioIntro':
       'Grave sua voz ou envie um arquivo de áudio descrevendo a demanda.',
@@ -476,7 +504,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'briefing.receivedTitle': 'Briefing received',
     'briefing.aiHint':
-      'This text is what the AI uses in later steps (refinement, specification, documentation and manual). Always save after changes.',
+      'This text is what the AI uses in the following steps (specification, documentation, manual, and finally refinement for a last polish). Always save after changes.',
     'briefing.audioOriginal': 'Original briefing audio',
     'briefing.saveServer': 'Save to server',
     'briefing.charCount': '{{n}} characters (min. 15)',
@@ -528,6 +556,33 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'comments.delete': 'Delete',
 
     'doc.genError': 'Could not generate documentation.',
+    'doc.panelTitle': 'Technical documentation',
+    'doc.helpLead':
+      'Describe the system for builders and reviewers: overview, main parts and business rules. You can AI‑generate a draft and refine everything here.',
+    'doc.helpBoxTitle': 'How to use this page',
+    'doc.helpStep1':
+      'Use Generate with AI to build a first draft from the briefing and user stories — or edit the blocks below directly.',
+    'doc.helpStep2': 'In each block, click Edit to change the title, format and content.',
+    'doc.helpStep3':
+      'For lists and grids, type in the dashed field and press Enter (or Add) to append a row.',
+    'doc.helpStep4':
+      'When finished, click Save — only what is saved on the server is included in export (.md / PDF).',
+    'doc.addSectionText': '+ Text',
+    'doc.addSectionList': '+ List',
+    'doc.addSectionGrid': '+ Grid',
+    'doc.addSectionHint': 'Add extra sections (e.g. integrations, NFRs, glossary).',
+    'doc.sectionTypeLabel': 'Format',
+    'doc.sectionTypeText': 'Paragraph',
+    'doc.sectionTypeList': 'Numbered list',
+    'doc.sectionTypeGrid': 'Card grid',
+    'doc.editSection': 'Edit',
+    'doc.deleteSection': 'Remove',
+    'doc.confirmDeleteSection':
+      'Remove this section? Changes are persisted only after you click Save.',
+    'doc.newSectionTitle': 'New section',
+    'doc.addItemButton': 'Add',
+    'doc.sectionBodyPlaceholder': 'Write this section’s content for the technical team.',
+    'doc.emptyHint': '(No items yet — use Edit to add)',
     'doc.placeholderModule': 'Add module (Enter)',
     'doc.placeholderRule': 'Add rule (Enter)',
     'doc.seed.overviewTitle': 'System overview',
@@ -573,7 +628,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'refinement.titleStart': 'Start AI refinement',
     'refinement.intro':
-      'The AI uses the briefing text saved in the Briefing tab and asks questions to close gaps before specification. If you change the briefing, save it there before generating stories or docs.',
+      'Last step in the flow: use the AI for a final polish — clarity, consistency and readability of what you already captured in other tabs. The main context is the saved briefing; mention changes in stories, docs or the manual in chat if you want cross-checking.',
     'refinement.startButton': 'Start refinement',
     'refinement.placeholderWait': 'Waiting for AI reply…',
     'refinement.placeholderWrite':
@@ -588,7 +643,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Something went wrong processing your message. Try again.',
 
     'export.hint':
-      'The file only reflects what is already saved on the server (briefing, refinement, stories, docs).',
+      'The file only reflects what is already saved on the server (briefing, stories, documentation, manual and refinement messages).',
     'export.titleMd': 'Download full package as Markdown (saved data only)',
     'export.titlePdf': 'Download full package as PDF (saved data only)',
     'export.loadError':
@@ -601,11 +656,12 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'In three steps you turn a request into a full specification. Here is how:',
     'onboarding.step1Title': 'Create your first project',
     'onboarding.step1Desc': 'Name it and choose how to capture the request.',
-    'onboarding.step2Title': 'Refine with AI',
-    'onboarding.step2Desc': 'Answer AI questions to deepen the briefing.',
-    'onboarding.step3Title': 'Export the specification',
+    'onboarding.step2Title': 'Specification and documentation',
+    'onboarding.step2Desc':
+      'Generate user stories, technical documentation and the manual from the briefing with AI.',
+    'onboarding.step3Title': 'Refine and export',
     'onboarding.step3Desc':
-      'On the project page, download the full package (.md or PDF) with everything saved.',
+      'On the project page, use refinement to review the package and download the bundle (.md or PDF) with everything saved.',
     'onboarding.cta': 'Create first project',
     'onboarding.dismissAria': 'Dismiss',
 
@@ -661,7 +717,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.charactersHint': '{{n}} characters',
     'newProject.detailHint': 'More detail usually means better AI output',
     'newProject.back': 'Back',
-    'newProject.createSubmit': 'Create project and start refinement',
+    'newProject.createSubmit': 'Create project and continue',
     'newProject.audioTitle': 'Audio briefing',
     'newProject.audioIntro':
       'Record your voice or upload an audio file describing the request.',
@@ -829,7 +885,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'briefing.receivedTitle': 'Briefing recibido',
     'briefing.aiHint':
-      'Este texto es el que la IA usa en las siguientes etapas (refinamiento, especificación, documentación y manual). Guarde siempre tras cambiar.',
+      'Este texto es el que la IA usa en las siguientes etapas (especificación, documentación, manual y, al final, refinamiento para una última revisión). Guarde siempre tras cambiar.',
     'briefing.audioOriginal': 'Audio original del briefing',
     'briefing.saveServer': 'Guardar en el servidor',
     'briefing.charCount': '{{n}} caracteres (mín. 15)',
@@ -881,6 +937,33 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'comments.delete': 'Eliminar',
 
     'doc.genError': 'Error al generar documentación.',
+    'doc.panelTitle': 'Documentación técnica',
+    'doc.helpLead':
+      'Describa el sistema para quien lo construye o revisa: visión general, partes principales y reglas de negocio. Puede generar un borrador con IA y afinarlo aquí.',
+    'doc.helpBoxTitle': 'Qué hacer en esta página',
+    'doc.helpStep1':
+      'Use Generar con IA para crear un primer texto a partir del briefing y las historias — o edite directamente los bloques de abajo.',
+    'doc.helpStep2': 'En cada bloque, pulse Editar para cambiar el título, el formato y el contenido.',
+    'doc.helpStep3':
+      'En listas y cuadrículas, escriba en el campo discontinuo y pulse Intro (o Añadir) para agregar una fila.',
+    'doc.helpStep4':
+      'Al terminar, pulse Guardar — solo lo guardado en el servidor entra en la exportación (.md / PDF).',
+    'doc.addSectionText': '+ Texto',
+    'doc.addSectionList': '+ Lista',
+    'doc.addSectionGrid': '+ Cuadrícula',
+    'doc.addSectionHint': 'Añada secciones extra (p. ej. integraciones, RNF, glosario).',
+    'doc.sectionTypeLabel': 'Formato',
+    'doc.sectionTypeText': 'Párrafo',
+    'doc.sectionTypeList': 'Lista numerada',
+    'doc.sectionTypeGrid': 'Cuadrícula de tarjetas',
+    'doc.editSection': 'Editar',
+    'doc.deleteSection': 'Eliminar',
+    'doc.confirmDeleteSection':
+      '¿Eliminar esta sección? Los cambios quedan guardados solo tras pulsar Guardar.',
+    'doc.newSectionTitle': 'Nueva sección',
+    'doc.addItemButton': 'Añadir',
+    'doc.sectionBodyPlaceholder': 'Escriba aquí el contenido de esta sección para el equipo técnico.',
+    'doc.emptyHint': '(Sin ítems — use Editar para añadir)',
     'doc.placeholderModule': 'Añadir módulo (Enter)',
     'doc.placeholderRule': 'Añadir regla (Enter)',
     'doc.seed.overviewTitle': 'Visión general del sistema',
@@ -926,7 +1009,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'refinement.titleStart': 'Iniciar refinamiento con IA',
     'refinement.intro':
-      'La IA usa el texto del briefing guardado en la pestaña Briefing y hace preguntas antes de la especificación. Si cambia el briefing, guárdelo allí antes de generar historias o documentación.',
+      'Última etapa del flujo: use la IA para un «repaso fino» — claridad, coherencia y lectura de lo ya registrado en las demás pestañas. El contexto principal es el briefing guardado; mencione en el chat cambios en historias, documentación o manual si necesita contrastar.',
     'refinement.startButton': 'Iniciar refinamiento',
     'refinement.placeholderWait': 'Esperando respuesta de la IA...',
     'refinement.placeholderWrite':
@@ -942,7 +1025,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Ocurrió un error al procesar su mensaje. Inténtelo de nuevo.',
 
     'export.hint':
-      'El archivo solo refleja lo ya guardado en el servidor (briefing, refinamiento, historias, documentación).',
+      'El archivo solo refleja lo ya guardado en el servidor (briefing, historias, documentación, manual y mensajes de refinamiento).',
     'export.titleMd': 'Descargar paquete completo en Markdown (solo datos guardados)',
     'export.titlePdf': 'Descargar paquete completo en PDF (solo datos guardados)',
     'export.loadError':
@@ -955,11 +1038,12 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'En 3 pasos convierte una demanda en una especificación completa:',
     'onboarding.step1Title': 'Cree su primer proyecto',
     'onboarding.step1Desc': 'Póngale nombre y elija cómo capturar la demanda.',
-    'onboarding.step2Title': 'Refine con IA',
-    'onboarding.step2Desc': 'Responda a la IA para detallar el briefing.',
-    'onboarding.step3Title': 'Exporte la especificación',
+    'onboarding.step2Title': 'Especificación y documentación',
+    'onboarding.step2Desc':
+      'Genere historias de usuario, documentación técnica y manual con IA a partir del briefing.',
+    'onboarding.step3Title': 'Refinar y exportar',
     'onboarding.step3Desc':
-      'En la página del proyecto descargue el paquete (.md o PDF) con todo lo guardado.',
+      'En la página del proyecto, use el refinamiento para revisar el conjunto y descargue el paquete (.md o PDF) con lo guardado.',
     'onboarding.cta': 'Crear primer proyecto',
     'onboarding.dismissAria': 'Cerrar',
 
@@ -1017,7 +1101,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.charactersHint': '{{n}} caracteres',
     'newProject.detailHint': 'Cuanto más detalle, mejor suele ser el resultado de la IA',
     'newProject.back': 'Volver',
-    'newProject.createSubmit': 'Crear proyecto e iniciar refinamiento',
+    'newProject.createSubmit': 'Crear proyecto y continuar',
     'newProject.audioTitle': 'Briefing en audio',
     'newProject.audioIntro':
       'Grabe su voz o envíe un archivo de audio describiendo la demanda.',

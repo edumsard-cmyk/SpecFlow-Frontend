@@ -861,17 +861,61 @@ const INITIAL_DOC: DocSection[] = [
   },
 ]
 
-function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate: (s: DocSection) => void }) {
+function createEmptyDocSection(type: DocSection['type'], title: string): DocSection {
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `doc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  if (type === 'text') {
+    return { id, title, type: 'text', content: '' }
+  }
+  return { id, title, type, content: '', items: [''] }
+}
+
+function normalizeDocSections(rows: DocSection[]): DocSection[] {
+  return rows.map((s, i) => ({
+    ...s,
+    id:
+      typeof s.id === 'string' && s.id.trim()
+        ? s.id
+        : `doc-${i}-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().slice(0, 8) : String(Date.now())}`,
+  }))
+}
+
+function DocSectionBlock({
+  section,
+  onUpdate,
+  onRemove,
+  canRemove,
+}: {
+  section: DocSection
+  onUpdate: (s: DocSection) => void
+  onRemove?: () => void
+  canRemove: boolean
+}) {
   const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(section)
   const [newItem, setNewItem] = useState('')
 
-  const save = () => { onUpdate(draft); setEditing(false) }
-  const cancel = () => { setDraft(section); setEditing(false) }
+  useEffect(() => {
+    if (!editing) setDraft(section)
+  }, [section, editing])
+
+  const save = () => {
+    onUpdate(draft)
+    setEditing(false)
+    setNewItem('')
+  }
+
+  const cancel = () => {
+    setDraft(section)
+    setEditing(false)
+    setNewItem('')
+  }
 
   const updateItem = (i: number, val: string) =>
-    setDraft(d => ({ ...d, items: d.items?.map((it, idx) => idx === i ? val : it) }))
+    setDraft(d => ({ ...d, items: d.items?.map((it, idx) => (idx === i ? val : it)) }))
 
   const removeItem = (i: number) =>
     setDraft(d => ({ ...d, items: d.items?.filter((_, idx) => idx !== i) }))
@@ -882,135 +926,233 @@ function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate:
     setNewItem('')
   }
 
+  const changeDraftType = (type: DocSection['type']) => {
+    setDraft(d => {
+      if (type === 'text') {
+        return { ...d, type, items: undefined, content: d.content ?? '' }
+      }
+      const prev = d.items?.filter(x => x.trim()) ?? []
+      return {
+        ...d,
+        type,
+        content: '',
+        items: prev.length > 0 ? prev : [''],
+      }
+    })
+  }
+
+  const startEdit = () => {
+    setDraft(section)
+    setNewItem('')
+    setEditing(true)
+  }
+
+  const modeType = editing ? draft.type : section.type
+
   return (
-    <div className="group">
-      <div className="flex items-center justify-between mb-2">
-        {editing ? (
-          <input
-            value={draft.title}
-            onChange={e => setDraft(d => ({ ...d, title: e.target.value }))}
-            className="text-sm font-semibold text-[#374151] border border-[#E5E7EB] rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-          />
-        ) : (
-          <h3 className="text-sm font-semibold text-[#374151]">{section.title}</h3>
-        )}
-        {!editing ? (
-          <button
-            onClick={() => { setDraft(section); setEditing(true) }}
-            className="text-[#9CA3AF] hover:text-[#1D4ED8] opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-            </svg>
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={cancel}>{t('common.cancel')}</Button>
-            <Button size="sm" onClick={save}>{t('common.save')}</Button>
-          </div>
-        )}
+    <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA]/50 px-4 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-[180px] space-y-2">
+          {editing ? (
+            <>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF] mb-1">
+                  {t('doc.sectionTypeLabel')}
+                </label>
+                <select
+                  value={draft.type}
+                  onChange={e => changeDraftType(e.target.value as DocSection['type'])}
+                  className="w-full max-w-xs text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                >
+                  <option value="text">{t('doc.sectionTypeText')}</option>
+                  <option value="list">{t('doc.sectionTypeList')}</option>
+                  <option value="grid">{t('doc.sectionTypeGrid')}</option>
+                </select>
+              </div>
+              <input
+                value={draft.title}
+                onChange={e => setDraft(d => ({ ...d, title: e.target.value }))}
+                className="w-full text-base font-semibold text-[#111827] border border-[#E5E7EB] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                placeholder={t('doc.newSectionTitle')}
+              />
+            </>
+          ) : (
+            <h3 className="text-base font-semibold text-[#111827] pr-2">{section.title}</h3>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {!editing ? (
+            <>
+              <Button variant="outline" size="sm" type="button" onClick={startEdit}>
+                {t('doc.editSection')}
+              </Button>
+              {canRemove && onRemove ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  className="text-[#DC2626] hover:text-red-700 hover:bg-red-50"
+                  onClick={onRemove}
+                >
+                  {t('doc.deleteSection')}
+                </Button>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" type="button" onClick={cancel}>
+                {t('common.cancel')}
+              </Button>
+              <Button size="sm" type="button" onClick={save}>
+                {t('common.save')}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {section.type === 'text' && (
-        editing ? (
+      {modeType === 'text' &&
+        (editing ? (
           <textarea
             value={draft.content}
             onChange={e => setDraft(d => ({ ...d, content: e.target.value }))}
-            rows={4}
-            autoFocus
-            className="w-full text-sm text-[#6B7280] leading-relaxed border border-[#3B82F6] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 resize-none"
+            rows={6}
+            className="w-full text-sm text-[#374151] leading-relaxed border border-[#E5E7EB] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/40 resize-y min-h-[120px]"
+            placeholder={t('doc.sectionBodyPlaceholder')}
           />
+        ) : section.content.trim() ? (
+          <p className="text-sm text-[#6B7280] leading-relaxed whitespace-pre-wrap">{section.content}</p>
         ) : (
-          <p className="text-sm text-[#6B7280] leading-relaxed">{section.content}</p>
-        )
-      )}
+          <p className="text-sm text-[#9CA3AF] italic">{t('doc.emptyHint')}</p>
+        ))}
 
-      {section.type === 'grid' && (
-        editing ? (
+      {modeType === 'grid' &&
+        (editing ? (
           <div className="space-y-2">
             {draft.items?.map((item, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
                   value={item}
                   onChange={e => updateItem(i, e.target.value)}
-                  className="flex-1 text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  className="flex-1 text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  placeholder={t('doc.placeholderModule')}
                 />
-                <button onClick={() => removeItem(i)} className="text-[#EF4444] hover:text-red-600">
+                <button
+                  type="button"
+                  onClick={() => removeItem(i)}
+                  className="p-2 text-[#EF4444] hover:bg-red-50 rounded-lg"
+                  aria-label={t('common.delete')}
+                >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             ))}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <input
                 value={newItem}
                 onChange={e => setNewItem(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addItem()}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addItem()
+                  }
+                }}
                 placeholder={t('doc.placeholderModule')}
-                className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                className="flex-1 min-w-[160px] text-sm text-[#374151] border border-dashed border-[#CBD5E1] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
               />
+              <Button variant="outline" size="sm" type="button" onClick={addItem}>
+                {t('doc.addItemButton')}
+              </Button>
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {section.items?.map(m => (
-              <div key={m} className="flex items-center gap-2 p-3 bg-[#F8FAFC] rounded-lg border border-[#E5E7EB]">
+        ) : section.items?.some(x => x.trim()) ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {section.items?.filter(x => x.trim()).map((m, i) => (
+              <div
+                key={`${i}-${m}`}
+                className="flex items-center gap-2 p-3 bg-white rounded-lg border border-[#E5E7EB]"
+              >
                 <div className="w-1.5 h-1.5 rounded-full bg-[#1E3A8A] flex-shrink-0" />
                 <span className="text-sm text-[#374151] font-medium">{m}</span>
               </div>
             ))}
           </div>
-        )
-      )}
+        ) : (
+          <p className="text-sm text-[#9CA3AF] italic">{t('doc.emptyHint')}</p>
+        ))}
 
-      {section.type === 'list' && (
-        editing ? (
+      {modeType === 'list' &&
+        (editing ? (
           <div className="space-y-2">
             {draft.items?.map((item, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-xs flex items-center justify-center font-semibold flex-shrink-0">{i + 1}</span>
+                <span className="w-7 h-7 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-xs flex items-center justify-center font-semibold flex-shrink-0">
+                  {i + 1}
+                </span>
                 <input
                   value={item}
                   onChange={e => updateItem(i, e.target.value)}
-                  className="flex-1 text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  className="flex-1 text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  placeholder={t('doc.placeholderRule')}
                 />
-                <button onClick={() => removeItem(i)} className="text-[#EF4444] hover:text-red-600">
+                <button
+                  type="button"
+                  onClick={() => removeItem(i)}
+                  className="p-2 text-[#EF4444] hover:bg-red-50 rounded-lg"
+                  aria-label={t('common.delete')}
+                >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             ))}
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#F1F5F9] text-[#9CA3AF] text-xs flex items-center justify-center font-semibold flex-shrink-0">+</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#F1F5F9] text-[#9CA3AF] text-xs flex items-center justify-center font-semibold flex-shrink-0">
+                +
+              </span>
               <input
                 value={newItem}
                 onChange={e => setNewItem(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addItem()}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addItem()
+                  }
+                }}
                 placeholder={t('doc.placeholderRule')}
-                className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                className="flex-1 min-w-[160px] text-sm text-[#374151] border border-dashed border-[#CBD5E1] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
               />
+              <Button variant="outline" size="sm" type="button" onClick={addItem}>
+                {t('doc.addItemButton')}
+              </Button>
             </div>
           </div>
-        ) : (
+        ) : section.items?.some(x => x.trim()) ? (
           <ul className="space-y-2">
-            {section.items?.map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-[#374151]">
-                <span className="w-5 h-5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-xs flex items-center justify-center font-semibold flex-shrink-0 mt-0.5">{i + 1}</span>
-                {r}
+            {section.items?.filter(x => x.trim()).map((r, i) => (
+              <li key={i} className="flex items-start gap-3 text-sm text-[#374151]">
+                <span className="w-7 h-7 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-xs flex items-center justify-center font-semibold flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <span className="leading-relaxed pt-1">{r}</span>
               </li>
             ))}
           </ul>
-        )
-      )}
+        ) : (
+          <p className="text-sm text-[#9CA3AF] italic">{t('doc.emptyHint')}</p>
+        ))}
     </div>
   )
 }
 
 function DocumentacaoTab({ projectId, initialContent }: { projectId: string; initialContent: DocSection[] | null }) {
   const { t } = useI18n()
-  const [sections, setSections] = useState<DocSection[]>(initialContent ?? INITIAL_DOC)
+  const [sections, setSections] = useState<DocSection[]>(() =>
+    normalizeDocSections(initialContent ?? INITIAL_DOC),
+  )
   const [saved, setSaved] = useState(initialContent !== null)
   const [saving, startSaving] = useTransition()
   const [generating, setGenerating] = useState(false)
@@ -1027,7 +1169,7 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
       })
       const json = await res.json()
       if (json.error) { setGenError(json.error); return }
-      setSections(json.data)
+      setSections(normalizeDocSections(json.data))
       setSaved(false)
     } catch {
       setGenError(t('doc.genError'))
@@ -1041,6 +1183,17 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
     setSaved(false)
   }
 
+  const handleAddSection = (type: DocSection['type']) => {
+    setSections(prev => [...prev, createEmptyDocSection(type, t('doc.newSectionTitle'))])
+    setSaved(false)
+  }
+
+  const handleRemoveSection = (index: number) => {
+    if (!window.confirm(t('doc.confirmDeleteSection'))) return
+    setSections(prev => prev.filter((_, i) => i !== index))
+    setSaved(false)
+  }
+
   const handleSave = () => {
     startSaving(async () => {
       await saveDocumentAction(projectId, 'doc', JSON.stringify(sections))
@@ -1050,48 +1203,104 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
 
   return (
     <Card padding="lg" className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {genError && <span className="text-xs text-[#EF4444]">{genError}</span>}
-          <Button variant="outline" size="sm" onClick={handleGenerate} loading={generating}>
-            {!generating && (
-              <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                </svg>
-                {t('spec.generateAi')}
-              </>
-            )}
-          </Button>
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold text-[#111827]">{t('doc.panelTitle')}</h2>
+        <p className="text-sm text-[#6B7280] leading-relaxed">{t('doc.helpLead')}</p>
+      </div>
+
+      <div className="rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-4">
+        <p className="text-xs font-semibold text-[#1E40AF] uppercase tracking-wide mb-3">
+          {t('doc.helpBoxTitle')}
+        </p>
+        <ul className="text-sm text-[#1E3A8A] space-y-2.5 list-none">
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-white border border-[#BFDBFE] text-[#1D4ED8] text-xs font-bold flex items-center justify-center">
+              1
+            </span>
+            <span className="leading-snug pt-1">{t('doc.helpStep1')}</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-white border border-[#BFDBFE] text-[#1D4ED8] text-xs font-bold flex items-center justify-center">
+              2
+            </span>
+            <span className="leading-snug pt-1">{t('doc.helpStep2')}</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-white border border-[#BFDBFE] text-[#1D4ED8] text-xs font-bold flex items-center justify-center">
+              3
+            </span>
+            <span className="leading-snug pt-1">{t('doc.helpStep3')}</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-white border border-[#BFDBFE] text-[#1D4ED8] text-xs font-bold flex items-center justify-center">
+              4
+            </span>
+            <span className="leading-snug pt-1">{t('doc.helpStep4')}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-[#F1F5F9] pb-5">
+        <div className="flex flex-col gap-2 min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" type="button" onClick={handleGenerate} loading={generating}>
+              {!generating && (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                  {t('spec.generateAi')}
+                </>
+              )}
+            </Button>
+            <span className="hidden sm:inline text-[#E5E7EB] select-none">|</span>
+            <Button variant="outline" size="sm" type="button" onClick={() => handleAddSection('text')}>
+              {t('doc.addSectionText')}
+            </Button>
+            <Button variant="outline" size="sm" type="button" onClick={() => handleAddSection('list')}>
+              {t('doc.addSectionList')}
+            </Button>
+            <Button variant="outline" size="sm" type="button" onClick={() => handleAddSection('grid')}>
+              {t('doc.addSectionGrid')}
+            </Button>
+          </div>
+          <p className="text-xs text-[#9CA3AF]">{t('doc.addSectionHint')}</p>
+          {genError ? <p className="text-sm text-[#EF4444]">{genError}</p> : null}
         </div>
-        <div>
-        {!saved ? (
-          <Button size="sm" onClick={handleSave} loading={saving}>
-            {!saving && (
-              <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                {t('common.save')}
-              </>
-            )}
-          </Button>
-        ) : (
-          <span className="flex items-center gap-1 text-xs text-[#10B981]">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-            {t('common.saved')}
-          </span>
-        )}
+        <div className="flex-shrink-0">
+          {!saved ? (
+            <Button size="sm" type="button" onClick={handleSave} loading={saving}>
+              {!saving && (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  {t('common.save')}
+                </>
+              )}
+            </Button>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-[#10B981]">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              {t('common.saved')}
+            </span>
+          )}
         </div>
       </div>
-      {sections.map((section, i) => (
-        <div key={section.id}>
-          <DocSectionBlock section={section} onUpdate={s => handleUpdate(i, s)} />
-          {i < sections.length - 1 && <div className="border-t border-[#F1F5F9] mt-6" />}
-        </div>
-      ))}
+
+      <div className="space-y-4">
+        {sections.map((section, i) => (
+          <DocSectionBlock
+            key={section.id}
+            section={section}
+            onUpdate={s => handleUpdate(i, s)}
+            canRemove={sections.length > 1}
+            onRemove={sections.length > 1 ? () => handleRemoveSection(i) : undefined}
+          />
+        ))}
+      </div>
     </Card>
   )
 }
@@ -1382,10 +1591,10 @@ export default function ProjetoPage() {
   const tabs = useMemo(
     (): { id: ProjectStatus | 'briefing'; label: string }[] => [
       { id: 'briefing', label: t('status.briefing') },
-      { id: 'refinement', label: t('status.refinement') },
       { id: 'specification', label: t('status.specification') },
       { id: 'documentation', label: t('status.documentation') },
       { id: 'manual', label: t('status.manual') },
+      { id: 'refinement', label: t('status.refinement') },
     ],
     [t]
   )

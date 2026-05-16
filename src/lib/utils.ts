@@ -36,10 +36,10 @@ export function getProfileInitials(name: string): string {
 export function getProgressFromStatus(status: ProjectStatus): number {
   const progress: Record<ProjectStatus, number> = {
     briefing: 10,
-    refinement: 30,
-    specification: 50,
-    documentation: 70,
-    manual: 90,
+    specification: 30,
+    documentation: 50,
+    manual: 70,
+    refinement: 85,
     done: 100,
   }
   return progress[status]

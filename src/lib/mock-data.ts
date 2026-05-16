@@ -9,7 +9,7 @@ export const MOCK_PROJECTS: Project[] = [
     created_by: '1',
     created_at: '2024-03-10T10:00:00Z',
     status: 'specification',
-    progress: 50,
+    progress: 30,
   },
   {
     id: '2',
@@ -19,7 +19,7 @@ export const MOCK_PROJECTS: Project[] = [
     created_by: '1',
     created_at: '2024-03-08T14:00:00Z',
     status: 'manual',
-    progress: 90,
+    progress: 70,
   },
   {
     id: '3',
@@ -49,7 +49,7 @@ export const MOCK_PROJECTS: Project[] = [
     created_by: '1',
     created_at: '2024-03-13T16:00:00Z',
     status: 'refinement',
-    progress: 30,
+    progress: 85,
   },
   {
     id: '6',
@@ -59,7 +59,7 @@ export const MOCK_PROJECTS: Project[] = [
     created_by: '1',
     created_at: '2024-03-14T08:30:00Z',
     status: 'documentation',
-    progress: 70,
+    progress: 50,
   },
   {
     id: '7',

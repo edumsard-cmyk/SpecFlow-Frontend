@@ -26,10 +26,10 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
     (): { value: ProjectStatus | 'all'; label: string }[] => [
       { value: 'all', label: t('projects.filterAll') },
       { value: 'briefing', label: t('status.briefing') },
-      { value: 'refinement', label: t('status.refinement') },
       { value: 'specification', label: t('status.specification') },
       { value: 'documentation', label: t('status.documentation') },
       { value: 'manual', label: t('status.manual') },
+      { value: 'refinement', label: t('status.refinement') },
       { value: 'done', label: t('projects.filterDone') },
     ],
     [t]

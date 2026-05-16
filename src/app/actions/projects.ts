@@ -82,10 +82,10 @@ export async function updateProjectStatusAction(
 ): Promise<{ error?: string }> {
   const STATUS_PROGRESS: Record<ProjectStatus, number> = {
     briefing: 10,
-    refinement: 25,
-    specification: 45,
-    documentation: 65,
-    manual: 85,
+    specification: 30,
+    documentation: 50,
+    manual: 70,
+    refinement: 85,
     done: 100,
   }
   try {
