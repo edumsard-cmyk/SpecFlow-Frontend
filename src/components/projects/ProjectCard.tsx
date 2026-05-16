@@ -1,6 +1,9 @@
+'use client'
+
 import Link from 'next/link'
-import { STATUS_LABELS, STATUS_STEPS, type ProjectStatus } from '@/types'
+import { type ProjectStatus, STATUS_STEPS } from '@/types'
 import { getStatusColor, formatDate } from '@/lib/utils'
+import { useI18n } from '@/components/i18n/I18nProvider'
 import Badge from '@/components/ui/Badge'
 
 interface ProjectCardProject {
@@ -28,14 +31,14 @@ function ProgressBar({ value }: { value: number }) {
   )
 }
 
-function StepDots({ status }: { status: ProjectStatus }) {
+function StepDots({ status, labelFor }: { status: ProjectStatus; labelFor: (s: ProjectStatus) => string }) {
   const currentIndex = STATUS_STEPS.indexOf(status)
   return (
     <div className="flex items-center gap-1">
       {STATUS_STEPS.filter(s => s !== 'done').map((step, i) => (
         <div
           key={step}
-          title={STATUS_LABELS[step]}
+          title={labelFor(step)}
           className={`h-1.5 rounded-full transition-all duration-300 ${
             i < currentIndex
               ? 'bg-[#1E3A8A] w-4'
@@ -50,6 +53,8 @@ function StepDots({ status }: { status: ProjectStatus }) {
 }
 
 export default function ProjectCard({ project, view = 'grid' }: ProjectCardProps) {
+  const { t, locale } = useI18n()
+  const statusLabel = (s: ProjectStatus) => t(`status.${s}`)
   if (view === 'list') {
     return (
       <Link href={`/projetos/${project.id}`}>
@@ -63,21 +68,21 @@ export default function ProjectCard({ project, view = 'grid' }: ProjectCardProps
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <p className="font-medium text-[#111827] truncate group-hover:text-[#1D4ED8] transition-colors">{project.name}</p>
-              <Badge className={getStatusColor(project.status)}>{STATUS_LABELS[project.status]}</Badge>
+              <Badge className={getStatusColor(project.status)}>{statusLabel(project.status)}</Badge>
             </div>
             <p className="text-sm text-[#6B7280] truncate">{project.description}</p>
           </div>
 
           <div className="w-40 flex-shrink-0">
             <div className="flex items-center justify-between mb-1.5">
-              <StepDots status={project.status} />
+              <StepDots status={project.status} labelFor={statusLabel} />
               <span className="text-xs font-medium text-[#111827] ml-2">{project.progress}%</span>
             </div>
             <ProgressBar value={project.progress} />
           </div>
 
           <div className="flex-shrink-0 text-right w-24">
-            <p className="text-xs text-[#9CA3AF]">{formatDate(project.created_at)}</p>
+            <p className="text-xs text-[#9CA3AF]">{formatDate(project.created_at, locale)}</p>
           </div>
 
           <svg className="w-4 h-4 text-[#D1D5DB] group-hover:text-[#1D4ED8] transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -97,7 +102,7 @@ export default function ProjectCard({ project, view = 'grid' }: ProjectCardProps
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
             </svg>
           </div>
-          <Badge className={getStatusColor(project.status)}>{STATUS_LABELS[project.status]}</Badge>
+          <Badge className={getStatusColor(project.status)}>{statusLabel(project.status)}</Badge>
         </div>
 
         <div className="flex-1">
@@ -109,16 +114,16 @@ export default function ProjectCard({ project, view = 'grid' }: ProjectCardProps
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <StepDots status={project.status} />
+            <StepDots status={project.status} labelFor={statusLabel} />
             <span className="text-xs font-medium text-[#111827]">{project.progress}%</span>
           </div>
           <ProgressBar value={project.progress} />
         </div>
 
         <div className="flex items-center justify-between pt-1 border-t border-[#F1F5F9]">
-          <p className="text-xs text-[#9CA3AF]">{formatDate(project.created_at)}</p>
+          <p className="text-xs text-[#9CA3AF]">{formatDate(project.created_at, locale)}</p>
           <span className="text-xs text-[#1D4ED8] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-            Abrir →
+            {t('projectCard.open')}
           </span>
         </div>
       </div>

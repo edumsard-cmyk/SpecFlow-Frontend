@@ -1,9 +1,10 @@
-export type Locale = 'pt' | 'en'
+export type Locale = 'pt' | 'en' | 'es'
 
 export const defaultLocale: Locale = 'pt'
 
 export const dictionaries: Record<Locale, Record<string, string>> = {
   pt: {
+    'brand.tagline': 'Gestão de Demandas',
     'nav.menu': 'Menu',
     'nav.dashboard': 'Dashboard',
     'nav.projects': 'Projetos',
@@ -20,9 +21,349 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'i18n.language': 'Idioma',
     'i18n.pt': 'Português',
     'i18n.en': 'English',
+    'i18n.es': 'Español',
     'logout.aria': 'Sair da conta',
+
+    'status.briefing': 'Briefing',
+    'status.refinement': 'Refinamento',
+    'status.specification': 'Especificação',
+    'status.documentation': 'Documentação',
+    'status.manual': 'Manual',
+    'status.done': 'Concluído',
+
+    'common.cancel': 'Cancelar',
+    'common.save': 'Salvar',
+    'common.saved': 'Salvo',
+    'common.edit': 'Editar',
+    'common.delete': 'Excluir',
+    'common.back': 'Voltar',
+    'common.continue': 'Continuar',
+    'common.characters': 'caracteres',
+    'common.optional': '(opcional)',
+    'common.progress': 'Progresso',
+    'common.send': 'Enviar',
+    'common.add': 'Adicionar',
+    'common.or': 'ou',
+    'common.emDash': '—',
+
+    'dashboard.title': 'Dashboard',
+    'dashboard.subtitle': 'Visão geral dos seus projetos',
+    'dashboard.newProject': 'Novo Projeto',
+    'dashboard.statTotal': 'Total de Projetos',
+    'dashboard.statInProgress': 'Em Andamento',
+    'dashboard.statDone': 'Concluídos',
+    'dashboard.statAvgProgress': 'Progresso Médio',
+    'dashboard.statTotalZero': 'Nenhum projeto ainda',
+    'dashboard.statTotalMany': '{{n}} projetos',
+    'dashboard.statTotalOne': '1 projeto',
+    'dashboard.statProgressZero': 'Nenhum em andamento',
+    'dashboard.statProgressMany': '{{n}} ativos',
+    'dashboard.statProgressOne': '1 ativo',
+    'dashboard.statDoneZero': 'Nenhum concluído',
+    'dashboard.statDoneMany': '{{n}} concluídos',
+    'dashboard.statDoneOne': '1 concluído',
+    'dashboard.avgProgressHint': 'de todos os projetos',
+    'dashboard.recentTitle': 'Projetos Recentes',
+    'dashboard.viewAll': 'Ver todos →',
+    'dashboard.emptyRecent': 'Nenhum projeto criado ainda',
+    'dashboard.createFirst': 'Criar primeiro projeto',
+
+    'projects.title': 'Projetos',
+    'projects.subtitleOne': '1 projeto no total',
+    'projects.subtitleMany': '{{n}} projetos no total',
+    'projects.newProject': 'Novo Projeto',
+    'projects.searchPlaceholder': 'Buscar projetos...',
+    'projects.sortRecent': 'Mais recentes',
+    'projects.sortName': 'Nome A-Z',
+    'projects.sortProgress': 'Progresso',
+    'projects.viewGridAria': 'Visualização em grade',
+    'projects.viewListAria': 'Visualização em lista',
+    'projects.filterAll': 'Todos',
+    'projects.filterDone': 'Concluídos',
+    'projects.emptyTitle': 'Nenhum projeto encontrado',
+    'projects.emptySearch': 'Nenhum resultado para "{{q}}"',
+    'projects.emptyHint': 'Crie seu primeiro projeto para começar',
+    'projects.createProject': 'Criar projeto',
+    'projects.firstUseGuide': 'Ver guia de primeiro uso',
+    'projects.showing': 'Exibindo {{shown}} de {{total}} projetos',
+
+    'projectCard.open': 'Abrir →',
+
+    'nextSteps.title': 'Sugestão de próximos passos',
+    'nextSteps.beforeStage': 'Avance para',
+    'nextSteps.afterStage':
+      'quando a etapa atual estiver satisfatória.',
+
+    'detail.navProjects': 'Projetos',
+    'detail.editProjectAria': 'Editar projeto',
+    'detail.deleteProjectAria': 'Apagar projeto',
+    'detail.modalEditTitle': 'Editar projeto',
+    'detail.labelProjectName': 'Nome do projeto',
+    'detail.labelDescription': 'Descrição',
+    'detail.saveChanges': 'Salvar alterações',
+    'detail.modalDeleteTitle': 'Apagar projeto?',
+    'detail.modalDeleteSubtitle': 'Esta ação não pode ser desfeita.',
+    'detail.modalDeleteLead':
+      'O projeto "{{name}}" e todo seu conteúdo serão removidos permanentemente.',
+    'detail.deleteDeleting': 'Apagando…',
+    'detail.deleteConfirm': 'Sim, apagar projeto',
+    'detail.completeTitle': 'Projeto concluído!',
+    'detail.completeSubtitle': 'Todas as etapas foram finalizadas com sucesso.',
+    'detail.viewAllProjects': 'Ver todos os projetos',
+    'detail.finishProject': 'Concluir projeto',
+    'detail.stageDone': 'Etapa concluída',
+    'detail.finishStage': 'Concluir etapa',
+    'detail.currentStageLabel': 'Etapa atual:',
+    'detail.goToCurrentStage': 'Ir para etapa atual',
+
+    'briefing.receivedTitle': 'Briefing recebido',
+    'briefing.aiHint':
+      'Este texto é o que a IA usa nas etapas seguintes (refinamento, especificação, documentação e manual). Guarde sempre que alterar.',
+    'briefing.audioOriginal': 'Áudio original do briefing',
+    'briefing.saveServer': 'Guardar no servidor',
+    'briefing.charCount': '{{n}} caracteres (mín. 15)',
+    'briefing.emptyPlaceholder': '(Sem texto no briefing — edite para preencher)',
+    'briefing.savedAt': 'Guardado em {{date}}',
+    'briefing.emptyReadonly':
+      'Sem texto de briefing. Clique em Editar para descrever a demanda — este conteúdo alimenta todas as próximas abas.',
+
+    'spec.legend':
+      'Use o formato Como · Quero · Para para descrever mudanças com clareza — quem pede, o que quer e porquê.',
+    'spec.countMany': '{{n}} histórias de usuário',
+    'spec.countOne': '1 história de usuário',
+    'spec.generateAi': 'Gerar com IA',
+    'spec.clearSpec': 'Limpar especificação',
+    'spec.emptyCard':
+      'Nenhuma história ainda. Use Gerar com IA ou Nova história e preencha Como, Quero e Para.',
+    'spec.acceptanceCriteria': 'Critérios de aceite',
+    'spec.titlePlaceholderShort': 'Título curto (opcional)',
+    'spec.titlePlaceholderLong':
+      'Título curto (opcional — pode resumir o «Quero»)',
+    'spec.addCriterionPlaceholder': 'Adicionar critério (Enter)',
+    'spec.deleteStory': 'Excluir história',
+    'spec.confirmClear':
+      'Remover todas as histórias de usuário deste projeto? Os dados guardados na especificação serão apagados.',
+    'spec.genError': 'Erro ao gerar histórias.',
+    'spec.storyFallbackAi': 'História',
+    'spec.newStory': 'Nova história',
+    'spec.addStory': 'Adicionar história',
+    'spec.newStoryFallback': 'Nova história',
+    'spec.voiceEmpty': 'Sem descrição nesta história.',
+    'spec.voiceLabel.como': 'Como',
+    'spec.voiceLabel.quero': 'Quero',
+    'spec.voiceLabel.para': 'Para',
+    'spec.voiceHintReadonly.como': 'Quem é o utilizador ou interessado?',
+    'spec.voiceHintReadonly.quero': 'O que precisa ser feito?',
+    'spec.voiceHintReadonly.para': 'Qual o valor ou objetivo?',
+    'spec.voiceHintEdit.como': 'Quem é? (ex.: visitante do site, administrador)',
+    'spec.voiceHintEdit.quero': 'O quê? (ação ou necessidade)',
+    'spec.voiceHintEdit.para': 'Para quê? (benefício ou objetivo)',
+    'spec.placeholder.como': 'Ex.: visitante autenticado no SpecFlow',
+    'spec.placeholder.quero': 'Ex.: alterar o menu lateral do meu painel',
+    'spec.placeholder.para': 'Ex.: encontrar as funções mais rápido sem me perder',
+    'spec.editStoryAria': 'Editar história',
+    'spec.editorIntro':
+      'Preencha os três blocos — fica organizado para o cliente e é o texto que segue para documentação e manual.',
+
+    'comments.title': 'Comentários',
+    'comments.placeholder': 'Adicionar comentário…',
+    'comments.delete': 'Excluir',
+
+    'doc.genError': 'Erro ao gerar documentação.',
+    'doc.placeholderModule': 'Adicionar módulo (Enter)',
+    'doc.placeholderRule': 'Adicionar regra (Enter)',
+    'doc.seed.overviewTitle': 'Visão geral do sistema',
+    'doc.seed.overviewBody':
+      'O sistema de agendamento para clínicas médicas é uma plataforma web responsiva que permite o gerenciamento completo de consultas entre pacientes, médicos e equipe administrativa. A solução suporta múltiplos convênios e fornece notificações automatizadas em diferentes canais.',
+    'doc.seed.modulesTitle': 'Módulos principais',
+    'doc.seed.module1': 'Portal do Paciente',
+    'doc.seed.module2': 'Painel do Médico',
+    'doc.seed.module3': 'Central Administrativa',
+    'doc.seed.module4': 'Motor de Notificações',
+    'doc.seed.rulesTitle': 'Regras de negócio',
+    'doc.seed.rule1':
+      'Agendamento só é confirmado após validação do convênio ou pagamento antecipado',
+    'doc.seed.rule2':
+      'Cancelamentos com menos de 2h de antecedência geram notificação especial para secretaria',
+    'doc.seed.rule3':
+      'Médico pode bloquear agenda com no mínimo 30 minutos de antecedência',
+    'doc.seed.rule4':
+      'Notificações de lembrete são enviadas automaticamente às 08h do dia anterior',
+
+    'manual.title': 'Manual do Usuário',
+    'manual.versionHint': 'Versão 1.0 — Gerado automaticamente pelo SpecFlow',
+    'manual.genError': 'Erro ao gerar manual.',
+    'manual.exportPdf': 'Exportar PDF',
+    'manual.sectionTitlePlaceholder': 'Título da nova seção',
+    'manual.addSection': 'Adicionar seção',
+    'manual.placeholderStep': 'Adicionar passo (Enter)',
+    'manual.seed.s1Title': '1. Como agendar uma consulta',
+    'manual.seed.s1a': 'Acesse o portal e clique em "Agendar Consulta"',
+    'manual.seed.s1b': 'Selecione a especialidade médica desejada',
+    'manual.seed.s1c': 'Escolha o médico e visualize os horários disponíveis',
+    'manual.seed.s1d': 'Selecione a data e horário de sua preferência',
+    'manual.seed.s1e': 'Informe os dados do convênio ou escolha pagamento particular',
+    'manual.seed.s1f':
+      'Confirme o agendamento — você receberá um e-mail de confirmação',
+    'manual.seed.s2Title': '2. Como cancelar ou remarcar',
+    'manual.seed.s2a': 'Acesse "Minhas Consultas" no menu principal',
+    'manual.seed.s2b': 'Localize a consulta que deseja alterar',
+    'manual.seed.s2c': 'Clique em "Cancelar" ou "Remarcar"',
+    'manual.seed.s2d': 'Para remarcar, selecione a nova data e horário',
+    'manual.seed.s2e':
+      'Cancele com pelo menos 2 horas de antecedência para evitar cobranças',
+
+    'refinement.titleStart': 'Iniciar Refinamento com IA',
+    'refinement.intro':
+      'A IA usa o texto do briefing guardado na aba Briefing e faz perguntas para cobrir lacunas antes da especificação. Se alterar o briefing, guarde-o nessa aba antes de gerar histórias ou documentação.',
+    'refinement.startButton': 'Iniciar refinamento',
+    'refinement.placeholderWait': 'Aguardando resposta da IA...',
+    'refinement.placeholderWrite':
+      'Responda ou adicione mais contexto... (Enter para enviar)',
+    'refinement.keyboardHint': 'Shift+Enter para nova linha · Enter para enviar',
+    'refinement.error429': 'Muitas requisições. Aguarde um instante e tente de novo.',
+    'refinement.error500':
+      'Serviço temporariamente indisponível. Tente novamente em alguns minutos.',
+    'refinement.errorNetwork':
+      'Não foi possível conectar ao refinamento. Verifique sua internet e tente de novo.',
+    'refinement.errorProcess':
+      'Ocorreu um erro ao processar sua mensagem. Tente novamente.',
+
+    'export.hint':
+      'O arquivo reflete apenas o que já está salvo no servidor (briefing, refinamento, histórias, docs).',
+    'export.titleMd': 'Baixar pacote completo em Markdown (somente dados salvos)',
+    'export.titlePdf': 'Baixar pacote completo em PDF (somente dados salvos)',
+    'export.loadError':
+      'Não foi possível carregar o projeto. Verifique se você ainda tem acesso e tente de novo.',
+    'export.fail':
+      'Falha ao exportar. Verifique a conexão e tente novamente.',
+
+    'onboarding.welcomeTitle': 'Bem-vindo ao SpecFlow!',
+    'onboarding.welcomeSubtitle':
+      'Em 3 passos você transforma uma demanda em especificação completa. Veja como:',
+    'onboarding.step1Title': 'Crie seu primeiro projeto',
+    'onboarding.step1Desc': 'Dê um nome e escolha como quer inserir a demanda.',
+    'onboarding.step2Title': 'Refine com a IA',
+    'onboarding.step2Desc': 'Responda as perguntas da IA para detalhar o briefing.',
+    'onboarding.step3Title': 'Exporte a especificação',
+    'onboarding.step3Desc':
+      'Na página do projeto, baixe o pacote completo (.md ou PDF) com tudo que já foi salvo.',
+    'onboarding.cta': 'Criar primeiro projeto',
+    'onboarding.dismissAria': 'Fechar',
+
+    'auth.login.tagline': 'Da ideia ao uso, sem ruído.',
+    'auth.login.title': 'Entrar na plataforma',
+    'auth.login.subtitle': 'Acesse sua conta para continuar',
+    'auth.login.email': 'E-mail',
+    'auth.login.emailPlaceholder': 'voce@empresa.com',
+    'auth.login.password': 'Senha',
+    'auth.login.wrongCredentials': 'E-mail ou senha incorretos.',
+    'auth.login.submit': 'Entrar',
+    'auth.login.forgot': 'Esqueceu a senha?',
+    'auth.login.noAccount': 'Não tem uma conta?',
+    'auth.login.register': 'Cadastre-se',
+    'auth.login.footerHelp': 'Ajuda',
+    'auth.login.footerTerms': 'Termos de uso',
+    'auth.login.footerPrivacy': 'Privacidade',
+    'auth.login.hidePassword': 'Ocultar senha',
+    'auth.login.showPassword': 'Mostrar senha',
+
+    'newProject.title': 'Novo Projeto',
+    'newProject.subtitle': 'Crie um projeto e inicie o fluxo SpecFlow',
+    'newProject.cancel': 'Cancelar',
+    'newProject.stepIdentify': 'Identificação',
+    'newProject.stepBriefing': 'Briefing inicial',
+    'newProject.aboutTitle': 'Sobre o projeto',
+    'newProject.nameLabel': 'Nome do projeto',
+    'newProject.namePlaceholder': 'Ex: App de Agendamento, Portal do Cliente...',
+    'newProject.descriptionLabel': 'Descrição',
+    'newProject.descriptionPlaceholder': 'Descreva brevemente o objetivo do projeto...',
+    'newProject.continue': 'Continuar',
+    'newProject.howToInsertTitle': 'Como você quer inserir a demanda?',
+    'newProject.howToInsertSubtitle':
+      'Escolha o formato que melhor se encaixa no seu fluxo',
+    'newProject.input.text.label': 'Texto livre',
+    'newProject.input.text.desc':
+      'Descreva a demanda com suas próprias palavras',
+    'newProject.input.audio.label': 'Áudio',
+    'newProject.input.audio.desc':
+      'Grave ou faça upload de um áudio com a demanda',
+    'newProject.input.document.label': 'Documento',
+    'newProject.input.document.desc':
+      'Importe um PDF, Word ou planilha com os requisitos',
+    'newProject.input.form.label': 'Formulário guiado',
+    'newProject.input.form.desc':
+      'Responda perguntas estruturadas para detalhar a demanda',
+    'newProject.input.video.label': 'Vídeo',
+    'newProject.input.video.desc':
+      'Grave ou envie um vídeo explicando a demanda',
+    'newProject.briefingTitle': 'Briefing inicial',
+    'newProject.briefingIntro':
+      'Conte tudo que você sabe sobre a demanda. Não precisa ser perfeito — a IA vai refinar depois.',
+    'newProject.briefingPlaceholder':
+      'Ex: Precisamos de um sistema para gerenciar agendamentos de clínicas médicas...',
+    'newProject.charactersHint': '{{n}} caracteres',
+    'newProject.detailHint': 'Quanto mais detalhado, melhor o resultado da IA',
+    'newProject.back': 'Voltar',
+    'newProject.createSubmit': 'Criar projeto e iniciar refinamento',
+    'newProject.audioTitle': 'Briefing em áudio',
+    'newProject.audioIntro':
+      'Grave sua voz ou envie um arquivo de áudio descrevendo a demanda.',
+    'newProject.audioMicDenied':
+      'Permissão de microfone negada. Verifique as configurações do navegador.',
+    'newProject.recording': 'Gravando…',
+    'newProject.clickToRecord': 'Clique para iniciar a gravação',
+    'newProject.uploadAudio': 'Enviar arquivo de áudio',
+    'newProject.audioReady': 'Áudio pronto',
+    'newProject.discard': 'Descartar',
+    'newProject.resetRecording': 'Remover e gravar novamente',
+    'newProject.videoTitle': 'Briefing em vídeo',
+    'newProject.videoIntro':
+      'Grave pela câmera ou envie um arquivo de vídeo explicando a demanda.',
+    'newProject.cameraDenied':
+      'Permissão de câmera/microfone negada. Verifique as configurações do navegador.',
+    'newProject.clickToRecordVideo':
+      'Clique para iniciar a gravação pela câmera',
+    'newProject.uploadVideo': 'Enviar arquivo de vídeo',
+    'newProject.videoReady': 'Vídeo pronto',
+    'newProject.docTitle': 'Importar documento',
+    'newProject.docIntro':
+      'Envie um PDF, Word ou planilha com os requisitos do projeto.',
+    'newProject.docDrop': 'Arraste o arquivo aqui ou clique para selecionar',
+    'newProject.docFormatsHint': 'PDF, Word, Excel ou TXT — até 20 MB',
+    'newProject.removeFile': 'Remover arquivo',
+    'newProject.errorAudioCreate':
+      'Não foi possível criar o projeto com este áudio.',
+    'newProject.errorAudioSend':
+      'Falha ao enviar o áudio. Verifique sua conexão e tente de novo.',
+    'newProject.guided.goal':
+      'Qual é o principal objetivo do sistema?',
+    'newProject.guided.goalPh':
+      'Ex: Permitir que clientes agendem consultas médicas online sem precisar ligar para a clínica.',
+    'newProject.guided.users': 'Quem vai usar o sistema?',
+    'newProject.guided.usersPh':
+      'Ex: Pacientes, médicos e secretárias da clínica.',
+    'newProject.guided.features':
+      'Quais funcionalidades são essenciais?',
+    'newProject.guided.featuresPh':
+      'Ex: Agendamento online, lembretes por e-mail, painel do médico para gerenciar agenda...',
+    'newProject.guided.deadline': 'Qual é a estimativa de prazo?',
+    'newProject.guided.deadlinePh': 'Ex: 3 meses, até dezembro de 2024...',
+    'newProject.guided.integrations':
+      'Há integrações necessárias com outros sistemas?',
+    'newProject.guided.integrationsPh':
+      'Ex: Sistema de convênios, WhatsApp, Google Calendar... (opcional)',
+    'newProject.guided.title': 'Briefing guiado',
+    'newProject.guided.intro':
+      'Responda às perguntas — geramos um texto estruturado para o projeto.',
+    'newProject.guided.footer':
+      'As 3 primeiras perguntas são obrigatórias (mínimo 10 caracteres cada).',
+    'newProject.placeholderVideo': '[Briefing enviado por vídeo]',
+    'newProject.placeholderDoc': '[Briefing enviado por documento]',
   },
+
   en: {
+    'brand.tagline': 'Demand management',
     'nav.menu': 'Menu',
     'nav.dashboard': 'Dashboard',
     'nav.projects': 'Projects',
@@ -39,6 +380,696 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'i18n.language': 'Language',
     'i18n.pt': 'Portuguese',
     'i18n.en': 'English',
+    'i18n.es': 'Spanish',
     'logout.aria': 'Sign out',
+
+    'status.briefing': 'Briefing',
+    'status.refinement': 'Refinement',
+    'status.specification': 'Specification',
+    'status.documentation': 'Documentation',
+    'status.manual': 'Manual',
+    'status.done': 'Done',
+
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.saved': 'Saved',
+    'common.edit': 'Edit',
+    'common.delete': 'Delete',
+    'common.back': 'Back',
+    'common.continue': 'Continue',
+    'common.characters': 'characters',
+    'common.optional': '(optional)',
+    'common.progress': 'Progress',
+    'common.send': 'Send',
+    'common.add': 'Add',
+    'common.or': 'or',
+    'common.emDash': '—',
+
+    'dashboard.title': 'Dashboard',
+    'dashboard.subtitle': 'Overview of your projects',
+    'dashboard.newProject': 'New project',
+    'dashboard.statTotal': 'Total projects',
+    'dashboard.statInProgress': 'In progress',
+    'dashboard.statDone': 'Completed',
+    'dashboard.statAvgProgress': 'Average progress',
+    'dashboard.statTotalZero': 'No projects yet',
+    'dashboard.statTotalMany': '{{n}} projects',
+    'dashboard.statTotalOne': '1 project',
+    'dashboard.statProgressZero': 'None in progress',
+    'dashboard.statProgressMany': '{{n}} active',
+    'dashboard.statProgressOne': '1 active',
+    'dashboard.statDoneZero': 'None completed',
+    'dashboard.statDoneMany': '{{n}} completed',
+    'dashboard.statDoneOne': '1 completed',
+    'dashboard.avgProgressHint': 'across all projects',
+    'dashboard.recentTitle': 'Recent projects',
+    'dashboard.viewAll': 'View all →',
+    'dashboard.emptyRecent': 'No projects created yet',
+    'dashboard.createFirst': 'Create your first project',
+
+    'projects.title': 'Projects',
+    'projects.subtitleOne': '1 project in total',
+    'projects.subtitleMany': '{{n}} projects in total',
+    'projects.newProject': 'New project',
+    'projects.searchPlaceholder': 'Search projects...',
+    'projects.sortRecent': 'Most recent',
+    'projects.sortName': 'Name A–Z',
+    'projects.sortProgress': 'Progress',
+    'projects.viewGridAria': 'Grid view',
+    'projects.viewListAria': 'List view',
+    'projects.filterAll': 'All',
+    'projects.filterDone': 'Completed',
+    'projects.emptyTitle': 'No projects found',
+    'projects.emptySearch': 'No results for "{{q}}"',
+    'projects.emptyHint': 'Create your first project to get started',
+    'projects.createProject': 'Create project',
+    'projects.firstUseGuide': 'View getting-started guide',
+    'projects.showing': 'Showing {{shown}} of {{total}} projects',
+
+    'projectCard.open': 'Open →',
+
+    'nextSteps.title': 'Suggested next steps',
+    'nextSteps.beforeStage': 'Move on to',
+    'nextSteps.afterStage': 'once you are happy with the current step.',
+
+    'detail.navProjects': 'Projects',
+    'detail.editProjectAria': 'Edit project',
+    'detail.deleteProjectAria': 'Delete project',
+    'detail.modalEditTitle': 'Edit project',
+    'detail.labelProjectName': 'Project name',
+    'detail.labelDescription': 'Description',
+    'detail.saveChanges': 'Save changes',
+    'detail.modalDeleteTitle': 'Delete project?',
+    'detail.modalDeleteSubtitle': 'This action cannot be undone.',
+    'detail.modalDeleteLead':
+      'The project "{{name}}" and all its content will be permanently removed.',
+    'detail.deleteDeleting': 'Deleting…',
+    'detail.deleteConfirm': 'Yes, delete project',
+    'detail.completeTitle': 'Project completed!',
+    'detail.completeSubtitle': 'All steps were finished successfully.',
+    'detail.viewAllProjects': 'View all projects',
+    'detail.finishProject': 'Finish project',
+    'detail.stageDone': 'Step completed',
+    'detail.finishStage': 'Complete step',
+    'detail.currentStageLabel': 'Current step:',
+    'detail.goToCurrentStage': 'Go to current step',
+
+    'briefing.receivedTitle': 'Briefing received',
+    'briefing.aiHint':
+      'This text is what the AI uses in later steps (refinement, specification, documentation and manual). Always save after changes.',
+    'briefing.audioOriginal': 'Original briefing audio',
+    'briefing.saveServer': 'Save to server',
+    'briefing.charCount': '{{n}} characters (min. 15)',
+    'briefing.emptyPlaceholder': '(No briefing text yet — edit to add content)',
+    'briefing.savedAt': 'Saved on {{date}}',
+    'briefing.emptyReadonly':
+      'No briefing text yet. Click Edit to describe the request — this content feeds every following tab.',
+
+    'spec.legend':
+      'Use As · I want · So that to describe changes clearly — who asks, what they need, and why.',
+    'spec.countMany': '{{n}} user stories',
+    'spec.countOne': '1 user story',
+    'spec.generateAi': 'Generate with AI',
+    'spec.clearSpec': 'Clear specification',
+    'spec.emptyCard':
+      'No stories yet. Use Generate with AI or New story and fill As, I want and So that.',
+    'spec.acceptanceCriteria': 'Acceptance criteria',
+    'spec.titlePlaceholderShort': 'Short title (optional)',
+    'spec.titlePlaceholderLong':
+      'Short title (optional — can summarize “I want”)',
+    'spec.addCriterionPlaceholder': 'Add criterion (Enter)',
+    'spec.deleteStory': 'Delete story',
+    'spec.confirmClear':
+      'Remove all user stories for this project? Saved specification data will be erased.',
+    'spec.genError': 'Could not generate stories.',
+    'spec.storyFallbackAi': 'Story',
+    'spec.newStory': 'New story',
+    'spec.addStory': 'Add story',
+    'spec.newStoryFallback': 'New story',
+    'spec.voiceEmpty': 'No description for this story.',
+    'spec.voiceLabel.como': 'As',
+    'spec.voiceLabel.quero': 'I want',
+    'spec.voiceLabel.para': 'So that',
+    'spec.voiceHintReadonly.como': 'Who is the user or stakeholder?',
+    'spec.voiceHintReadonly.quero': 'What needs to be done?',
+    'spec.voiceHintReadonly.para': 'What is the value or goal?',
+    'spec.voiceHintEdit.como': 'Who? (e.g. site visitor, admin)',
+    'spec.voiceHintEdit.quero': 'What? (action or need)',
+    'spec.voiceHintEdit.para': 'Why? (benefit or objective)',
+    'spec.placeholder.como': 'e.g. authenticated visitor using SpecFlow',
+    'spec.placeholder.quero': 'e.g. change the sidebar menu in my dashboard',
+    'spec.placeholder.para': 'e.g. find features faster without getting lost',
+    'spec.editStoryAria': 'Edit story',
+    'spec.editorIntro':
+      'Fill all three blocks — it stays clear for stakeholders and flows into docs and the manual.',
+
+    'comments.title': 'Comments',
+    'comments.placeholder': 'Add a comment…',
+    'comments.delete': 'Delete',
+
+    'doc.genError': 'Could not generate documentation.',
+    'doc.placeholderModule': 'Add module (Enter)',
+    'doc.placeholderRule': 'Add rule (Enter)',
+    'doc.seed.overviewTitle': 'System overview',
+    'doc.seed.overviewBody':
+      'The clinic scheduling system is a responsive web platform for managing appointments between patients, doctors and admin staff. It supports multiple insurers and automated notifications across channels.',
+    'doc.seed.modulesTitle': 'Main modules',
+    'doc.seed.module1': 'Patient portal',
+    'doc.seed.module2': 'Doctor dashboard',
+    'doc.seed.module3': 'Admin hub',
+    'doc.seed.module4': 'Notification engine',
+    'doc.seed.rulesTitle': 'Business rules',
+    'doc.seed.rule1':
+      'Appointments are confirmed only after insurer validation or upfront payment',
+    'doc.seed.rule2':
+      'Cancellations within 2 hours trigger a special alert for reception',
+    'doc.seed.rule3':
+      'Doctors can block slots with at least 30 minutes notice',
+    'doc.seed.rule4':
+      'Reminder notifications are sent automatically at 8am the day before',
+
+    'manual.title': 'User manual',
+    'manual.versionHint': 'Version 1.0 — Generated automatically by SpecFlow',
+    'manual.genError': 'Could not generate manual.',
+    'manual.exportPdf': 'Export PDF',
+    'manual.sectionTitlePlaceholder': 'New section title',
+    'manual.addSection': 'Add section',
+    'manual.placeholderStep': 'Add step (Enter)',
+    'manual.seed.s1Title': '1. How to book an appointment',
+    'manual.seed.s1a': 'Open the portal and click “Book appointment”',
+    'manual.seed.s1b': 'Choose the medical specialty',
+    'manual.seed.s1c': 'Pick a doctor and view available slots',
+    'manual.seed.s1d': 'Select your preferred date and time',
+    'manual.seed.s1e': 'Enter insurer details or choose private pay',
+    'manual.seed.s1f':
+      'Confirm the booking — you will receive a confirmation email',
+    'manual.seed.s2Title': '2. How to cancel or reschedule',
+    'manual.seed.s2a': 'Go to “My appointments” in the main menu',
+    'manual.seed.s2b': 'Find the appointment you want to change',
+    'manual.seed.s2c': 'Click “Cancel” or “Reschedule”',
+    'manual.seed.s2d': 'For reschedule, pick the new date and time',
+    'manual.seed.s2e':
+      'Cancel at least 2 hours in advance to avoid charges',
+
+    'refinement.titleStart': 'Start AI refinement',
+    'refinement.intro':
+      'The AI uses the briefing text saved in the Briefing tab and asks questions to close gaps before specification. If you change the briefing, save it there before generating stories or docs.',
+    'refinement.startButton': 'Start refinement',
+    'refinement.placeholderWait': 'Waiting for AI reply…',
+    'refinement.placeholderWrite':
+      'Reply or add context… (Enter to send)',
+    'refinement.keyboardHint': 'Shift+Enter new line · Enter to send',
+    'refinement.error429': 'Too many requests. Wait a moment and try again.',
+    'refinement.error500':
+      'Service temporarily unavailable. Try again in a few minutes.',
+    'refinement.errorNetwork':
+      'Could not reach refinement. Check your connection and try again.',
+    'refinement.errorProcess':
+      'Something went wrong processing your message. Try again.',
+
+    'export.hint':
+      'The file only reflects what is already saved on the server (briefing, refinement, stories, docs).',
+    'export.titleMd': 'Download full package as Markdown (saved data only)',
+    'export.titlePdf': 'Download full package as PDF (saved data only)',
+    'export.loadError':
+      'Could not load the project. Check that you still have access and try again.',
+    'export.fail':
+      'Export failed. Check your connection and try again.',
+
+    'onboarding.welcomeTitle': 'Welcome to SpecFlow!',
+    'onboarding.welcomeSubtitle':
+      'In three steps you turn a request into a full specification. Here is how:',
+    'onboarding.step1Title': 'Create your first project',
+    'onboarding.step1Desc': 'Name it and choose how to capture the request.',
+    'onboarding.step2Title': 'Refine with AI',
+    'onboarding.step2Desc': 'Answer AI questions to deepen the briefing.',
+    'onboarding.step3Title': 'Export the specification',
+    'onboarding.step3Desc':
+      'On the project page, download the full package (.md or PDF) with everything saved.',
+    'onboarding.cta': 'Create first project',
+    'onboarding.dismissAria': 'Dismiss',
+
+    'auth.login.tagline': 'From idea to usage, without noise.',
+    'auth.login.title': 'Sign in',
+    'auth.login.subtitle': 'Access your account to continue',
+    'auth.login.email': 'Email',
+    'auth.login.emailPlaceholder': 'you@company.com',
+    'auth.login.password': 'Password',
+    'auth.login.wrongCredentials': 'Incorrect email or password.',
+    'auth.login.submit': 'Sign in',
+    'auth.login.forgot': 'Forgot password?',
+    'auth.login.noAccount': "Don't have an account?",
+    'auth.login.register': 'Sign up',
+    'auth.login.footerHelp': 'Help',
+    'auth.login.footerTerms': 'Terms',
+    'auth.login.footerPrivacy': 'Privacy',
+    'auth.login.hidePassword': 'Hide password',
+    'auth.login.showPassword': 'Show password',
+
+    'newProject.title': 'New project',
+    'newProject.subtitle': 'Create a project and start the SpecFlow flow',
+    'newProject.cancel': 'Cancel',
+    'newProject.stepIdentify': 'Details',
+    'newProject.stepBriefing': 'Initial briefing',
+    'newProject.aboutTitle': 'About the project',
+    'newProject.nameLabel': 'Project name',
+    'newProject.namePlaceholder': 'e.g. Scheduling app, Customer portal…',
+    'newProject.descriptionLabel': 'Description',
+    'newProject.descriptionPlaceholder': 'Briefly describe the project goal…',
+    'newProject.continue': 'Continue',
+    'newProject.howToInsertTitle': 'How do you want to capture the request?',
+    'newProject.howToInsertSubtitle':
+      'Pick the format that best fits your workflow',
+    'newProject.input.text.label': 'Free text',
+    'newProject.input.text.desc': 'Describe the request in your own words',
+    'newProject.input.audio.label': 'Audio',
+    'newProject.input.audio.desc': 'Record or upload audio describing the request',
+    'newProject.input.document.label': 'Document',
+    'newProject.input.document.desc':
+      'Import a PDF, Word file or spreadsheet with requirements',
+    'newProject.input.form.label': 'Guided form',
+    'newProject.input.form.desc':
+      'Answer structured questions to detail the request',
+    'newProject.input.video.label': 'Video',
+    'newProject.input.video.desc':
+      'Record or upload a video explaining the request',
+    'newProject.briefingTitle': 'Initial briefing',
+    'newProject.briefingIntro':
+      'Share everything you know about the request. It does not need to be perfect — AI will refine later.',
+    'newProject.briefingPlaceholder':
+      'e.g. We need a system to manage medical clinic appointments...',
+    'newProject.charactersHint': '{{n}} characters',
+    'newProject.detailHint': 'More detail usually means better AI output',
+    'newProject.back': 'Back',
+    'newProject.createSubmit': 'Create project and start refinement',
+    'newProject.audioTitle': 'Audio briefing',
+    'newProject.audioIntro':
+      'Record your voice or upload an audio file describing the request.',
+    'newProject.audioMicDenied':
+      'Microphone permission denied. Check your browser settings.',
+    'newProject.recording': 'Recording…',
+    'newProject.clickToRecord': 'Click to start recording',
+    'newProject.uploadAudio': 'Upload audio file',
+    'newProject.audioReady': 'Audio ready',
+    'newProject.discard': 'Discard',
+    'newProject.resetRecording': 'Remove and record again',
+    'newProject.videoTitle': 'Video briefing',
+    'newProject.videoIntro':
+      'Record with your camera or upload a video explaining the request.',
+    'newProject.cameraDenied':
+      'Camera/microphone permission denied. Check your browser settings.',
+    'newProject.clickToRecordVideo': 'Click to start camera recording',
+    'newProject.uploadVideo': 'Upload video file',
+    'newProject.videoReady': 'Video ready',
+    'newProject.docTitle': 'Import document',
+    'newProject.docIntro':
+      'Upload a PDF, Word file or spreadsheet with project requirements.',
+    'newProject.docDrop': 'Drag a file here or click to choose',
+    'newProject.docFormatsHint': 'PDF, Word, Excel or TXT — up to 20 MB',
+    'newProject.removeFile': 'Remove file',
+    'newProject.errorAudioCreate': 'Could not create the project with this audio.',
+    'newProject.errorAudioSend':
+      'Failed to upload audio. Check your connection and try again.',
+    'newProject.guided.goal': 'What is the main goal of the system?',
+    'newProject.guided.goalPh':
+      'e.g. Let patients book medical appointments online without calling the clinic.',
+    'newProject.guided.users': 'Who will use the system?',
+    'newProject.guided.usersPh':
+      'e.g. Patients, doctors and clinic reception staff.',
+    'newProject.guided.features': 'Which features are essential?',
+    'newProject.guided.featuresPh':
+      'e.g. Online booking, email reminders, doctor agenda dashboard…',
+    'newProject.guided.deadline': 'What is the timeline?',
+    'newProject.guided.deadlinePh': 'e.g. 3 months, by December 2024…',
+    'newProject.guided.integrations':
+      'Are integrations with other systems required?',
+    'newProject.guided.integrationsPh':
+      'e.g. Insurance API, WhatsApp, Google Calendar… (optional)',
+    'newProject.guided.title': 'Guided briefing',
+    'newProject.guided.intro':
+      'Answer the questions — we build structured text for the project.',
+    'newProject.guided.footer':
+      'The first 3 questions are required (min. 10 characters each).',
+    'newProject.placeholderVideo': '[Briefing submitted as video]',
+    'newProject.placeholderDoc': '[Briefing submitted as document]',
+  },
+
+  es: {
+    'brand.tagline': 'Gestión de demandas',
+    'nav.menu': 'Menú',
+    'nav.dashboard': 'Panel',
+    'nav.projects': 'Proyectos',
+    'nav.settings': 'Configuración',
+    'nav.help': 'Ayuda',
+    'nav.adminSection': 'Admin',
+    'nav.adminPanel': 'Panel admin',
+    'nav.adminCompanies': 'Empresas',
+    'nav.adminUsers': 'Usuarios',
+    'nav.adminAudit': 'Auditoría',
+    'role.admin': 'Admin',
+    'role.company': 'Gestor',
+    'role.user': 'Usuario',
+    'i18n.language': 'Idioma',
+    'i18n.pt': 'Portugués',
+    'i18n.en': 'Inglés',
+    'i18n.es': 'Español',
+    'logout.aria': 'Cerrar sesión',
+
+    'status.briefing': 'Briefing',
+    'status.refinement': 'Refinamiento',
+    'status.specification': 'Especificación',
+    'status.documentation': 'Documentación',
+    'status.manual': 'Manual',
+    'status.done': 'Completado',
+
+    'common.cancel': 'Cancelar',
+    'common.save': 'Guardar',
+    'common.saved': 'Guardado',
+    'common.edit': 'Editar',
+    'common.delete': 'Eliminar',
+    'common.back': 'Volver',
+    'common.continue': 'Continuar',
+    'common.characters': 'caracteres',
+    'common.optional': '(opcional)',
+    'common.progress': 'Progreso',
+    'common.send': 'Enviar',
+    'common.add': 'Añadir',
+    'common.or': 'o',
+    'common.emDash': '—',
+
+    'dashboard.title': 'Panel',
+    'dashboard.subtitle': 'Resumen de tus proyectos',
+    'dashboard.newProject': 'Nuevo proyecto',
+    'dashboard.statTotal': 'Total de proyectos',
+    'dashboard.statInProgress': 'En curso',
+    'dashboard.statDone': 'Completados',
+    'dashboard.statAvgProgress': 'Progreso medio',
+    'dashboard.statTotalZero': 'Aún no hay proyectos',
+    'dashboard.statTotalMany': '{{n}} proyectos',
+    'dashboard.statTotalOne': '1 proyecto',
+    'dashboard.statProgressZero': 'Ninguno en curso',
+    'dashboard.statProgressMany': '{{n}} activos',
+    'dashboard.statProgressOne': '1 activo',
+    'dashboard.statDoneZero': 'Ninguno completado',
+    'dashboard.statDoneMany': '{{n}} completados',
+    'dashboard.statDoneOne': '1 completado',
+    'dashboard.avgProgressHint': 'de todos los proyectos',
+    'dashboard.recentTitle': 'Proyectos recientes',
+    'dashboard.viewAll': 'Ver todos →',
+    'dashboard.emptyRecent': 'Aún no hay proyectos',
+    'dashboard.createFirst': 'Crear primer proyecto',
+
+    'projects.title': 'Proyectos',
+    'projects.subtitleOne': '1 proyecto en total',
+    'projects.subtitleMany': '{{n}} proyectos en total',
+    'projects.newProject': 'Nuevo proyecto',
+    'projects.searchPlaceholder': 'Buscar proyectos...',
+    'projects.sortRecent': 'Más recientes',
+    'projects.sortName': 'Nombre A-Z',
+    'projects.sortProgress': 'Progreso',
+    'projects.viewGridAria': 'Vista en cuadrícula',
+    'projects.viewListAria': 'Vista en lista',
+    'projects.filterAll': 'Todos',
+    'projects.filterDone': 'Completados',
+    'projects.emptyTitle': 'No se encontraron proyectos',
+    'projects.emptySearch': 'Sin resultados para "{{q}}"',
+    'projects.emptyHint': 'Crea tu primer proyecto para empezar',
+    'projects.createProject': 'Crear proyecto',
+    'projects.firstUseGuide': 'Ver guía de primer uso',
+    'projects.showing': 'Mostrando {{shown}} de {{total}} proyectos',
+
+    'projectCard.open': 'Abrir →',
+
+    'nextSteps.title': 'Próximos passos sugeridos',
+    'nextSteps.beforeStage': 'Avanza a',
+    'nextSteps.afterStage':
+      'cuando la etapa actual sea satisfactoria.',
+
+    'detail.navProjects': 'Proyectos',
+    'detail.editProjectAria': 'Editar proyecto',
+    'detail.deleteProjectAria': 'Eliminar proyecto',
+    'detail.modalEditTitle': 'Editar proyecto',
+    'detail.labelProjectName': 'Nombre del proyecto',
+    'detail.labelDescription': 'Descripción',
+    'detail.saveChanges': 'Guardar cambios',
+    'detail.modalDeleteTitle': '¿Eliminar proyecto?',
+    'detail.modalDeleteSubtitle': 'Esta acción no se puede deshacer.',
+    'detail.modalDeleteLead':
+      'El proyecto "{{name}}" y todo su contenido se eliminarán permanentemente.',
+    'detail.deleteDeleting': 'Eliminando…',
+    'detail.deleteConfirm': 'Sí, eliminar proyecto',
+    'detail.completeTitle': '¡Proyecto completado!',
+    'detail.completeSubtitle': 'Todas las etapas se finalizaron correctamente.',
+    'detail.viewAllProjects': 'Ver todos los proyectos',
+    'detail.finishProject': 'Finalizar proyecto',
+    'detail.stageDone': 'Etapa completada',
+    'detail.finishStage': 'Completar etapa',
+    'detail.currentStageLabel': 'Etapa actual:',
+    'detail.goToCurrentStage': 'Ir a la etapa actual',
+
+    'briefing.receivedTitle': 'Briefing recibido',
+    'briefing.aiHint':
+      'Este texto es el que la IA usa en las siguientes etapas (refinamiento, especificación, documentación y manual). Guarde siempre tras cambiar.',
+    'briefing.audioOriginal': 'Audio original del briefing',
+    'briefing.saveServer': 'Guardar en el servidor',
+    'briefing.charCount': '{{n}} caracteres (mín. 15)',
+    'briefing.emptyPlaceholder': '(Sin texto en el briefing — edite para completar)',
+    'briefing.savedAt': 'Guardado el {{date}}',
+    'briefing.emptyReadonly':
+      'Sin texto de briefing. Pulse Editar para describir la demanda — este contenido alimenta todas las pestañas siguientes.',
+
+    'spec.legend':
+      'Use Como · Quiero · Para para describir cambios con claridad — quién pide, qué necesita y por qué.',
+    'spec.countMany': '{{n}} historias de usuario',
+    'spec.countOne': '1 historia de usuario',
+    'spec.generateAi': 'Generar con IA',
+    'spec.clearSpec': 'Limpiar especificación',
+    'spec.emptyCard':
+      'Aún no hay historias. Use Generar con IA o Nueva historia y complete Como, Quiero y Para.',
+    'spec.acceptanceCriteria': 'Criterios de aceptación',
+    'spec.titlePlaceholderShort': 'Título corto (opcional)',
+    'spec.titlePlaceholderLong':
+      'Título corto (opcional — puede resumir el «Quiero»)',
+    'spec.addCriterionPlaceholder': 'Añadir criterio (Enter)',
+    'spec.deleteStory': 'Eliminar historia',
+    'spec.confirmClear':
+      '¿Eliminar todas las historias de usuario de este proyecto? Se borrarán los datos guardados en la especificación.',
+    'spec.genError': 'Error al generar historias.',
+    'spec.storyFallbackAi': 'Historia',
+    'spec.newStory': 'Nueva historia',
+    'spec.addStory': 'Añadir historia',
+    'spec.newStoryFallback': 'Nueva historia',
+    'spec.voiceEmpty': 'Sin descripción en esta historia.',
+    'spec.voiceLabel.como': 'Como',
+    'spec.voiceLabel.quero': 'Quiero',
+    'spec.voiceLabel.para': 'Para',
+    'spec.voiceHintReadonly.como': '¿Quién es el usuario o interesado?',
+    'spec.voiceHintReadonly.quero': '¿Qué hay que hacer?',
+    'spec.voiceHintReadonly.para': '¿Cuál es el valor u objetivo?',
+    'spec.voiceHintEdit.como': '¿Quién? (ej.: visitante del sitio, administrador)',
+    'spec.voiceHintEdit.quero': '¿Qué? (acción o necesidad)',
+    'spec.voiceHintEdit.para': '¿Para qué? (beneficio u objetivo)',
+    'spec.placeholder.como': 'Ej.: visitante autenticado en SpecFlow',
+    'spec.placeholder.quero': 'Ej.: cambiar el menú lateral de mi panel',
+    'spec.placeholder.para': 'Ej.: encontrar funciones más rápido sin perderme',
+    'spec.editStoryAria': 'Editar historia',
+    'spec.editorIntro':
+      'Complete los tres bloques — queda claro para el cliente y es el texto que sigue a documentación y manual.',
+
+    'comments.title': 'Comentarios',
+    'comments.placeholder': 'Añadir comentario…',
+    'comments.delete': 'Eliminar',
+
+    'doc.genError': 'Error al generar documentación.',
+    'doc.placeholderModule': 'Añadir módulo (Enter)',
+    'doc.placeholderRule': 'Añadir regla (Enter)',
+    'doc.seed.overviewTitle': 'Visión general del sistema',
+    'doc.seed.overviewBody':
+      'El sistema de agenda para clínicas médicas es una plataforma web responsive que permite gestionar citas entre pacientes, médicos y administración. Admite varios seguros y notificaciones automáticas multicanal.',
+    'doc.seed.modulesTitle': 'Módulos principales',
+    'doc.seed.module1': 'Portal del paciente',
+    'doc.seed.module2': 'Panel del médico',
+    'doc.seed.module3': 'Central administrativa',
+    'doc.seed.module4': 'Motor de notificaciones',
+    'doc.seed.rulesTitle': 'Reglas de negocio',
+    'doc.seed.rule1':
+      'La cita solo se confirma tras validar el seguro o el pago anticipado',
+    'doc.seed.rule2':
+      'Las cancelaciones con menos de 2 h generan aviso especial a recepción',
+    'doc.seed.rule3':
+      'El médico puede bloquear agenda con al menos 30 minutos de antelación',
+    'doc.seed.rule4':
+      'Los recordatorios se envían automáticamente a las 08:00 del día anterior',
+
+    'manual.title': 'Manual de usuario',
+    'manual.versionHint': 'Versión 1.0 — Generado automáticamente por SpecFlow',
+    'manual.genError': 'Error al generar el manual.',
+    'manual.exportPdf': 'Exportar PDF',
+    'manual.sectionTitlePlaceholder': 'Título de la nueva sección',
+    'manual.addSection': 'Añadir sección',
+    'manual.placeholderStep': 'Añadir paso (Enter)',
+    'manual.seed.s1Title': '1. Cómo pedir una cita',
+    'manual.seed.s1a': 'Entre al portal y pulse «Pedir cita»',
+    'manual.seed.s1b': 'Seleccione la especialidad médica',
+    'manual.seed.s1c': 'Elija médico y vea horarios disponibles',
+    'manual.seed.s1d': 'Seleccione fecha y hora preferidas',
+    'manual.seed.s1e': 'Indique datos del seguro o pago particular',
+    'manual.seed.s1f':
+      'Confirme la cita — recibirá un correo de confirmación',
+    'manual.seed.s2Title': '2. Cómo cancelar o reprogramar',
+    'manual.seed.s2a': 'Vaya a «Mis citas» en el menú principal',
+    'manual.seed.s2b': 'Localice la cita que desea cambiar',
+    'manual.seed.s2c': 'Pulse «Cancelar» o «Reprogramar»',
+    'manual.seed.s2d': 'Para reprogramar, elija nueva fecha y hora',
+    'manual.seed.s2e':
+      'Cancele con al menos 2 horas de antelación para evitar cargos',
+
+    'refinement.titleStart': 'Iniciar refinamiento con IA',
+    'refinement.intro':
+      'La IA usa el texto del briefing guardado en la pestaña Briefing y hace preguntas antes de la especificación. Si cambia el briefing, guárdelo allí antes de generar historias o documentación.',
+    'refinement.startButton': 'Iniciar refinamiento',
+    'refinement.placeholderWait': 'Esperando respuesta de la IA...',
+    'refinement.placeholderWrite':
+      'Responda o añada contexto... (Enter para enviar)',
+    'refinement.keyboardHint': 'Shift+Enter nueva línea · Enter para enviar',
+    'refinement.error429':
+      'Demasiadas solicitudes. Espere un momento y vuelva a intentar.',
+    'refinement.error500':
+      'Servicio temporalmente no disponible. Inténtelo de nuevo en unos minutos.',
+    'refinement.errorNetwork':
+      'No se pudo conectar al refinamiento. Revise su conexión.',
+    'refinement.errorProcess':
+      'Ocurrió un error al procesar su mensaje. Inténtelo de nuevo.',
+
+    'export.hint':
+      'El archivo solo refleja lo ya guardado en el servidor (briefing, refinamiento, historias, documentación).',
+    'export.titleMd': 'Descargar paquete completo en Markdown (solo datos guardados)',
+    'export.titlePdf': 'Descargar paquete completo en PDF (solo datos guardados)',
+    'export.loadError':
+      'No se pudo cargar el proyecto. Compruebe que aún tiene acceso.',
+    'export.fail':
+      'Falló la exportación. Revise la conexión e inténtelo de nuevo.',
+
+    'onboarding.welcomeTitle': '¡Bienvenido a SpecFlow!',
+    'onboarding.welcomeSubtitle':
+      'En 3 pasos convierte una demanda en una especificación completa:',
+    'onboarding.step1Title': 'Cree su primer proyecto',
+    'onboarding.step1Desc': 'Póngale nombre y elija cómo capturar la demanda.',
+    'onboarding.step2Title': 'Refine con IA',
+    'onboarding.step2Desc': 'Responda a la IA para detallar el briefing.',
+    'onboarding.step3Title': 'Exporte la especificación',
+    'onboarding.step3Desc':
+      'En la página del proyecto descargue el paquete (.md o PDF) con todo lo guardado.',
+    'onboarding.cta': 'Crear primer proyecto',
+    'onboarding.dismissAria': 'Cerrar',
+
+    'auth.login.tagline': 'De la idea al uso, sin ruido.',
+    'auth.login.title': 'Entrar en la plataforma',
+    'auth.login.subtitle': 'Acceda a su cuenta para continuar',
+    'auth.login.email': 'Correo',
+    'auth.login.emailPlaceholder': 'usted@empresa.com',
+    'auth.login.password': 'Contraseña',
+    'auth.login.wrongCredentials': 'Correo o contraseña incorrectos.',
+    'auth.login.submit': 'Entrar',
+    'auth.login.forgot': '¿Olvidó la contraseña?',
+    'auth.login.noAccount': '¿No tiene cuenta?',
+    'auth.login.register': 'Regístrese',
+    'auth.login.footerHelp': 'Ayuda',
+    'auth.login.footerTerms': 'Términos',
+    'auth.login.footerPrivacy': 'Privacidad',
+    'auth.login.hidePassword': 'Ocultar contraseña',
+    'auth.login.showPassword': 'Mostrar contraseña',
+
+    'newProject.title': 'Nuevo proyecto',
+    'newProject.subtitle': 'Cree un proyecto e inicie el flujo SpecFlow',
+    'newProject.cancel': 'Cancelar',
+    'newProject.stepIdentify': 'Identificación',
+    'newProject.stepBriefing': 'Briefing inicial',
+    'newProject.aboutTitle': 'Sobre el proyecto',
+    'newProject.nameLabel': 'Nombre del proyecto',
+    'newProject.namePlaceholder': 'Ej.: App de citas, Portal del cliente…',
+    'newProject.descriptionLabel': 'Descripción',
+    'newProject.descriptionPlaceholder': 'Describa brevemente el objetivo…',
+    'newProject.continue': 'Continuar',
+    'newProject.howToInsertTitle': '¿Cómo quiere introducir la demanda?',
+    'newProject.howToInsertSubtitle':
+      'Elija el formato que mejor encaje en su flujo',
+    'newProject.input.text.label': 'Texto libre',
+    'newProject.input.text.desc':
+      'Describa la demanda con sus propias palabras',
+    'newProject.input.audio.label': 'Audio',
+    'newProject.input.audio.desc':
+      'Grabe o suba un audio con la demanda',
+    'newProject.input.document.label': 'Documento',
+    'newProject.input.document.desc':
+      'Importe PDF, Word o hoja de cálculo con requisitos',
+    'newProject.input.form.label': 'Formulario guiado',
+    'newProject.input.form.desc':
+      'Responda preguntas estructuradas para detallar la demanda',
+    'newProject.input.video.label': 'Vídeo',
+    'newProject.input.video.desc':
+      'Grabe o envíe un vídeo explicando la demanda',
+    'newProject.briefingTitle': 'Briefing inicial',
+    'newProject.briefingIntro':
+      'Cuente todo lo que sepa sobre la demanda. No tiene que ser perfecto — la IA refinará después.',
+    'newProject.briefingPlaceholder':
+      'Ej.: Necesitamos un sistema para gestionar citas en clínicas...',
+    'newProject.charactersHint': '{{n}} caracteres',
+    'newProject.detailHint': 'Cuanto más detalle, mejor suele ser el resultado de la IA',
+    'newProject.back': 'Volver',
+    'newProject.createSubmit': 'Crear proyecto e iniciar refinamiento',
+    'newProject.audioTitle': 'Briefing en audio',
+    'newProject.audioIntro':
+      'Grabe su voz o envíe un archivo de audio describiendo la demanda.',
+    'newProject.audioMicDenied':
+      'Permiso de micrófono denegado. Revise la configuración del navegador.',
+    'newProject.recording': 'Grabando…',
+    'newProject.clickToRecord': 'Pulse para iniciar la grabación',
+    'newProject.uploadAudio': 'Subir archivo de audio',
+    'newProject.audioReady': 'Audio listo',
+    'newProject.discard': 'Descartar',
+    'newProject.resetRecording': 'Eliminar y grabar de nuevo',
+    'newProject.videoTitle': 'Briefing en vídeo',
+    'newProject.videoIntro':
+      'Grabe con la cámara o suba un vídeo explicando la demanda.',
+    'newProject.cameraDenied':
+      'Permiso de cámara/micrófono denegado. Revise la configuración del navegador.',
+    'newProject.clickToRecordVideo':
+      'Pulse para iniciar grabación con la cámara',
+    'newProject.uploadVideo': 'Subir archivo de vídeo',
+    'newProject.videoReady': 'Vídeo listo',
+    'newProject.docTitle': 'Importar documento',
+    'newProject.docIntro':
+      'Envíe PDF, Word o hoja de cálculo con los requisitos del proyecto.',
+    'newProject.docDrop': 'Arrastre el archivo aquí o pulse para elegir',
+    'newProject.docFormatsHint': 'PDF, Word, Excel o TXT — hasta 20 MB',
+    'newProject.removeFile': 'Eliminar archivo',
+    'newProject.errorAudioCreate':
+      'No se pudo crear el proyecto con este audio.',
+    'newProject.errorAudioSend':
+      'Error al subir el audio. Revise la conexión e inténtelo de nuevo.',
+    'newProject.guided.goal': '¿Cuál es el objetivo principal del sistema?',
+    'newProject.guided.goalPh':
+      'Ej.: Permitir que los pacientes pidan cita médica en línea sin llamar a la clínica.',
+    'newProject.guided.users': '¿Quién usará el sistema?',
+    'newProject.guided.usersPh':
+      'Ej.: Pacientes, médicos y personal de recepción.',
+    'newProject.guided.features':
+      '¿Qué funcionalidades son esenciales?',
+    'newProject.guided.featuresPh':
+      'Ej.: Citas en línea, recordatorios por correo, panel del médico…',
+    'newProject.guided.deadline': '¿Cuál es el plazo estimado?',
+    'newProject.guided.deadlinePh': 'Ej.: 3 meses, hasta diciembre de 2024…',
+    'newProject.guided.integrations':
+      '¿Hay integraciones necesarias con otros sistemas?',
+    'newProject.guided.integrationsPh':
+      'Ej.: Seguros, WhatsApp, Google Calendar… (opcional)',
+    'newProject.guided.title': 'Briefing guiado',
+    'newProject.guided.intro':
+      'Responda las preguntas — generamos texto estructurado para el proyecto.',
+    'newProject.guided.footer':
+      'Las 3 primeras preguntas son obligatorias (mín. 10 caracteres cada una).',
+    'newProject.placeholderVideo': '[Briefing enviado en vídeo]',
+    'newProject.placeholderDoc': '[Briefing enviado como documento]',
   },
 }

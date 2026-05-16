@@ -5,8 +5,10 @@ import { useState, useTransition } from 'react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { login } from '@/app/actions/auth'
+import { useI18n } from '@/components/i18n/I18nProvider'
 
 export default function LoginPage() {
+  const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
@@ -21,7 +23,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError(
           result.error.includes('Invalid login credentials')
-            ? 'E-mail ou senha incorretos.'
+            ? t('auth.login.wrongCredentials')
             : result.error
         )
       }
@@ -38,13 +40,13 @@ export default function LoginPage() {
           </svg>
         </div>
         <h1 className="text-2xl font-bold text-white">SpecFlow</h1>
-        <p className="text-[#94A3B8] text-sm mt-1">Da ideia ao uso, sem ruído.</p>
+        <p className="text-[#94A3B8] text-sm mt-1">{t('auth.login.tagline')}</p>
       </div>
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-2xl p-8">
-        <h2 className="text-xl font-semibold text-[#111827] mb-1">Entrar na plataforma</h2>
-        <p className="text-sm text-[#6B7280] mb-6">Acesse sua conta para continuar</p>
+        <h2 className="text-xl font-semibold text-[#111827] mb-1">{t('auth.login.title')}</h2>
+        <p className="text-sm text-[#6B7280] mb-6">{t('auth.login.subtitle')}</p>
 
         {error && (
           <div role="alert" aria-live="polite" className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
@@ -60,8 +62,8 @@ export default function LoginPage() {
             id="email"
             name="email"
             type="email"
-            label="E-mail"
-            placeholder="voce@empresa.com"
+            label={t('auth.login.email')}
+            placeholder={t('auth.login.emailPlaceholder')}
             required
             autoComplete="email"
             icon={
@@ -76,7 +78,7 @@ export default function LoginPage() {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
-              label="Senha"
+              label={t('auth.login.password')}
               placeholder="••••••••"
               required
               autoComplete="current-password"
@@ -91,7 +93,7 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(v => !v)}
                   className="text-[#9CA3AF] hover:text-[#374151] transition-colors"
                   tabIndex={-1}
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-label={showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')}
                 >
                   {showPassword ? (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -108,34 +110,34 @@ export default function LoginPage() {
             />
             <div className="flex justify-end mt-1.5">
               <Link href="/esqueci-senha" className="text-xs text-[#1D4ED8] hover:underline">
-                Esqueceu a senha?
+                {t('auth.login.forgot')}
               </Link>
             </div>
           </div>
 
           <Button type="submit" className="w-full mt-2" size="lg" loading={isPending}>
-            {!isPending && 'Entrar'}
+            {!isPending && t('auth.login.submit')}
           </Button>
         </form>
 
         <p className="text-center text-sm text-[#6B7280] mt-6">
-          Não tem uma conta?{' '}
+          {t('auth.login.noAccount')}{' '}
           <Link href="/cadastro" className="text-[#1D4ED8] font-medium hover:underline">
-            Cadastre-se
+            {t('auth.login.register')}
           </Link>
         </p>
 
         <p className="text-center text-xs text-[#94A3B8] mt-5 flex flex-wrap justify-center gap-x-3 gap-y-1">
           <Link href="/ajuda" className="hover:text-white transition-colors">
-            Ajuda
+            {t('auth.login.footerHelp')}
           </Link>
           <span aria-hidden="true">·</span>
           <Link href="/termos" className="hover:text-white transition-colors">
-            Termos de uso
+            {t('auth.login.footerTerms')}
           </Link>
           <span aria-hidden="true">·</span>
           <Link href="/privacidade" className="hover:text-white transition-colors">
-            Privacidade
+            {t('auth.login.footerPrivacy')}
           </Link>
         </p>
       </div>

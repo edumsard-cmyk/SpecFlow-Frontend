@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { appendRefinementMessageAction } from '@/app/actions/refinement'
 import Button from '@/components/ui/Button'
+import { useI18n } from '@/components/i18n/I18nProvider'
 
 interface Message {
   role: 'ai' | 'user'
@@ -15,12 +16,15 @@ interface RefinamentoTabProps {
   initialMessages?: Message[]
 }
 
-async function refinementErrorMessage(res: Response): Promise<string> {
+async function refinementErrorMessage(
+  res: Response,
+  errMsg: (key: string) => string
+): Promise<string> {
   if (res.status === 429) {
-    return 'Muitas requisições. Aguarde um instante e tente de novo.'
+    return errMsg('refinement.error429')
   }
   if (res.status >= 500) {
-    return 'Serviço temporariamente indisponível. Tente novamente em alguns minutos.'
+    return errMsg('refinement.error500')
   }
   try {
     const j = (await res.json()) as { error?: unknown }
@@ -28,13 +32,14 @@ async function refinementErrorMessage(res: Response): Promise<string> {
   } catch {
     /* corpo pode não ser JSON */
   }
-  return 'Não foi possível conectar ao refinamento. Verifique sua internet e tente de novo.'
+  return errMsg('refinement.errorNetwork')
 }
 
 export default function RefinamentoTab({
   projectId,
   initialMessages = [],
 }: RefinamentoTabProps) {
+  const { t } = useI18n()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -76,7 +81,7 @@ export default function RefinamentoTab({
         body: JSON.stringify({ messages: apiMessages, projectId }),
       })
 
-      if (!res.ok) throw new Error(await refinementErrorMessage(res))
+      if (!res.ok) throw new Error(await refinementErrorMessage(res, k => t(k)))
 
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
@@ -119,7 +124,7 @@ export default function RefinamentoTab({
         void appendRefinementMessageAction(projectId, 'ai', accumulated)
       }
     } catch (err) {
-      const fallback = 'Ocorreu um erro ao processar sua mensagem. Tente novamente.'
+      const fallback = t('refinement.errorProcess')
       const text = err instanceof Error && err.message ? err.message : fallback
       setMessages(prev => {
         const updated = [...prev]
@@ -133,7 +138,7 @@ export default function RefinamentoTab({
     } finally {
       setIsLoading(false)
     }
-  }, [projectId])
+  }, [projectId, t])
 
   const handleStart = useCallback(() => {
     setHasStarted(true)
@@ -171,15 +176,15 @@ export default function RefinamentoTab({
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
           </svg>
         </div>
-        <h3 className="text-base font-semibold text-[#111827] mb-2">Iniciar Refinamento com IA</h3>
-        <p className="text-sm text-[#6B7280] max-w-sm mb-6 leading-relaxed">
-          A IA vai analisar seu briefing e fazer perguntas para garantir que a especificação seja completa e sem ambiguidades.
+        <h3 className="text-base font-semibold text-[#111827] mb-2">{t('refinement.titleStart')}</h3>
+        <p className="text-sm text-[#6B7280] max-w-md mb-6 leading-relaxed">
+          {t('refinement.intro')}
         </p>
         <Button onClick={handleStart}>
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
           </svg>
-          Iniciar refinamento
+          {t('refinement.startButton')}
         </Button>
       </div>
     )
@@ -226,7 +231,7 @@ export default function RefinamentoTab({
       }`}>
         <textarea
           ref={textareaRef}
-          placeholder={isLoading ? 'Aguardando resposta da IA...' : 'Responda ou adicione mais contexto... (Enter para enviar)'}
+          placeholder={isLoading ? t('refinement.placeholderWait') : t('refinement.placeholderWrite')}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -246,7 +251,7 @@ export default function RefinamentoTab({
       </div>
 
       <p className="text-xs text-center text-[#9CA3AF]">
-        Shift+Enter para nova linha · Enter para enviar
+        {t('refinement.keyboardHint')}
       </p>
     </div>
   )

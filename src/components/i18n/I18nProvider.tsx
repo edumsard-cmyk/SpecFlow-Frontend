@@ -26,16 +26,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Locale | null
-    if (stored === 'en' || stored === 'pt') {
+    if (stored === 'en' || stored === 'pt' || stored === 'es') {
       setLocaleState(stored)
-      document.documentElement.lang = stored === 'en' ? 'en' : 'pt-BR'
+      document.documentElement.lang =
+        stored === 'en' ? 'en' : stored === 'es' ? 'es' : 'pt-BR'
     }
   }, [])
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l)
     localStorage.setItem(STORAGE_KEY, l)
-    document.documentElement.lang = l === 'en' ? 'en' : 'pt-BR'
+    document.documentElement.lang =
+      l === 'en' ? 'en' : l === 'es' ? 'es' : 'pt-BR'
   }, [])
 
   const t = useCallback(

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect, useTransition } from 'react'
+import { useState, useRef, useEffect, useTransition, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
@@ -8,12 +9,13 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import { createProjectAction } from '@/app/actions/projects'
+import { useI18n } from '@/components/i18n/I18nProvider'
 
-const INPUT_TYPES = [
+type InputTypeId = 'text' | 'audio' | 'document' | 'form' | 'video'
+
+const INPUT_TYPE_ITEMS: { id: InputTypeId; icon: ReactNode }[] = [
   {
     id: 'text',
-    label: 'Texto livre',
-    description: 'Descreva a demanda com suas próprias palavras',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
@@ -22,8 +24,6 @@ const INPUT_TYPES = [
   },
   {
     id: 'audio',
-    label: 'Áudio',
-    description: 'Grave ou faça upload de um áudio com a demanda',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
@@ -32,8 +32,6 @@ const INPUT_TYPES = [
   },
   {
     id: 'document',
-    label: 'Documento',
-    description: 'Importe um PDF, Word ou planilha com os requisitos',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -42,8 +40,6 @@ const INPUT_TYPES = [
   },
   {
     id: 'form',
-    label: 'Formulário guiado',
-    description: 'Responda perguntas estruturadas para detalhar a demanda',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
@@ -52,8 +48,6 @@ const INPUT_TYPES = [
   },
   {
     id: 'video',
-    label: 'Vídeo',
-    description: 'Grave ou envie um vídeo explicando a demanda',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
@@ -62,17 +56,12 @@ const INPUT_TYPES = [
   },
 ]
 
-const GUIDED_QUESTIONS = [
-  { id: 'goal', label: 'Qual é o principal objetivo do sistema?', placeholder: 'Ex: Permitir que clientes agendem consultas médicas online sem precisar ligar para a clínica.' },
-  { id: 'users', label: 'Quem vai usar o sistema?', placeholder: 'Ex: Pacientes, médicos e secretárias da clínica.' },
-  { id: 'features', label: 'Quais funcionalidades são essenciais?', placeholder: 'Ex: Agendamento online, lembretes por e-mail, painel do médico para gerenciar agenda...' },
-  { id: 'deadline', label: 'Qual é a estimativa de prazo?', placeholder: 'Ex: 3 meses, até dezembro de 2024...' },
-  { id: 'integrations', label: 'Há integrações necessárias com outros sistemas?', placeholder: 'Ex: Sistema de convênios, WhatsApp, Google Calendar... (opcional)' },
-]
+const GUIDED_IDS = ['goal', 'users', 'features', 'deadline', 'integrations'] as const
 
 /* ── Áudio ───────────────────────────────────────────────────── */
 
-function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
+function AudioInput({ onReady }: { onReady: (file: File | Blob | null) => void }) {
+  const { t } = useI18n()
   const [isRecording, setIsRecording] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
@@ -101,17 +90,17 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
         const url = URL.createObjectURL(blob)
         setAudioUrl(url)
-        onChange(true)
-        stream.getTracks().forEach(t => t.stop())
+        onReady(blob)
+        stream.getTracks().forEach(track => track.stop())
       }
 
       recorder.start()
       mediaRecorderRef.current = recorder
       setIsRecording(true)
       setRecordingTime(0)
-      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+      timerRef.current = setInterval(() => setRecordingTime(sec => sec + 1), 1000)
     } catch {
-      setError('Permissão de microfone negada. Verifique as configurações do navegador.')
+      setError(t('newProject.audioMicDenied'))
     }
   }
 
@@ -127,13 +116,13 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
     if (audioUrl) URL.revokeObjectURL(audioUrl)
     const url = URL.createObjectURL(file)
     setAudioUrl(url)
-    onChange(true)
+    onReady(file)
   }
 
   const reset = () => {
     if (audioUrl) URL.revokeObjectURL(audioUrl)
     setAudioUrl(null)
-    onChange(false)
+    onReady(null)
     setRecordingTime(0)
   }
 
@@ -141,8 +130,8 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
 
   return (
     <Card padding="lg">
-      <h2 className="text-base font-semibold text-[#111827] mb-1">Briefing em áudio</h2>
-      <p className="text-sm text-[#6B7280] mb-5">Grave sua voz ou envie um arquivo de áudio descrevendo a demanda.</p>
+      <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.audioTitle')}</h2>
+      <p className="text-sm text-[#6B7280] mb-5">{t('newProject.audioIntro')}</p>
 
       {error && (
         <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#EF4444]">{error}</div>
@@ -173,16 +162,16 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
             </button>
             <div className="text-center">
               {isRecording ? (
-                <p className="text-sm font-medium text-[#EF4444]">Gravando… {fmt(recordingTime)}</p>
+                <p className="text-sm font-medium text-[#EF4444]">{t('newProject.recording')} {fmt(recordingTime)}</p>
               ) : (
-                <p className="text-sm text-[#6B7280]">Clique para iniciar a gravação</p>
+                <p className="text-sm text-[#6B7280]">{t('newProject.clickToRecord')}</p>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-[#E5E7EB]" />
-            <span className="text-xs text-[#9CA3AF]">ou</span>
+            <span className="text-xs text-[#9CA3AF]">{t('common.or')}</span>
             <div className="flex-1 h-px bg-[#E5E7EB]" />
           </div>
 
@@ -195,7 +184,7 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
-            Enviar arquivo de áudio
+            {t('newProject.uploadAudio')}
           </button>
         </div>
       ) : (
@@ -204,11 +193,11 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
             <svg className="w-5 h-5 text-[#10B981] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
-            <span className="text-sm text-[#065F46] font-medium">Áudio pronto</span>
+            <span className="text-sm text-[#065F46] font-medium">{t('newProject.audioReady')}</span>
           </div>
           <audio controls src={audioUrl} className="w-full rounded-lg" />
           <button type="button" onClick={reset} className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors">
-            Remover e gravar novamente
+            {t('newProject.resetRecording')}
           </button>
         </div>
       )}
@@ -219,6 +208,7 @@ function AudioInput({ onChange }: { onChange: (hasAudio: boolean) => void }) {
 /* ── Vídeo ───────────────────────────────────────────────────── */
 
 function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
+  const { t } = useI18n()
   const [isRecording, setIsRecording] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
@@ -251,7 +241,7 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
         const url = URL.createObjectURL(blob)
         setVideoUrl(url)
         onChange(true)
-        stream.getTracks().forEach(t => t.stop())
+        stream.getTracks().forEach(track => track.stop())
         if (previewRef.current) previewRef.current.srcObject = null
       }
 
@@ -259,9 +249,9 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
       mediaRecorderRef.current = recorder
       setIsRecording(true)
       setRecordingTime(0)
-      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+      timerRef.current = setInterval(() => setRecordingTime(sec => sec + 1), 1000)
     } catch {
-      setError('Permissão de câmera/microfone negada. Verifique as configurações do navegador.')
+      setError(t('newProject.cameraDenied'))
     }
   }
 
@@ -291,8 +281,8 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
 
   return (
     <Card padding="lg">
-      <h2 className="text-base font-semibold text-[#111827] mb-1">Briefing em vídeo</h2>
-      <p className="text-sm text-[#6B7280] mb-5">Grave pela câmera ou envie um arquivo de vídeo explicando a demanda.</p>
+      <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.videoTitle')}</h2>
+      <p className="text-sm text-[#6B7280] mb-5">{t('newProject.videoIntro')}</p>
 
       {error && (
         <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#EF4444]">{error}</div>
@@ -325,16 +315,16 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
             </button>
             <div className="text-center">
               {isRecording ? (
-                <p className="text-sm font-medium text-[#EF4444]">Gravando… {fmt(recordingTime)}</p>
+                <p className="text-sm font-medium text-[#EF4444]">{t('newProject.recording')} {fmt(recordingTime)}</p>
               ) : (
-                <p className="text-sm text-[#6B7280]">Clique para iniciar a gravação pela câmera</p>
+                <p className="text-sm text-[#6B7280]">{t('newProject.clickToRecordVideo')}</p>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-[#E5E7EB]" />
-            <span className="text-xs text-[#9CA3AF]">ou</span>
+            <span className="text-xs text-[#9CA3AF]">{t('common.or')}</span>
             <div className="flex-1 h-px bg-[#E5E7EB]" />
           </div>
 
@@ -347,7 +337,7 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
-            Enviar arquivo de vídeo
+            {t('newProject.uploadVideo')}
           </button>
         </div>
       ) : (
@@ -356,11 +346,11 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
             <svg className="w-5 h-5 text-[#10B981] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
-            <span className="text-sm text-[#065F46] font-medium">Vídeo pronto</span>
+            <span className="text-sm text-[#065F46] font-medium">{t('newProject.videoReady')}</span>
           </div>
           <video controls src={videoUrl} className="w-full rounded-lg bg-black max-h-64" />
           <button type="button" onClick={reset} className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors">
-            Remover e gravar novamente
+            {t('newProject.resetRecording')}
           </button>
         </div>
       )}
@@ -371,6 +361,7 @@ function VideoInput({ onChange }: { onChange: (hasVideo: boolean) => void }) {
 /* ── Documento ───────────────────────────────────────────────── */
 
 function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
+  const { t } = useI18n()
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -402,8 +393,8 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
 
   return (
     <Card padding="lg">
-      <h2 className="text-base font-semibold text-[#111827] mb-1">Importar documento</h2>
-      <p className="text-sm text-[#6B7280] mb-5">Envie um PDF, Word ou planilha com os requisitos do projeto.</p>
+      <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.docTitle')}</h2>
+      <p className="text-sm text-[#6B7280] mb-5">{t('newProject.docIntro')}</p>
 
       {!file ? (
         <div
@@ -419,8 +410,8 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
           </svg>
           <div className="text-center">
-            <p className="text-sm font-medium text-[#374151]">Arraste o arquivo aqui ou clique para selecionar</p>
-            <p className="text-xs text-[#9CA3AF] mt-1">PDF, Word, Excel ou TXT — até 20 MB</p>
+            <p className="text-sm font-medium text-[#374151]">{t('newProject.docDrop')}</p>
+            <p className="text-xs text-[#9CA3AF] mt-1">{t('newProject.docFormatsHint')}</p>
           </div>
           <input ref={fileInputRef} type="file" accept={accept} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
         </div>
@@ -441,7 +432,7 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
             onClick={() => { setFile(null); onChange(false) }}
             className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors"
           >
-            Remover arquivo
+            {t('newProject.removeFile')}
           </button>
         </div>
       )}
@@ -451,31 +442,40 @@ function DocumentInput({ onChange }: { onChange: (hasFile: boolean) => void }) {
 
 /* ── Formulário guiado ───────────────────────────────────────── */
 
-function GuidedFormInput({ onChange, onAnswers }: { onChange: (filled: boolean) => void; onAnswers: (a: Record<string, string>) => void }) {
+function GuidedFormInput({
+  questions,
+  onChange,
+  onAnswers,
+}: {
+  questions: { id: string; label: string; placeholder: string }[]
+  onChange: (filled: boolean) => void
+  onAnswers: (a: Record<string, string>) => void
+}) {
+  const { t } = useI18n()
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
   const update = (id: string, value: string) => {
     const next = { ...answers, [id]: value }
     setAnswers(next)
     onAnswers(next)
-    const required = GUIDED_QUESTIONS.slice(0, 3)
+    const required = questions.slice(0, 3)
     onChange(required.every(q => (next[q.id] ?? '').trim().length >= 10))
   }
 
   return (
     <Card padding="lg">
-      <h2 className="text-base font-semibold text-[#111827] mb-1">Formulário guiado</h2>
-      <p className="text-sm text-[#6B7280] mb-5">Responda as perguntas abaixo para estruturar o briefing do projeto.</p>
+      <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.guided.title')}</h2>
+      <p className="text-sm text-[#6B7280] mb-5">{t('newProject.guided.intro')}</p>
 
       <div className="space-y-5">
-        {GUIDED_QUESTIONS.map((q, i) => (
+        {questions.map((q, i) => (
           <div key={q.id}>
             <label className="text-sm font-medium text-[#374151] flex items-center gap-1.5 mb-1.5">
               <span className="w-5 h-5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-xs flex items-center justify-center font-semibold flex-shrink-0">
                 {i + 1}
               </span>
               {q.label}
-              {i >= 3 && <span className="text-[10px] text-[#9CA3AF] font-normal ml-1">(opcional)</span>}
+              {i >= 3 && <span className="text-[10px] text-[#9CA3AF] font-normal ml-1">{t('common.optional')}</span>}
             </label>
             <textarea
               value={answers[q.id] ?? ''}
@@ -488,9 +488,7 @@ function GuidedFormInput({ onChange, onAnswers }: { onChange: (filled: boolean) 
         ))}
       </div>
 
-      <p className="text-xs text-[#9CA3AF] mt-4">
-        As 3 primeiras perguntas são obrigatórias (mínimo 10 caracteres cada).
-      </p>
+      <p className="text-xs text-[#9CA3AF] mt-4">{t('newProject.guided.footer')}</p>
     </Card>
   )
 }
@@ -499,22 +497,47 @@ function GuidedFormInput({ onChange, onAnswers }: { onChange: (filled: boolean) 
 
 export default function NovoProjeto() {
   const router = useRouter()
+  const { t } = useI18n()
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [inputType, setInputType] = useState<'text' | 'audio' | 'document' | 'form' | 'video'>('text')
+  const [inputType, setInputType] = useState<InputTypeId>('text')
   const [briefing, setBriefing] = useState('')
-  const [hasAudio, setHasAudio] = useState(false)
+  const [audioFile, setAudioFile] = useState<File | Blob | null>(null)
   const [hasDocument, setHasDocument] = useState(false)
   const [hasForm, setHasForm] = useState(false)
   const [hasVideo, setHasVideo] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
 
+  const guidedQuestions = useMemo(
+    () =>
+      GUIDED_IDS.map(id => ({
+        id,
+        label: t(`newProject.guided.${id}`),
+        placeholder: t(`newProject.guided.${id}Ph`),
+      })),
+    [t],
+  )
+
+  const inputTypes = useMemo(
+    () =>
+      INPUT_TYPE_ITEMS.map(item => ({
+        ...item,
+        label: t(`newProject.input.${item.id}.label`),
+        description: t(`newProject.input.${item.id}.desc`),
+      })),
+    [t],
+  )
+
+  useEffect(() => {
+    if (inputType !== 'audio') setAudioFile(null)
+  }, [inputType])
+
   const isStep2Valid = () => {
     if (inputType === 'text') return briefing.trim().length >= 10
-    if (inputType === 'audio') return hasAudio
+    if (inputType === 'audio') return audioFile !== null
     if (inputType === 'document') return hasDocument
     if (inputType === 'form') return hasForm
     if (inputType === 'video') return hasVideo
@@ -531,18 +554,44 @@ export default function NovoProjeto() {
     if (!isStep2Valid()) return
     setError(null)
 
+    if (inputType === 'audio') {
+      if (!audioFile) return
+      startTransition(async () => {
+        try {
+          const fd = new FormData()
+          fd.append('name', name.trim())
+          fd.append('description', description.trim())
+          const upload =
+            audioFile instanceof File
+              ? audioFile
+              : new File([audioFile], 'briefing.webm', {
+                  type: audioFile.type || 'audio/webm',
+                })
+          fd.append('audio', upload)
+          const res = await fetch('/api/projects/from-audio', { method: 'POST', body: fd })
+          const data = (await res.json()) as { projectId?: string; error?: string }
+          if (!res.ok || !data.projectId) {
+            setError(data.error ?? t('newProject.errorAudioCreate'))
+            return
+          }
+          router.push(`/projetos/${data.projectId}`)
+        } catch {
+          setError(t('newProject.errorAudioSend'))
+        }
+      })
+      return
+    }
+
     const briefingContent = inputType === 'text'
       ? briefing
       : inputType === 'form'
-      ? Object.entries(formAnswers).filter(([, v]) => v.trim()).map(([k, v]) => {
-          const q = GUIDED_QUESTIONS.find(q => q.id === k)
+        ? Object.entries(formAnswers).filter(([, v]) => v.trim()).map(([k, v]) => {
+          const q = guidedQuestions.find(g => g.id === k)
           return q ? `${q.label}\n${v}` : v
         }).join('\n\n')
-      : inputType === 'audio'
-      ? '[Briefing enviado por áudio]'
       : inputType === 'video'
-      ? '[Briefing enviado por vídeo]'
-      : '[Briefing enviado por documento]'
+      ? t('newProject.placeholderVideo')
+      : t('newProject.placeholderDoc')
 
     startTransition(async () => {
       const result = await createProjectAction({ name, description, inputType, briefingContent })
@@ -557,15 +606,15 @@ export default function NovoProjeto() {
   return (
     <div className="flex flex-col flex-1">
       <Header
-        title="Novo Projeto"
-        subtitle="Crie um projeto e inicie o fluxo SpecFlow"
+        title={t('newProject.title')}
+        subtitle={t('newProject.subtitle')}
         actions={
           <Link href="/projetos">
             <Button variant="ghost">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
-              Cancelar
+              {t('newProject.cancel')}
             </Button>
           </Link>
         }
@@ -575,8 +624,8 @@ export default function NovoProjeto() {
         {/* Steps indicator */}
         <div className="flex items-center gap-3 mb-8">
           {[
-            { n: 1, label: 'Identificação' },
-            { n: 2, label: 'Briefing inicial' },
+            { n: 1 as const, label: t('newProject.stepIdentify') },
+            { n: 2 as const, label: t('newProject.stepBriefing') },
           ].map((s, i) => (
             <div key={s.n} className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -607,22 +656,22 @@ export default function NovoProjeto() {
         {step === 1 && (
           <form onSubmit={handleContinue} className="space-y-5">
             <Card padding="lg">
-              <h2 className="text-base font-semibold text-[#111827] mb-4">Sobre o projeto</h2>
+              <h2 className="text-base font-semibold text-[#111827] mb-4">{t('newProject.aboutTitle')}</h2>
               <div className="space-y-4">
                 <Input
                   id="name"
-                  label="Nome do projeto"
-                  placeholder="Ex: App de Agendamento, Portal do Cliente..."
+                  label={t('newProject.nameLabel')}
+                  placeholder={t('newProject.namePlaceholder')}
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
                 />
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#374151]">
-                    Descrição <span className="text-[#9CA3AF] font-normal">(opcional)</span>
+                    {t('newProject.descriptionLabel')} <span className="text-[#9CA3AF] font-normal">{t('common.optional')}</span>
                   </label>
                   <textarea
-                    placeholder="Descreva brevemente o objetivo do projeto..."
+                    placeholder={t('newProject.descriptionPlaceholder')}
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={3}
@@ -634,7 +683,7 @@ export default function NovoProjeto() {
 
             <div className="flex justify-end">
               <Button type="submit" size="lg" disabled={!name.trim()}>
-                Continuar
+                {t('newProject.continue')}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
@@ -647,14 +696,14 @@ export default function NovoProjeto() {
           <form onSubmit={handleCreate} className="space-y-5">
             {/* Input type selection */}
             <Card padding="lg">
-              <h2 className="text-base font-semibold text-[#111827] mb-1">Como você quer inserir a demanda?</h2>
-              <p className="text-sm text-[#6B7280] mb-4">Escolha o formato que melhor se encaixa no seu fluxo</p>
+              <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.howToInsertTitle')}</h2>
+              <p className="text-sm text-[#6B7280] mb-4">{t('newProject.howToInsertSubtitle')}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {INPUT_TYPES.map(type => (
+                {inputTypes.map(type => (
                   <button
                     key={type.id}
                     type="button"
-                    onClick={() => setInputType(type.id as 'text' | 'audio' | 'document' | 'form')}
+                    onClick={() => setInputType(type.id)}
                     className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
                       inputType === type.id
                         ? 'border-[#1E3A8A] bg-blue-50'
@@ -677,12 +726,12 @@ export default function NovoProjeto() {
 
             {inputType === 'text' && (
               <Card padding="lg">
-                <h2 className="text-base font-semibold text-[#111827] mb-1">Briefing inicial</h2>
+                <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.briefingTitle')}</h2>
                 <p className="text-sm text-[#6B7280] mb-4">
-                  Conte tudo que você sabe sobre a demanda. Não precisa ser perfeito — a IA vai refinar depois.
+                  {t('newProject.briefingIntro')}
                 </p>
                 <textarea
-                  placeholder="Ex: Precisamos de um sistema para gerenciar agendamentos de clínicas médicas. O paciente deve conseguir marcar consultas online, receber confirmação por e-mail e lembrete 24h antes. O médico precisa visualizar a agenda do dia e bloquear horários quando necessário..."
+                  placeholder={t('newProject.briefingPlaceholder')}
                   value={briefing}
                   onChange={e => setBriefing(e.target.value)}
                   rows={8}
@@ -690,18 +739,20 @@ export default function NovoProjeto() {
                   required
                 />
                 <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-[#9CA3AF]">{briefing.length} caracteres</p>
+                  <p className="text-xs text-[#9CA3AF]">{t('newProject.charactersHint').replace('{{n}}', String(briefing.length))}</p>
                   {briefing.length < 50 && briefing.length > 0 && (
-                    <p className="text-xs text-[#F59E0B]">Quanto mais detalhado, melhor o resultado da IA</p>
+                    <p className="text-xs text-[#F59E0B]">{t('newProject.detailHint')}</p>
                   )}
                 </div>
               </Card>
             )}
 
-            {inputType === 'audio' && <AudioInput onChange={setHasAudio} />}
+            {inputType === 'audio' && <AudioInput onReady={setAudioFile} />}
             {inputType === 'video' && <VideoInput onChange={setHasVideo} />}
             {inputType === 'document' && <DocumentInput onChange={setHasDocument} />}
-            {inputType === 'form' && <GuidedFormInput onChange={setHasForm} onAnswers={setFormAnswers} />}
+            {inputType === 'form' && (
+              <GuidedFormInput questions={guidedQuestions} onChange={setHasForm} onAnswers={setFormAnswers} />
+            )}
 
             {error && (
               <div role="alert" className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#EF4444]">
@@ -714,12 +765,12 @@ export default function NovoProjeto() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
-                Voltar
+                {t('newProject.back')}
               </Button>
               <Button type="submit" size="lg" loading={isPending} disabled={!isStep2Valid() || isPending}>
                 {!isPending && (
                   <>
-                    Criar projeto e iniciar refinamento
+                    {t('newProject.createSubmit')}
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>

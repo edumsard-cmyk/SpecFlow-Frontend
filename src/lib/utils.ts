@@ -1,11 +1,14 @@
+import type { Locale } from '@/lib/i18n/dictionaries'
+import { intlLocaleTag } from '@/lib/i18n/locale-format'
 import { type ProjectStatus } from '@/types'
 
 export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ')
 }
 
-export function formatDate(date: string): string {
-  return new Intl.DateTimeFormat('pt-BR', {
+export function formatDate(date: string, locale?: Locale): string {
+  const tag = locale ? intlLocaleTag(locale) : 'pt-BR'
+  return new Intl.DateTimeFormat(tag, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

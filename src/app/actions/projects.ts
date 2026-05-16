@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createProject, updateProjectStatus, getProject } from '@/lib/data/projects'
-import { saveBriefing } from '@/lib/data/briefings'
+import { saveBriefing, updateBriefingContent } from '@/lib/data/briefings'
 import { logAudit } from '@/lib/data/audit'
 import { createClient } from '@/lib/supabase/server'
 import { type Database } from '@/lib/supabase/types'
@@ -43,6 +43,36 @@ export async function createProjectAction(payload: CreateProjectPayload): Promis
     return { projectId: project.id }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Erro ao criar projeto.' }
+  }
+}
+
+export async function saveBriefingContentAction(
+  projectId: string,
+  content: string
+): Promise<{ error?: string }> {
+  const trimmed = content.trim()
+  if (trimmed.length < 15) {
+    return { error: 'Briefing muito curto — use pelo menos 15 caracteres para as próximas etapas ficarem úteis.' }
+  }
+
+  try {
+    const proj = await getProject(projectId)
+    if (!proj) return { error: 'Projeto não encontrado.' }
+
+    await updateBriefingContent(projectId, trimmed)
+
+    await logAudit({
+      action: 'briefing.save',
+      entityType: 'project',
+      entityId: projectId,
+      companyId: proj.company_id,
+      metadata: { length: trimmed.length },
+    })
+
+    revalidatePath(`/projetos/${projectId}`)
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Erro ao guardar briefing.' }
   }
 }
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useTransition } from 'react'
+import { useTransition, type SVGProps } from 'react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/actions/auth'
 import { getProfileInitials } from '@/lib/utils'
@@ -99,6 +99,38 @@ const adminItems = [
   },
 ]
 
+function SvgFlagBr(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <rect width="30" height="20" rx="2" fill="#009739" />
+      <path d="M15 4l9 6-9 6-9-6 9-6z" fill="#FFDF00" />
+      <circle cx="15" cy="10" r="4.2" fill="#002776" />
+    </svg>
+  )
+}
+
+function SvgFlagUs(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <rect width="30" height="20" rx="2" fill="#B22234" />
+      <path
+        fill="#fff"
+        d="M0 1.54h30v1.54H0zm0 3.08h30v1.54H0zm0 3.08h30v1.54H0zm0 3.08h30v1.54H0zm0 3.08h30v1.54H0zm0 3.08h30v1.54H0z"
+      />
+      <rect width="13" height="10.78" fill="#3C3B6E" />
+    </svg>
+  )
+}
+
+function SvgFlagEs(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <rect width="30" height="20" rx="2" fill="#AA151B" />
+      <rect y="5" width="30" height="10" fill="#F1BF00" />
+    </svg>
+  )
+}
+
 function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }: {
   profile: Profile | null
   onClose?: () => void
@@ -124,7 +156,7 @@ function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }:
           </div>
           <div>
             <span className="text-white font-bold text-lg leading-none">SpecFlow</span>
-            <p className="text-[#64748B] text-[10px] mt-0.5">Gestão de Demandas</p>
+            <p className="text-[#64748B] text-[10px] mt-0.5">{t('brand.tagline')}</p>
           </div>
         </div>
         {onClose && (
@@ -202,28 +234,52 @@ function SidebarContent({ profile, onClose, isActive, handleLogout, isPending }:
           </Link>
         ))}
 
-        <div className="px-3 py-2 flex items-center gap-2 border-t border-white/10 mt-2 pt-2">
-          <span className="text-[10px] text-[#64748B] uppercase tracking-wide flex-1">{t('i18n.language')}</span>
-          <button
-            type="button"
-            onClick={() => setLocale('pt')}
-            className={cn(
-              'text-[10px] font-bold px-2 py-1 rounded',
-              locale === 'pt' ? 'bg-[#1D4ED8] text-white' : 'text-[#94A3B8] hover:bg-[#1E3A8A]'
-            )}
-          >
-            PT
-          </button>
-          <button
-            type="button"
-            onClick={() => setLocale('en')}
-            className={cn(
-              'text-[10px] font-bold px-2 py-1 rounded',
-              locale === 'en' ? 'bg-[#1D4ED8] text-white' : 'text-[#94A3B8] hover:bg-[#1E3A8A]'
-            )}
-          >
-            EN
-          </button>
+        <div className="px-3 py-2 border-t border-white/10 mt-2 pt-2 space-y-2">
+          <span className="text-[10px] text-[#64748B] uppercase tracking-wide block">{t('i18n.language')}</span>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLocale('pt')}
+              aria-label={t('i18n.pt')}
+              title={t('i18n.pt')}
+              className={cn(
+                'rounded-md overflow-hidden border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F2460]',
+                locale === 'pt'
+                  ? 'border-white shadow-[0_0_0_2px_rgba(255,255,255,0.35)] scale-105'
+                  : 'border-transparent opacity-75 hover:opacity-100 hover:border-white/30'
+              )}
+            >
+              <SvgFlagBr className="w-9 h-6 block" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocale('en')}
+              aria-label={t('i18n.en')}
+              title={t('i18n.en')}
+              className={cn(
+                'rounded-md overflow-hidden border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F2460]',
+                locale === 'en'
+                  ? 'border-white shadow-[0_0_0_2px_rgba(255,255,255,0.35)] scale-105'
+                  : 'border-transparent opacity-75 hover:opacity-100 hover:border-white/30'
+              )}
+            >
+              <SvgFlagUs className="w-9 h-6 block" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocale('es')}
+              aria-label={t('i18n.es')}
+              title={t('i18n.es')}
+              className={cn(
+                'rounded-md overflow-hidden border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F2460]',
+                locale === 'es'
+                  ? 'border-white shadow-[0_0_0_2px_rgba(255,255,255,0.35)] scale-105'
+                  : 'border-transparent opacity-75 hover:opacity-100 hover:border-white/30'
+              )}
+            >
+              <SvgFlagEs className="w-9 h-6 block" aria-hidden />
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 px-3 py-2.5 mt-2">

@@ -6,29 +6,34 @@ import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import ProjectCard from '@/components/projects/ProjectCard'
-import { type ProjectStatus, STATUS_LABELS } from '@/types'
+import { useI18n } from '@/components/i18n/I18nProvider'
+import { type ProjectStatus } from '@/types'
 import { type Database } from '@/lib/supabase/types'
 
 type ProjectRow = Database['public']['Tables']['projects']['Row']
-
-const STATUS_FILTERS: { value: ProjectStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'Todos' },
-  { value: 'briefing', label: 'Briefing' },
-  { value: 'refinement', label: 'Refinamento' },
-  { value: 'specification', label: 'Especificação' },
-  { value: 'documentation', label: 'Documentação' },
-  { value: 'manual', label: 'Manual' },
-  { value: 'done', label: 'Concluídos' },
-]
 
 type ViewMode = 'grid' | 'list'
 type SortOption = 'recent' | 'name' | 'progress'
 
 export default function ProjetosClient({ projects }: { projects: ProjectRow[] }) {
+  const { t } = useI18n()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all')
   const [view, setView] = useState<ViewMode>('grid')
   const [sort, setSort] = useState<SortOption>('recent')
+
+  const STATUS_FILTERS = useMemo(
+    (): { value: ProjectStatus | 'all'; label: string }[] => [
+      { value: 'all', label: t('projects.filterAll') },
+      { value: 'briefing', label: t('status.briefing') },
+      { value: 'refinement', label: t('status.refinement') },
+      { value: 'specification', label: t('status.specification') },
+      { value: 'documentation', label: t('status.documentation') },
+      { value: 'manual', label: t('status.manual') },
+      { value: 'done', label: t('projects.filterDone') },
+    ],
+    [t]
+  )
 
   const filtered = useMemo(() => {
     let result = [...projects]
@@ -64,15 +69,19 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
   return (
     <div className="flex flex-col flex-1">
       <Header
-        title="Projetos"
-        subtitle={`${projects.length} projeto${projects.length !== 1 ? 's' : ''} no total`}
+        title={t('projects.title')}
+        subtitle={
+          projects.length === 1
+            ? t('projects.subtitleOne')
+            : t('projects.subtitleMany').replace('{{n}}', String(projects.length))
+        }
         actions={
           <Link href="/projetos/novo">
             <Button>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Novo Projeto
+              {t('projects.newProject')}
             </Button>
           </Link>
         }
@@ -83,7 +92,7 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
         <div className="flex items-center gap-3">
           <div className="flex-1 max-w-sm">
             <Input
-              placeholder="Buscar projetos..."
+              placeholder={t('projects.searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               icon={
@@ -100,16 +109,16 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
               onChange={e => setSort(e.target.value as SortOption)}
               className="text-sm border border-[#E5E7EB] rounded-lg px-3 py-2 text-[#374151] bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer"
             >
-              <option value="recent">Mais recentes</option>
-              <option value="name">Nome A-Z</option>
-              <option value="progress">Progresso</option>
+              <option value="recent">{t('projects.sortRecent')}</option>
+              <option value="name">{t('projects.sortName')}</option>
+              <option value="progress">{t('projects.sortProgress')}</option>
             </select>
 
             <div className="flex items-center border border-[#E5E7EB] rounded-lg bg-white overflow-hidden">
               <button
                 onClick={() => setView('grid')}
                 className={`p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] ${view === 'grid' ? 'bg-[#1E3A8A] text-white' : 'text-[#6B7280] hover:bg-[#F8FAFC]'}`}
-                aria-label="Visualização em grade"
+                aria-label={t('projects.viewGridAria')}
                 aria-pressed={view === 'grid'}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -119,7 +128,7 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
               <button
                 onClick={() => setView('list')}
                 className={`p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] ${view === 'list' ? 'bg-[#1E3A8A] text-white' : 'text-[#6B7280] hover:bg-[#F8FAFC]'}`}
-                aria-label="Visualização em lista"
+                aria-label={t('projects.viewListAria')}
                 aria-pressed={view === 'list'}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -162,20 +171,22 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
               </svg>
             </div>
-            <h3 className="text-base font-medium text-[#374151] mb-1">Nenhum projeto encontrado</h3>
+            <h3 className="text-base font-medium text-[#374151] mb-1">{t('projects.emptyTitle')}</h3>
             <p className="text-sm text-[#9CA3AF] mb-4">
-              {search ? `Nenhum resultado para "${search}"` : 'Crie seu primeiro projeto para começar'}
+              {search
+                ? t('projects.emptySearch').replace('{{q}}', search)
+                : t('projects.emptyHint')}
             </p>
             {!search && (
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <Link href="/projetos/novo">
-                  <Button>Criar projeto</Button>
+                  <Button>{t('projects.createProject')}</Button>
                 </Link>
                 <Link
                   href="/ajuda"
                   className="text-sm text-[#1E3A8A] font-medium hover:underline"
                 >
-                  Ver guia de primeiro uso
+                  {t('projects.firstUseGuide')}
                 </Link>
               </div>
             )}
@@ -196,7 +207,9 @@ export default function ProjetosClient({ projects }: { projects: ProjectRow[] })
 
         {filtered.length > 0 && (
           <p className="text-xs text-[#9CA3AF] text-center pt-2">
-            Exibindo {filtered.length} de {projects.length} projetos
+            {t('projects.showing')
+              .replace('{{shown}}', String(filtered.length))
+              .replace('{{total}}', String(projects.length))}
           </p>
         )}
       </div>

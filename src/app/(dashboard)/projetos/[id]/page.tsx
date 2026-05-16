@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition, type Dispatch, type SetStateAction } from 'react'
+import { useState, useEffect, useTransition, useMemo, type Dispatch, type SetStateAction } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
@@ -11,38 +11,105 @@ import RefinamentoTab from '@/components/projects/RefinamentoTab'
 import ProjectExportButtons from '@/components/projects/ProjectExportButtons'
 import ProjectNextSteps from '@/components/projects/ProjectNextSteps'
 import StoryCommentsThread, { type StoryCommentRow } from '@/components/projects/StoryCommentsThread'
-import { type ProjectStatus, STATUS_LABELS, STATUS_STEPS } from '@/types'
+import { useI18n } from '@/components/i18n/I18nProvider'
+import { type Locale } from '@/lib/i18n/dictionaries'
+import { intlLocaleTag } from '@/lib/i18n/locale-format'
+import { type ProjectStatus, STATUS_STEPS } from '@/types'
 import { getStatusColor } from '@/lib/utils'
-import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, deleteProjectAction, type StoryPayload } from '@/app/actions/projects'
+import { updateProjectStatusAction, saveUserStoriesAction, saveDocumentAction, deleteProjectAction, saveBriefingContentAction, type StoryPayload } from '@/app/actions/projects'
 
 /* ── Briefing ─────────────────────────────────────────────── */
 
-function BriefingTab({ briefing }: { briefing: string | null }) {
-  const defaultText = briefing ?? MOCK_BRIEFING
+function formatBriefingFooter(iso: string | null | undefined, locale: Locale): string | null {
+  if (!iso?.trim()) return null
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    return d.toLocaleString(intlLocaleTag(locale), { dateStyle: 'medium', timeStyle: 'short' })
+  } catch {
+    return null
+  }
+}
+
+function BriefingTab({
+  projectId,
+  briefing,
+  audioUrl,
+  briefingCreatedAt,
+  onBriefingSaved,
+}: {
+  projectId: string
+  briefing: string | null
+  audioUrl?: string | null
+  briefingCreatedAt?: string | null
+  onBriefingSaved?: (content: string) => void
+}) {
+  const { t, locale } = useI18n()
   const [editing, setEditing] = useState(false)
-  const [text, setText] = useState(defaultText)
-  const [draft, setDraft] = useState(defaultText)
+  const [text, setText] = useState(() => briefing?.trim() ?? '')
+  const [draft, setDraft] = useState(() => briefing?.trim() ?? '')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [savePending, startSavePending] = useTransition()
 
   useEffect(() => {
-    if (briefing) { setText(briefing); setDraft(briefing) }
+    const next = briefing?.trim() ?? ''
+    setText(next)
+    setDraft(next)
   }, [briefing])
 
-  const save = () => { setText(draft); setEditing(false) }
-  const cancel = () => { setDraft(text); setEditing(false) }
+  const save = () => {
+    setSaveError(null)
+    startSavePending(async () => {
+      const res = await saveBriefingContentAction(projectId, draft)
+      if (res.error) {
+        setSaveError(res.error)
+        return
+      }
+      const trimmed = draft.trim()
+      setText(trimmed)
+      setEditing(false)
+      onBriefingSaved?.(trimmed)
+    })
+  }
+
+  const cancel = () => {
+    setDraft(text)
+    setSaveError(null)
+    setEditing(false)
+  }
+
+  const footerLabel = formatBriefingFooter(briefingCreatedAt, locale)
 
   return (
     <Card padding="lg" className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#374151]">Briefing recebido</h3>
+        <h3 className="text-sm font-semibold text-[#374151]">{t('briefing.receivedTitle')}</h3>
         {!editing && (
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
             </svg>
-            Editar
+            {t('common.edit')}
           </Button>
         )}
       </div>
+
+      <p className="text-xs text-[#6B7280] leading-relaxed border border-[#E5E7EB] rounded-lg px-3 py-2 bg-[#F9FAFB]">
+        {t('briefing.aiHint')}
+      </p>
+
+      {audioUrl ? (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-[#6B7280]">{t('briefing.audioOriginal')}</p>
+          <audio controls src={audioUrl} className="w-full rounded-lg" />
+        </div>
+      ) : null}
+
+      {saveError && (
+        <div role="alert" className="text-xs text-[#EF4444] px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+          {saveError}
+        </div>
+      )}
 
       {editing ? (
         <div className="space-y-3">
@@ -54,31 +121,42 @@ function BriefingTab({ briefing }: { briefing: string | null }) {
             className="w-full rounded-lg border border-[#3B82F6] bg-white px-4 py-3 text-sm text-[#111827] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 resize-none"
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#9CA3AF]">{draft.length} caracteres</span>
+            <span className="text-xs text-[#9CA3AF]">
+              {t('briefing.charCount').replace('{{n}}', String(draft.length))}
+            </span>
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={cancel}>Cancelar</Button>
-              <Button size="sm" onClick={save}>Salvar</Button>
+              <Button variant="ghost" size="sm" onClick={cancel} disabled={savePending}>
+                {t('common.cancel')}
+              </Button>
+              <Button size="sm" onClick={save} loading={savePending}>
+                {!savePending && t('briefing.saveServer')}
+              </Button>
             </div>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-[#6B7280] leading-relaxed bg-[#F8FAFC] rounded-lg p-4 border border-[#E5E7EB]">
-          {text}
-        </p>
+        <div className="text-sm leading-relaxed bg-[#F8FAFC] rounded-lg p-4 border border-[#E5E7EB]">
+          {text.trim() ? (
+            <p className="text-[#6B7280] whitespace-pre-wrap">{text}</p>
+          ) : (
+            <p className="text-[#9CA3AF] italic">
+              {t('briefing.emptyReadonly')}
+            </p>
+          )}
+        </div>
       )}
 
-      <div className="flex items-center gap-2 text-xs text-[#9CA3AF]">
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Recebido em 10 mar 2024 às 10:00
-      </div>
+      {footerLabel ? (
+        <div className="flex items-center gap-2 text-xs text-[#9CA3AF]">
+          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {t('briefing.savedAt').replace('{{date}}', footerLabel)}
+        </div>
+      ) : null}
     </Card>
   )
 }
-
-const MOCK_BRIEFING = 'Precisamos de um sistema para gerenciar agendamentos de clínicas médicas. O paciente deve conseguir marcar consultas online, receber confirmação por e-mail e lembrete 24h antes. O médico precisa visualizar a agenda do dia e bloquear horários quando necessário. Também é importante ter um painel para a secretária confirmar, remarcar ou cancelar consultas.'
-
 /* ── Especificação ────────────────────────────────────────── */
 
 interface Story {
@@ -88,53 +166,247 @@ interface Story {
   criteria: string[]
 }
 
-const INITIAL_STORIES: Story[] = [
-  {
-    id: 'US-01',
-    title: 'Agendamento online pelo paciente',
-    description: 'Como paciente, quero agendar uma consulta médica online para evitar ligar para a clínica.',
-    criteria: [
-      'Paciente pode selecionar especialidade, médico, data e horário disponível',
-      'Sistema deve exibir apenas horários não ocupados',
-      'Confirmação deve ser enviada por e-mail em até 2 minutos',
-      'Agendamento só é confirmado após validação do convênio (se aplicável)',
-    ],
-  },
-  {
-    id: 'US-02',
-    title: 'Lembrete automático de consulta',
-    description: 'Como paciente, quero receber um lembrete 24h antes da consulta para não esquecer.',
-    criteria: [
-      'Notificação enviada por e-mail e SMS 24h antes',
-      'Mensagem deve conter data, horário, médico e endereço da clínica',
-      'Paciente pode confirmar ou cancelar diretamente pelo link do lembrete',
-    ],
-  },
-  {
-    id: 'US-03',
-    title: 'Gestão da agenda pelo médico',
-    description: 'Como médico, quero visualizar minha agenda diária e bloquear horários para controlar minha disponibilidade.',
-    criteria: [
-      'Médico visualiza agenda em formato diário, semanal e mensal',
-      'Pode bloquear intervalos de tempo com justificativa',
-      'Recebe notificação para novos agendamentos em tempo real',
-      'Pode visualizar dados básicos do paciente antes da consulta',
-    ],
-  },
-]
+type StoryVoiceParts = { como: string; quero: string; para: string }
 
-function StoryCard({ story, index, onUpdate, onDelete }: {
+const EMPTY_STORY_VOICE: StoryVoiceParts = { como: '', quero: '', para: '' }
+
+/** Lê descrição guardada (rotulada ou texto livre) para os três campos. */
+function parseStoryDescription(description: string): StoryVoiceParts {
+  const text = description.trim()
+  if (!text) return { como: '', quero: '', para: '' }
+
+  const hasLabels =
+    /^como\s*:/im.test(text) ||
+    /^quero\s*:/im.test(text) ||
+    /^para\s*:/im.test(text) ||
+    /\n\s*como\s*:/i.test(text) ||
+    /\n\s*quero\s*:/i.test(text) ||
+    /\n\s*para\s*:/i.test(text)
+
+  if (!hasLabels) {
+    const lineMatch = text.match(
+      /^como\s+(.+?),\s*quero\s+(.+?)(?:,\s*para\s+(.+))?$/i
+    )
+    if (lineMatch) {
+      return {
+        como: lineMatch[1].trim(),
+        quero: lineMatch[2].trim(),
+        para: (lineMatch[3] ?? '').trim(),
+      }
+    }
+    return { como: '', quero: text, para: '' }
+  }
+
+  const parts: StoryVoiceParts = { como: '', quero: '', para: '' }
+  let mode: keyof StoryVoiceParts | null = null
+
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+
+    let m = trimmed.match(/^como\s*:\s*(.*)$/i)
+    if (m) {
+      mode = 'como'
+      parts.como = m[1].trim()
+      continue
+    }
+    m = trimmed.match(/^quero\s*:\s*(.*)$/i)
+    if (m) {
+      mode = 'quero'
+      parts.quero = m[1].trim()
+      continue
+    }
+    m = trimmed.match(/^para\s*:\s*(.*)$/i)
+    if (m) {
+      mode = 'para'
+      parts.para = m[1].trim()
+      continue
+    }
+
+    if (mode) {
+      parts[mode] = parts[mode] ? `${parts[mode]} ${trimmed}` : trimmed
+    }
+  }
+
+  return parts
+}
+
+function serializeStoryVoiceParts(parts: StoryVoiceParts): string {
+  const lines: string[] = []
+  if (parts.como.trim()) lines.push(`Como: ${parts.como.trim()}`)
+  if (parts.quero.trim()) lines.push(`Quero: ${parts.quero.trim()}`)
+  if (parts.para.trim()) lines.push(`Para: ${parts.para.trim()}`)
+  return lines.join('\n')
+}
+
+function StoryVoiceReadonly({ description }: { description: string }) {
+  const { t } = useI18n()
+  const { como, quero, para } = parseStoryDescription(description)
+  const blocks = [
+    {
+      key: 'como' as const,
+      label: t('spec.voiceLabel.como'),
+      hint: t('spec.voiceHintReadonly.como'),
+      color: 'bg-[#EFF6FF]',
+      border: 'border-[#BFDBFE]',
+      labelColor: 'text-[#1D4ED8]',
+    },
+    {
+      key: 'quero' as const,
+      label: t('spec.voiceLabel.quero'),
+      hint: t('spec.voiceHintReadonly.quero'),
+      color: 'bg-[#F5F3FF]',
+      border: 'border-[#DDD6FE]',
+      labelColor: 'text-[#5B21B6]',
+    },
+    {
+      key: 'para' as const,
+      label: t('spec.voiceLabel.para'),
+      hint: t('spec.voiceHintReadonly.para'),
+      color: 'bg-[#ECFDF5]',
+      border: 'border-[#A7F3D0]',
+      labelColor: 'text-[#047857]',
+    },
+  ] as const
+
+  const values = { como, quero, para }
+
+  if (!como.trim() && !quero.trim() && !para.trim()) {
+    return (
+      <p className="text-sm text-[#9CA3AF] italic rounded-lg border border-dashed border-[#E5E7EB] px-4 py-3 bg-[#FAFAFA]">
+        {t('spec.voiceEmpty')}
+      </p>
+    )
+  }
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-1">
+      {blocks.map(({ key, label, hint, color, border, labelColor }) => {
+        const val = values[key].trim()
+        if (!val) return null
+        return (
+          <div
+            key={key}
+            className={`rounded-xl border ${border} ${color} px-3.5 py-3 shadow-sm`}
+          >
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className={`text-xs font-bold uppercase tracking-wide ${labelColor}`}>{label}</span>
+              <span className="text-[10px] text-[#64748B] hidden sm:inline">{hint}</span>
+            </div>
+            <p className="text-sm text-[#374151] leading-relaxed whitespace-pre-wrap">{val}</p>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+const voiceFieldClass =
+  'w-full text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] resize-none min-h-[3rem] bg-white placeholder:text-[#9CA3AF]'
+
+function StoryVoiceEditor({
+  parts,
+  onChange,
+}: {
+  parts: StoryVoiceParts
+  onChange: (next: StoryVoiceParts) => void
+}) {
+  const { t } = useI18n()
+  const rows = [
+    {
+      key: 'como' as const,
+      label: t('spec.voiceLabel.como'),
+      hint: t('spec.voiceHintEdit.como'),
+      placeholder: t('spec.placeholder.como'),
+      wrapClass: 'focus-within:ring-2 focus-within:ring-[#DBEAFE]/90 rounded-lg',
+    },
+    {
+      key: 'quero' as const,
+      label: t('spec.voiceLabel.quero'),
+      hint: t('spec.voiceHintEdit.quero'),
+      placeholder: t('spec.placeholder.quero'),
+      wrapClass: 'focus-within:ring-2 focus-within:ring-[#EDE9FE]/90 rounded-lg',
+    },
+    {
+      key: 'para' as const,
+      label: t('spec.voiceLabel.para'),
+      hint: t('spec.voiceHintEdit.para'),
+      placeholder: t('spec.placeholder.para'),
+      wrapClass: 'focus-within:ring-2 focus-within:ring-[#D1FAE5]/90 rounded-lg',
+    },
+  ]
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-[#64748B] leading-relaxed">
+        {t('spec.editorIntro')}
+      </p>
+      <div className="rounded-xl border border-[#E5E7EB] overflow-hidden bg-[#FAFBFC] divide-y divide-[#EEF2F6]">
+        {rows.map(({ key, label, hint, placeholder, wrapClass }) => (
+          <div key={key} className={`p-3 sm:p-4 ${wrapClass}`}>
+            <label className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2 mb-1.5">
+              <span className="text-xs font-bold text-[#111827]">{label}</span>
+              <span className="text-[10px] sm:text-xs text-[#9CA3AF] font-normal">{hint}</span>
+            </label>
+            <textarea
+              value={parts[key]}
+              onChange={e => onChange({ ...parts, [key]: e.target.value })}
+              rows={2}
+              placeholder={placeholder}
+              className={voiceFieldClass}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function titleFallbackFromVoice(parts: StoryVoiceParts, emptyLabel: string): string {
+  const q = parts.quero.trim() || parts.como.trim() || parts.para.trim()
+  if (!q) return emptyLabel
+  return q.length <= 72 ? q : `${q.slice(0, 69)}…`
+}
+
+function StoryCard({ story, onUpdate, onDelete }: {
   story: Story
-  index: number
   onUpdate: (s: Story) => void
   onDelete: () => void
 }) {
+  const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(story)
+  const [voiceParts, setVoiceParts] = useState<StoryVoiceParts>(() =>
+    parseStoryDescription(story.description)
+  )
   const [newCriteria, setNewCriteria] = useState('')
 
-  const save = () => { onUpdate(draft); setEditing(false) }
-  const cancel = () => { setDraft(story); setEditing(false) }
+  useEffect(() => {
+    setDraft(story)
+    setVoiceParts(parseStoryDescription(story.description))
+  }, [story])
+
+  const openEdit = () => {
+    setDraft(story)
+    setVoiceParts(parseStoryDescription(story.description))
+    setEditing(true)
+  }
+
+  const save = () => {
+    const description = serializeStoryVoiceParts(voiceParts)
+    if (!description.trim()) return
+    onUpdate({
+      ...draft,
+      description,
+    })
+    setEditing(false)
+  }
+
+  const cancel = () => {
+    setDraft(story)
+    setVoiceParts(parseStoryDescription(story.description))
+    setEditing(false)
+  }
 
   const updateCriteria = (i: number, val: string) =>
     setDraft(d => ({ ...d, criteria: d.criteria.map((c, ci) => ci === i ? val : c) }))
@@ -156,24 +428,16 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
           <input
             value={draft.title}
             onChange={e => setDraft(d => ({ ...d, title: e.target.value }))}
-            placeholder="Título da história"
+            placeholder={t('spec.titlePlaceholderLong')}
             autoFocus
             className="flex-1 text-sm font-semibold text-[#111827] border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
           />
         </div>
 
-        <div>
-          <label className="text-xs font-semibold text-[#374151] mb-1 block">Descrição</label>
-          <textarea
-            value={draft.description}
-            onChange={e => setDraft(d => ({ ...d, description: e.target.value }))}
-            rows={2}
-            className="w-full text-sm text-[#6B7280] border border-[#E5E7EB] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] resize-none"
-          />
-        </div>
+        <StoryVoiceEditor parts={voiceParts} onChange={setVoiceParts} />
 
         <div>
-          <label className="text-xs font-semibold text-[#374151] mb-2 block">Critérios de aceite</label>
+          <label className="text-xs font-semibold text-[#374151] mb-2 block">{t('spec.acceptanceCriteria')}</label>
           <div className="space-y-2">
             {draft.criteria.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -185,7 +449,7 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
                   onChange={e => updateCriteria(i, e.target.value)}
                   className="flex-1 text-sm text-[#374151] border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
                 />
-                <button onClick={() => removeCriteria(i)} className="text-[#EF4444] hover:text-red-600 flex-shrink-0">
+                <button type="button" onClick={() => removeCriteria(i)} className="text-[#EF4444] hover:text-red-600 flex-shrink-0">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -200,7 +464,7 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
                 value={newCriteria}
                 onChange={e => setNewCriteria(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addCriteria()}
-                placeholder="Adicionar critério (Enter)"
+                placeholder={t('spec.addCriterionPlaceholder')}
                 className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6]"
               />
             </div>
@@ -208,12 +472,12 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F9]">
-          <button onClick={onDelete} className="text-xs text-[#EF4444] hover:underline">
-            Excluir história
+          <button type="button" onClick={onDelete} className="text-xs text-[#EF4444] hover:underline">
+            {t('spec.deleteStory')}
           </button>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={cancel}>Cancelar</Button>
-            <Button size="sm" onClick={save}>Salvar</Button>
+            <Button variant="ghost" size="sm" onClick={cancel}>{t('common.cancel')}</Button>
+            <Button size="sm" onClick={save}>{t('common.save')}</Button>
           </div>
         </div>
       </Card>
@@ -223,13 +487,15 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
   return (
     <Card padding="md" className="space-y-3 group">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded">{story.id}</span>
-          <h3 className="font-semibold text-[#111827] text-sm">{story.title}</h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-mono font-bold text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded flex-shrink-0">{story.id}</span>
+          <h3 className="font-semibold text-[#111827] text-sm truncate">{story.title}</h3>
         </div>
         <button
-          onClick={() => { setDraft(story); setEditing(true) }}
+          type="button"
+          onClick={openEdit}
           className="text-[#9CA3AF] hover:text-[#1D4ED8] flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          aria-label={t('spec.editStoryAria')}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -237,10 +503,10 @@ function StoryCard({ story, index, onUpdate, onDelete }: {
         </button>
       </div>
 
-      <p className="text-sm text-[#6B7280] italic">"{story.description}"</p>
+      <StoryVoiceReadonly description={story.description} />
 
       <div>
-        <p className="text-xs font-semibold text-[#374151] mb-2">Critérios de aceite:</p>
+        <p className="text-xs font-semibold text-[#374151] mb-2">{t('spec.acceptanceCriteria')}:</p>
         <ul className="space-y-1.5">
           {story.criteria.map((c, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-[#374151]">
@@ -267,12 +533,15 @@ function EspecificacaoTab({
   storyComments: StoryCommentRow[]
   setStoryComments: Dispatch<SetStateAction<StoryCommentRow[]>>
 }) {
-  const [stories, setStories] = useState<Story[]>(initialStories.length > 0 ? initialStories : INITIAL_STORIES)
+  const { t } = useI18n()
+  const [stories, setStories] = useState<Story[]>(initialStories)
   const [addingNew, setAddingNew] = useState(false)
   const [newStory, setNewStory] = useState<Omit<Story, 'id'>>({ title: '', description: '', criteria: [] })
+  const [newVoiceParts, setNewVoiceParts] = useState<StoryVoiceParts>(EMPTY_STORY_VOICE)
   const [newCriteria, setNewCriteria] = useState('')
-  const [saved, setSaved] = useState(initialStories.length > 0)
+  const [saved, setSaved] = useState(true)
   const [saving, startSaving] = useTransition()
+  const [clearing, startClearing] = useTransition()
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
 
@@ -287,10 +556,26 @@ function EspecificacaoTab({
       })
       const json = await res.json()
       if (json.error) { setGenError(json.error); return }
-      setStories(json.data)
+      type AiStory = {
+        code?: string
+        id?: string
+        title?: string
+        description?: string
+        criteria?: string[]
+      }
+      const raw = (json.data ?? []) as AiStory[]
+      const normalized: Story[] = raw.map((s, i) => ({
+        id: (typeof s.code === 'string' && s.code.trim() ? s.code.trim() : null)
+          ?? (typeof s.id === 'string' && s.id.trim() ? s.id.trim() : null)
+          ?? `US-${String(i + 1).padStart(2, '0')}`,
+        title: typeof s.title === 'string' ? s.title : t('spec.storyFallbackAi'),
+        description: serializeStoryVoiceParts(parseStoryDescription(typeof s.description === 'string' ? s.description : '')),
+        criteria: Array.isArray(s.criteria) ? s.criteria.filter((c): c is string => typeof c === 'string') : [],
+      }))
+      setStories(normalized)
       setSaved(false)
     } catch {
-      setGenError('Erro ao gerar histórias.')
+      setGenError(t('spec.genError'))
     } finally {
       setGenerating(false)
     }
@@ -319,6 +604,29 @@ function EspecificacaoTab({
     })
   }
 
+  const handleClearSpecification = () => {
+    if (stories.length === 0) return
+    if (
+      !window.confirm(
+        t('spec.confirmClear')
+      )
+    ) {
+      return
+    }
+    setGenError('')
+    startClearing(async () => {
+      const result = await saveUserStoriesAction(projectId, [])
+      if (result.error) {
+        setGenError(result.error)
+        return
+      }
+      setStories([])
+      setSaved(true)
+      setAddingNew(false)
+      setNewVoiceParts(EMPTY_STORY_VOICE)
+    })
+  }
+
   const addNewCriteria = () => {
     if (!newCriteria.trim()) return
     setNewStory(s => ({ ...s, criteria: [...s.criteria, newCriteria.trim()] }))
@@ -326,10 +634,13 @@ function EspecificacaoTab({
   }
 
   const saveNew = () => {
-    if (!newStory.title.trim()) return
+    const description = serializeStoryVoiceParts(newVoiceParts)
+    if (!description.trim()) return
     const id = `US-${String(stories.length + 1).padStart(2, '0')}`
-    setStories(prev => [...prev, { id, ...newStory }])
+    const title = newStory.title.trim() || titleFallbackFromVoice(newVoiceParts, t('spec.newStoryFallback'))
+    setStories(prev => [...prev, { id, title, description, criteria: newStory.criteria }])
     setNewStory({ title: '', description: '', criteria: [] })
+    setNewVoiceParts(EMPTY_STORY_VOICE)
     setNewCriteria('')
     setAddingNew(false)
     setSaved(false)
@@ -337,9 +648,18 @@ function EspecificacaoTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[#6B7280]">{stories.length} histórias de usuário</p>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1 min-w-0">
+          <p className="text-sm font-medium text-[#374151]">
+            {stories.length === 1
+              ? t('spec.countOne')
+              : t('spec.countMany').replace('{{n}}', String(stories.length))}
+          </p>
+          <p className="text-xs text-[#64748B] max-w-xl leading-relaxed">
+            {t('spec.legend')}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {genError && <span className="text-xs text-[#EF4444]">{genError}</span>}
           <Button variant="outline" size="sm" onClick={handleGenerate} loading={generating}>
             {!generating && (
@@ -347,7 +667,7 @@ function EspecificacaoTab({
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
-                Gerar com IA
+                {t('spec.generateAi')}
               </>
             )}
           </Button>
@@ -358,7 +678,7 @@ function EspecificacaoTab({
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                   </svg>
-                  Salvar
+                  {t('common.save')}
                 </>
               )}
             </Button>
@@ -368,23 +688,50 @@ function EspecificacaoTab({
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              Salvo
+              {t('common.saved')}
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={() => setAddingNew(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setNewStory({ title: '', description: '', criteria: [] })
+              setNewVoiceParts(EMPTY_STORY_VOICE)
+              setNewCriteria('')
+              setAddingNew(true)
+            }}
+          >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Nova história
+            {t('spec.newStory')}
           </Button>
+          {stories.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[#EF4444] hover:bg-red-50 hover:text-[#DC2626]"
+              onClick={handleClearSpecification}
+              loading={clearing}
+            >
+              {!clearing && t('spec.clearSpec')}
+            </Button>
+          )}
         </div>
       </div>
+
+      {stories.length === 0 && !addingNew && (
+        <Card padding="lg" className="border border-dashed border-[#E5E7EB] bg-[#F8FAFC]">
+          <p className="text-sm text-[#6B7280] text-center leading-relaxed">
+            {t('spec.emptyCard')}
+          </p>
+        </Card>
+      )}
 
       {stories.map((story, i) => (
         <div key={story.id} className="space-y-0">
           <StoryCard
             story={story}
-            index={i}
             onUpdate={s => updateStory(i, s)}
             onDelete={() => deleteStory(i)}
           />
@@ -407,25 +754,16 @@ function EspecificacaoTab({
             <input
               value={newStory.title}
               onChange={e => setNewStory(s => ({ ...s, title: e.target.value }))}
-              placeholder="Título da história"
+              placeholder={t('spec.titlePlaceholderShort')}
               autoFocus
               className="flex-1 text-sm font-semibold text-[#111827] border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
             />
           </div>
 
-          <div>
-            <label className="text-xs font-semibold text-[#374151] mb-1 block">Descrição</label>
-            <textarea
-              value={newStory.description}
-              onChange={e => setNewStory(s => ({ ...s, description: e.target.value }))}
-              rows={2}
-              placeholder='Como [ator], quero [ação] para [benefício].'
-              className="w-full text-sm text-[#6B7280] border border-[#E5E7EB] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] resize-none"
-            />
-          </div>
+          <StoryVoiceEditor parts={newVoiceParts} onChange={setNewVoiceParts} />
 
           <div>
-            <label className="text-xs font-semibold text-[#374151] mb-2 block">Critérios de aceite</label>
+            <label className="text-xs font-semibold text-[#374151] mb-2 block">{t('spec.acceptanceCriteria')}</label>
             <div className="space-y-2">
               {newStory.criteria.map((c, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -451,7 +789,7 @@ function EspecificacaoTab({
                   value={newCriteria}
                   onChange={e => setNewCriteria(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addNewCriteria()}
-                  placeholder="Adicionar critério (Enter)"
+                  placeholder={t('spec.addCriterionPlaceholder')}
                   className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
                 />
               </div>
@@ -459,11 +797,24 @@ function EspecificacaoTab({
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-[#F1F5F9]">
-            <Button variant="ghost" size="sm" onClick={() => { setAddingNew(false); setNewStory({ title: '', description: '', criteria: [] }); setNewCriteria('') }}>
-              Cancelar
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAddingNew(false)
+                setNewStory({ title: '', description: '', criteria: [] })
+                setNewVoiceParts(EMPTY_STORY_VOICE)
+                setNewCriteria('')
+              }}
+            >
+              {t('common.cancel')}
             </Button>
-            <Button size="sm" onClick={saveNew} disabled={!newStory.title.trim()}>
-              Adicionar história
+            <Button
+              size="sm"
+              onClick={saveNew}
+              disabled={!serializeStoryVoiceParts(newVoiceParts).trim()}
+            >
+              {t('spec.addStory')}
             </Button>
           </div>
         </Card>
@@ -511,6 +862,7 @@ const INITIAL_DOC: DocSection[] = [
 ]
 
 function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate: (s: DocSection) => void }) {
+  const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(section)
   const [newItem, setNewItem] = useState('')
@@ -553,8 +905,8 @@ function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate:
           </button>
         ) : (
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={cancel}>Cancelar</Button>
-            <Button size="sm" onClick={save}>Salvar</Button>
+            <Button variant="ghost" size="sm" onClick={cancel}>{t('common.cancel')}</Button>
+            <Button size="sm" onClick={save}>{t('common.save')}</Button>
           </div>
         )}
       </div>
@@ -595,7 +947,7 @@ function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate:
                 value={newItem}
                 onChange={e => setNewItem(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addItem()}
-                placeholder="Adicionar módulo (Enter)"
+                placeholder={t('doc.placeholderModule')}
                 className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
               />
             </div>
@@ -636,7 +988,7 @@ function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate:
                 value={newItem}
                 onChange={e => setNewItem(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addItem()}
-                placeholder="Adicionar regra (Enter)"
+                placeholder={t('doc.placeholderRule')}
                 className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
               />
             </div>
@@ -657,6 +1009,7 @@ function DocSectionBlock({ section, onUpdate }: { section: DocSection; onUpdate:
 }
 
 function DocumentacaoTab({ projectId, initialContent }: { projectId: string; initialContent: DocSection[] | null }) {
+  const { t } = useI18n()
   const [sections, setSections] = useState<DocSection[]>(initialContent ?? INITIAL_DOC)
   const [saved, setSaved] = useState(initialContent !== null)
   const [saving, startSaving] = useTransition()
@@ -677,7 +1030,7 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
       setSections(json.data)
       setSaved(false)
     } catch {
-      setGenError('Erro ao gerar documentação.')
+      setGenError(t('doc.genError'))
     } finally {
       setGenerating(false)
     }
@@ -706,7 +1059,7 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
-                Gerar com IA
+                {t('spec.generateAi')}
               </>
             )}
           </Button>
@@ -719,7 +1072,7 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                Salvar
+                {t('common.save')}
               </>
             )}
           </Button>
@@ -728,7 +1081,7 @@ function DocumentacaoTab({ projectId, initialContent }: { projectId: string; ini
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
-            Salvo
+            {t('common.saved')}
           </span>
         )}
         </div>
@@ -782,6 +1135,7 @@ function ManualSectionBlock({ section, onUpdate, onDelete }: {
   onUpdate: (s: ManualSection) => void
   onDelete: () => void
 }) {
+  const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(section)
   const [newStep, setNewStep] = useState('')
@@ -828,8 +1182,8 @@ function ManualSectionBlock({ section, onUpdate, onDelete }: {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={cancel}>Cancelar</Button>
-            <Button size="sm" onClick={save}>Salvar</Button>
+            <Button variant="ghost" size="sm" onClick={cancel}>{t('common.cancel')}</Button>
+            <Button size="sm" onClick={save}>{t('common.save')}</Button>
           </div>
         )}
       </div>
@@ -857,7 +1211,7 @@ function ManualSectionBlock({ section, onUpdate, onDelete }: {
               value={newStep}
               onChange={e => setNewStep(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addStep()}
-              placeholder="Adicionar passo (Enter)"
+              placeholder={t('manual.placeholderStep')}
               className="flex-1 text-sm text-[#374151] border border-dashed border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
             />
           </div>
@@ -877,6 +1231,7 @@ function ManualSectionBlock({ section, onUpdate, onDelete }: {
 }
 
 function ManualTab({ projectId, projectName, initialSections }: { projectId: string; projectName: string; initialSections: ManualSection[] | null }) {
+  const { t } = useI18n()
   const [sections, setSections] = useState<ManualSection[]>(initialSections ?? INITIAL_MANUAL)
   const [addingSection, setAddingSection] = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -899,7 +1254,7 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
       setSections(json.data)
       setSaved(false)
     } catch {
-      setGenError('Erro ao gerar manual.')
+      setGenError(t('manual.genError'))
     } finally {
       setGenerating(false)
     }
@@ -925,8 +1280,8 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
     <Card padding="lg" className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-[#374151]">Manual do Usuário</h3>
-          <p className="text-xs text-[#9CA3AF] mt-0.5">Versão 1.0 — Gerado automaticamente pelo SpecFlow</p>
+          <h3 className="text-sm font-semibold text-[#374151]">{t('manual.title')}</h3>
+          <p className="text-xs text-[#9CA3AF] mt-0.5">{t('manual.versionHint')}</p>
         </div>
         <div className="flex items-center gap-2">
           {genError && <span className="text-xs text-[#EF4444]">{genError}</span>}
@@ -936,7 +1291,7 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
-                Gerar com IA
+                {t('spec.generateAi')}
               </>
             )}
           </Button>
@@ -947,7 +1302,7 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                   </svg>
-                  Salvar
+                  {t('common.save')}
                 </>
               )}
             </Button>
@@ -956,7 +1311,7 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              Salvo
+              {t('common.saved')}
             </span>
           )}
           <Button
@@ -970,7 +1325,7 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            Exportar PDF
+            {t('manual.exportPdf')}
           </Button>
         </div>
       </div>
@@ -994,12 +1349,12 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addSection()}
-            placeholder="Título da nova seção"
+            placeholder={t('manual.sectionTitlePlaceholder')}
             autoFocus
             className="flex-1 text-sm text-[#374151] border border-[#3B82F6] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30"
           />
-          <Button size="sm" onClick={addSection} disabled={!newTitle.trim()}>Adicionar</Button>
-          <Button variant="ghost" size="sm" onClick={() => { setAddingSection(false); setNewTitle('') }}>Cancelar</Button>
+          <Button size="sm" onClick={addSection} disabled={!newTitle.trim()}>{t('common.add')}</Button>
+          <Button variant="ghost" size="sm" onClick={() => { setAddingSection(false); setNewTitle('') }}>{t('common.cancel')}</Button>
         </div>
       ) : (
         <button
@@ -1009,7 +1364,7 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          Adicionar seção
+          {t('manual.addSection')}
         </button>
       )}
     </Card>
@@ -1018,20 +1373,26 @@ function ManualTab({ projectId, projectName, initialSections }: { projectId: str
 
 /* ── Main page ────────────────────────────────────────────── */
 
-const TABS: { id: ProjectStatus | 'briefing'; label: string }[] = [
-  { id: 'briefing', label: 'Briefing' },
-  { id: 'refinement', label: 'Refinamento' },
-  { id: 'specification', label: 'Especificação' },
-  { id: 'documentation', label: 'Documentação' },
-  { id: 'manual', label: 'Manual' },
-]
-
 export default function ProjetoPage() {
   const router = useRouter()
   const params = useParams()
   const projectId = params.id as string
+  const { t } = useI18n()
+
+  const tabs = useMemo(
+    (): { id: ProjectStatus | 'briefing'; label: string }[] => [
+      { id: 'briefing', label: t('status.briefing') },
+      { id: 'refinement', label: t('status.refinement') },
+      { id: 'specification', label: t('status.specification') },
+      { id: 'documentation', label: t('status.documentation') },
+      { id: 'manual', label: t('status.manual') },
+    ],
+    [t]
+  )
 
   const [realBriefing, setRealBriefing] = useState<string | null>(null)
+  const [briefingAudioUrl, setBriefingAudioUrl] = useState<string | null>(null)
+  const [briefingCreatedAt, setBriefingCreatedAt] = useState<string | null>(null)
   const [refinementMessages, setRefinementMessages] = useState<
     { role: 'ai' | 'user'; content: string }[]
   >([])
@@ -1058,7 +1419,16 @@ export default function ProjetoPage() {
           setProjectStatus(status)
           setActiveTab(status === 'done' ? 'briefing' : status)
         }
-        if (data.briefing?.content) setRealBriefing(data.briefing.content)
+        if (data.briefing) {
+          setRealBriefing(data.briefing.content ?? null)
+          const url = data.briefing.audio_url
+          setBriefingAudioUrl(typeof url === 'string' && url.trim() ? url.trim() : null)
+          setBriefingCreatedAt(typeof data.briefing.created_at === 'string' ? data.briefing.created_at : null)
+        } else {
+          setRealBriefing(null)
+          setBriefingAudioUrl(null)
+          setBriefingCreatedAt(null)
+        }
         if (Array.isArray(data.refinementMessages) && data.refinementMessages.length > 0) {
           setRefinementMessages(
             data.refinementMessages.map(
@@ -1104,11 +1474,11 @@ export default function ProjetoPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
 
-  const currentTabIndex = TABS.findIndex(t => t.id === activeTab)
+  const currentTabIndex = tabs.findIndex(tab => tab.id === activeTab)
   const statusIndex = STATUS_STEPS.indexOf(projectStatus)
 
   const advanceStep = () => {
-    const nextTab = TABS[currentTabIndex + 1]
+    const nextTab = tabs[currentTabIndex + 1]
     const nextStatus = nextTab ? (nextTab.id as ProjectStatus) : 'done'
     setProjectStatus(nextStatus)
     if (nextTab) setActiveTab(nextTab.id)
@@ -1142,10 +1512,10 @@ export default function ProjetoPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowEdit(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
-            <h3 className="text-base font-semibold text-[#111827]">Editar projeto</h3>
+            <h3 className="text-base font-semibold text-[#111827]">{t('detail.modalEditTitle')}</h3>
             <div className="space-y-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-[#374151]">Nome do projeto</label>
+                <label className="text-sm font-medium text-[#374151]">{t('detail.labelProjectName')}</label>
                 <input
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
@@ -1154,7 +1524,7 @@ export default function ProjetoPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-[#374151]">Descrição <span className="text-[#9CA3AF] font-normal">(opcional)</span></label>
+                <label className="text-sm font-medium text-[#374151]">{t('detail.labelDescription')} <span className="text-[#9CA3AF] font-normal">{t('common.optional')}</span></label>
                 <textarea
                   value={editDesc}
                   onChange={e => setEditDesc(e.target.value)}
@@ -1164,8 +1534,8 @@ export default function ProjetoPage() {
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowEdit(false)}>Cancelar</Button>
-              <Button size="sm" onClick={saveEdit} disabled={!editName.trim()}>Salvar alterações</Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowEdit(false)}>{t('common.cancel')}</Button>
+              <Button size="sm" onClick={saveEdit} disabled={!editName.trim()}>{t('detail.saveChanges')}</Button>
             </div>
           </div>
         </div>
@@ -1183,24 +1553,24 @@ export default function ProjetoPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-base font-semibold text-[#111827]">Apagar projeto?</h3>
-                <p className="text-sm text-[#6B7280]">Esta ação não pode ser desfeita.</p>
+                <h3 className="text-base font-semibold text-[#111827]">{t('detail.modalDeleteTitle')}</h3>
+                <p className="text-sm text-[#6B7280]">{t('detail.modalDeleteSubtitle')}</p>
               </div>
             </div>
             <p className="text-sm text-[#374151] bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-3 py-2">
-              O projeto <span className="font-semibold">"{projectName}"</span> e todo seu conteúdo serão removidos permanentemente.
+              {t('detail.modalDeleteLead').replace(/\{\{name\}\}/g, projectName)}
             </p>
             {deleteError && (
               <p className="text-sm text-[#EF4444]">{deleteError}</p>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowDelete(false)} disabled={deleting}>Cancelar</Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowDelete(false)} disabled={deleting}>{t('common.cancel')}</Button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
                 className="px-3 py-1.5 text-sm font-medium text-white bg-[#EF4444] hover:bg-red-600 rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5"
               >
-                {deleting ? 'Apagando…' : 'Sim, apagar projeto'}
+                {deleting ? t('detail.deleteDeleting') : t('detail.deleteConfirm')}
               </button>
             </div>
           </div>
@@ -1217,13 +1587,13 @@ export default function ProjetoPage() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
-                Projetos
+                {t('detail.navProjects')}
               </Button>
             </Link>
             <button
               onClick={() => { setEditName(projectName); setEditDesc(projectDesc ?? ''); setShowEdit(true) }}
               className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F1F5F9] rounded-lg transition-colors"
-              title="Editar projeto"
+              title={t('detail.editProjectAria')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -1232,13 +1602,13 @@ export default function ProjetoPage() {
             <button
               onClick={() => setShowDelete(true)}
               className="p-1.5 text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50 rounded-lg transition-colors"
-              title="Apagar projeto"
+              title={t('detail.deleteProjectAria')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
               </svg>
             </button>
-            <Badge className={getStatusColor(projectStatus)}>{STATUS_LABELS[projectStatus]}</Badge>
+            <Badge className={getStatusColor(projectStatus)}>{t(`status.${projectStatus}`)}</Badge>
             <ProjectExportButtons
               projectId={projectId}
               disabled={loadingData}
@@ -1271,7 +1641,7 @@ export default function ProjetoPage() {
                     ) : i + 1}
                   </div>
                   <span className={`text-xs font-medium truncate ${isCurrent ? 'text-[#1E3A8A]' : isDone ? 'text-[#10B981]' : 'text-[#9CA3AF]'}`}>
-                    {STATUS_LABELS[step]}
+                    {t(`status.${step}`)}
                   </span>
                 </div>
                 {i < STATUS_STEPS.filter(s => s !== 'done').length - 1 && (
@@ -1292,7 +1662,7 @@ export default function ProjetoPage() {
       {/* Tabs */}
       <div className="bg-white border-b border-[#E5E7EB] px-6">
         <div className="flex items-center gap-1">
-          {TABS.map(tab => {
+          {tabs.map(tab => {
             const tabIdx = STATUS_STEPS.indexOf(tab.id as ProjectStatus)
             const isDone = tabIdx !== -1 && tabIdx < statusIndex
             return (
@@ -1319,7 +1689,15 @@ export default function ProjetoPage() {
 
       {/* Content */}
       <div className="flex-1 p-6 overflow-y-auto">
-        {activeTab === 'briefing' && <BriefingTab briefing={realBriefing} />}
+        {activeTab === 'briefing' && (
+          <BriefingTab
+            projectId={projectId}
+            briefing={realBriefing}
+            audioUrl={briefingAudioUrl}
+            briefingCreatedAt={briefingCreatedAt}
+            onBriefingSaved={content => setRealBriefing(content)}
+          />
+        )}
         <div className={activeTab === 'refinement' ? 'block' : 'hidden'}>
           <RefinamentoTab
             projectId={projectId}
@@ -1345,8 +1723,8 @@ export default function ProjetoPage() {
               </svg>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-bold text-[#065F46]">Projeto concluído!</h3>
-              <p className="text-sm text-[#6B7280] mt-1">Todas as etapas foram finalizadas com sucesso.</p>
+              <h3 className="text-lg font-bold text-[#065F46]">{t('detail.completeTitle')}</h3>
+              <p className="text-sm text-[#6B7280] mt-1">{t('detail.completeSubtitle')}</p>
             </div>
             <button
               onClick={() => router.push('/projetos')}
@@ -1355,7 +1733,7 @@ export default function ProjetoPage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
               </svg>
-              Ver todos os projetos
+              {t('detail.viewAllProjects')}
             </button>
           </div>
         )}
@@ -1363,18 +1741,18 @@ export default function ProjetoPage() {
         <div className="mt-8 flex items-center justify-between border-t border-[#F1F5F9] pt-6">
           <div>
             {currentTabIndex > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab(TABS[currentTabIndex - 1].id)}>
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab(tabs[currentTabIndex - 1].id)}>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
-                {TABS[currentTabIndex - 1].label}
+                {tabs[currentTabIndex - 1].label}
               </Button>
             )}
           </div>
           <div className="flex items-center gap-3">
-            {currentTabIndex < TABS.length - 1 && (
-              <Button variant="outline" size="sm" onClick={() => setActiveTab(TABS[currentTabIndex + 1].id)}>
-                {TABS[currentTabIndex + 1].label}
+            {currentTabIndex < tabs.length - 1 && (
+              <Button variant="outline" size="sm" onClick={() => setActiveTab(tabs[currentTabIndex + 1].id)}>
+                {tabs[currentTabIndex + 1].label}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
@@ -1385,15 +1763,15 @@ export default function ProjetoPage() {
               const isCurrentStep = tabStatus === statusIndex
               const isAlreadyDone = tabStatus < statusIndex
               const isFutureStep = tabStatus > statusIndex
-              const isLastTab = currentTabIndex === TABS.length - 1
-              const currentTabForStatus = TABS.find(t => t.id === projectStatus)
+              const isLastTab = currentTabIndex === tabs.length - 1
+              const currentTabForStatus = tabs.find(tab => tab.id === projectStatus)
 
               if (isLastTab && projectStatus !== 'done') return (
                 <Button size="sm" onClick={advanceStep}>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
-                  Concluir projeto
+                  {t('detail.finishProject')}
                 </Button>
               )
               if (isAlreadyDone) return (
@@ -1401,7 +1779,7 @@ export default function ProjetoPage() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
-                  Etapa concluída
+                  {t('detail.stageDone')}
                 </span>
               )
               if (isCurrentStep) return (
@@ -1409,16 +1787,17 @@ export default function ProjetoPage() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
-                  Concluir etapa
+                  {t('detail.finishStage')}
                 </Button>
               )
               if (isFutureStep && currentTabForStatus) return (
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-[#9CA3AF]">
-                    Etapa atual: <span className="font-medium text-[#374151]">{currentTabForStatus.label}</span>
+                    {t('detail.currentStageLabel')}{' '}
+                    <span className="font-medium text-[#374151]">{currentTabForStatus.label}</span>
                   </span>
                   <Button size="sm" onClick={() => setActiveTab(currentTabForStatus.id)}>
-                    Ir para etapa atual
+                    {t('detail.goToCurrentStage')}
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
