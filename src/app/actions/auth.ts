@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { authCallbackUrl } from '@/lib/site-url'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -36,6 +37,7 @@ export async function signup(
     password,
     options: {
       data: { name },
+      emailRedirectTo: authCallbackUrl('/confirmacao-email'),
     },
   })
 
@@ -94,12 +96,8 @@ export async function requestPasswordResetForEmail(
   if (!trimmed) return { error: 'Informe o e-mail.' }
 
   const supabase = await createClient()
-  const vercelUrl = process.env.VERCEL_URL
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    ?? (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000')
-
   const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-    redirectTo: `${siteUrl}/reset-password`,
+    redirectTo: authCallbackUrl('/reset-password'),
   })
 
   if (error) return { error: error.message }
@@ -111,12 +109,8 @@ export async function requestPasswordResetForCurrentUser(): Promise<{ error?: st
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email) return { error: 'Sessão inválida.' }
 
-  const vercelUrl = process.env.VERCEL_URL
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    ?? (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000')
-
   const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-    redirectTo: `${siteUrl}/reset-password`,
+    redirectTo: authCallbackUrl('/reset-password'),
   })
 
   if (error) return { error: error.message }

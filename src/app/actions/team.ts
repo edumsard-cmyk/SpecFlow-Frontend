@@ -20,14 +20,12 @@ export async function inviteTeamMemberAction(
   if (!n) return { error: 'Nome obrigatório.' }
   if (!em) return { error: 'E-mail obrigatório.' }
 
-  const vercelUrl = process.env.VERCEL_URL
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    ?? (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000')
+  const { authCallbackUrl } = await import('@/lib/site-url')
 
   const admin = createAdminClient()
   const { data, error } = await admin.auth.admin.inviteUserByEmail(em, {
     data: { name: n },
-    redirectTo: `${siteUrl}/login`,
+    redirectTo: authCallbackUrl('/login'),
   })
 
   if (error) return { error: error.message }

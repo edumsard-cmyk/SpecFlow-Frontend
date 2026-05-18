@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { signup } from '@/app/actions/auth'
+import AuthBrandHeader from '@/components/auth/AuthBrandHeader'
 
 export default function CadastroPage() {
   const [error, setError] = useState<string | null>(null)
@@ -32,16 +33,7 @@ export default function CadastroPage() {
 
   return (
     <div>
-      {/* Logo */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B82F6] to-[#7C3AED] flex items-center justify-center mb-4 shadow-lg">
-          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-          </svg>
-        </div>
-        <h1 className="text-2xl font-bold text-white">SpecFlow</h1>
-        <p className="text-[#94A3B8] text-sm mt-1">Da ideia ao uso, sem ruído.</p>
-      </div>
+      <AuthBrandHeader />
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-2xl p-8">

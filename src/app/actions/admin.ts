@@ -133,12 +133,10 @@ export async function resetUserPasswordAction(email: string): Promise<{ error?: 
   if (denied) return denied
 
   const supabase = await createClient()
-  const vercelUrl = process.env.VERCEL_URL
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    ?? (vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000')
+  const { authCallbackUrl } = await import('@/lib/site-url')
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/reset-password`,
+    redirectTo: authCallbackUrl('/reset-password'),
   })
 
   if (error) return { error: 'Erro ao enviar e-mail de redefinição.' }

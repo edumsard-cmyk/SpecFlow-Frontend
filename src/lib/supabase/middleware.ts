@@ -30,6 +30,8 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/cadastro')
+  const isAuthCallbackRoute = pathname.startsWith('/auth/')
+  const isConfirmacaoEmailRoute = pathname.startsWith('/confirmacao-email')
   const isResetPasswordRoute = pathname.startsWith('/reset-password')
   const isLegalRoute = pathname.startsWith('/termos') || pathname.startsWith('/privacidade')
   const isForgotPasswordRoute = pathname.startsWith('/esqueci-senha')
@@ -37,6 +39,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute =
     pathname === '/' ||
     isAuthRoute ||
+    isAuthCallbackRoute ||
+    isConfirmacaoEmailRoute ||
     isResetPasswordRoute ||
     isLegalRoute ||
     isForgotPasswordRoute ||

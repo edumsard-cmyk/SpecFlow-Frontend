@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { createClient } from '@/lib/supabase/client'
+import AuthBrandHeader from '@/components/auth/AuthBrandHeader'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -36,6 +37,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
+    <>
+      <AuthBrandHeader />
     <div className="rounded-2xl bg-white p-8 shadow-xl">
       <h1 className="text-xl font-bold text-[#111827] mb-1">Nova senha</h1>
       <p className="text-sm text-[#6B7280] mb-6">
@@ -80,5 +83,6 @@ export default function ResetPasswordPage() {
         </Link>
       </p>
     </div>
+    </>
   )
 }
