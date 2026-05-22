@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
+import { needsEmailConfirmation } from '@/lib/auth/email-confirmation'
 import { getSupabaseAnonOrPublishableKey } from '@/lib/supabase/keys'
 import { type Database } from './types'
 
@@ -33,6 +34,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/cadastro')
   const isAuthCallbackRoute = pathname.startsWith('/auth/')
   const isConfirmacaoEmailRoute = pathname.startsWith('/confirmacao-email')
+  const isAwaitingConfirmationRoute = pathname.startsWith('/aguardando-confirmacao')
   const isResetPasswordRoute = pathname.startsWith('/reset-password')
   const isLegalRoute = pathname.startsWith('/termos') || pathname.startsWith('/privacidade')
   const isForgotPasswordRoute = pathname.startsWith('/esqueci-senha')
@@ -42,10 +44,21 @@ export async function updateSession(request: NextRequest) {
     isAuthRoute ||
     isAuthCallbackRoute ||
     isConfirmacaoEmailRoute ||
+    isAwaitingConfirmationRoute ||
     isResetPasswordRoute ||
     isLegalRoute ||
     isForgotPasswordRoute ||
     isHelpRoute
+
+  const emailPending = user && needsEmailConfirmation(user)
+
+  // Conta criada mas e-mail ainda não confirmado — só páginas públicas / confirmação
+  if (emailPending && !isPublicRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/aguardando-confirmacao'
+    if (user.email) url.searchParams.set('email', user.email)
+    return NextResponse.redirect(url)
+  }
 
   // Redireciona para login se não autenticado em rota protegida
   if (!user && !isPublicRoute) {
@@ -55,7 +68,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redireciona para dashboard se já autenticado tentando acessar auth (exceto recuperação de senha)
-  if (user && isAuthRoute) {
+  if (user && isAuthRoute && !emailPending) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

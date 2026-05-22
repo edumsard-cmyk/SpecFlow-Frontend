@@ -78,15 +78,29 @@ https://nome-do-projeto.vercel.app/**
 
 ---
 
-## 4. Confirmação de e-mail (opcional mas comum em produção)
+## 4. Confirmação de e-mail (obrigatório para o fluxo de cadastro)
+
+Sem isto, o Supabase **não envia** o e-mail e o utilizador **entra logo** após o cadastro.
 
 1. **Authentication** → **Providers** → **Email**.
 2. Ative o provedor **Email** se estiver desligado.
-3. Opção **“Confirm email”** (ou equivalente): se estiver **ligada**, o utilizador só ganha sessão após clicar no link do e-mail — a página `/cadastro` da SpecFlow já mostra a mensagem nesse caso.
+3. Ligue **“Confirm email”** (Confirmar e-mail). Tem de estar **ON**.
+4. **Authentication** → **URL Configuration**:
+   - **Site URL** = domínio público da app (ex. `https://app.specflow.com.br`)
+   - **Redirect URLs** inclui `https://seu-dominio/auth/callback**` e `http://localhost:3000/auth/callback**`
+5. Na Vercel: `NEXT_PUBLIC_SITE_URL` = mesmo domínio do Site URL → redeploy.
+6. **Templates:** em **Email Templates** → **Confirm signup**, cole `supabase/templates/confirmation.html` e assunto `Confirme o seu e-mail — SpecFlow` (ver `supabase/email-templates.md`).
+7. Para o e-mail **chegar de facto** (não só na UI), escolha **uma** opção:
+   - **SMTP no Supabase** (secção 5 abaixo), ou
+   - **Resend na app:** `RESEND_API_KEY` + `RESEND_FROM_EMAIL` no `.env.local` / Vercel (a app envia o HTML SpecFlow com o link de confirmação).
+8. O envio gratuito do Supabase (sem SMTP/Resend) é limitado (~4 e-mails/hora) e muitas vezes **não chega** ou vai para spam.
 
-4. **Templates HTML com a marca SpecFlow:** o e-mail de reset **não muda sozinho** — siga o passo a passo em `supabase/email-templates.md` (cole `recovery.html` em **Reset password**, assunto `Redefinir senha — SpecFlow`, e configure **Sender name = SpecFlow** no SMTP).
+A app SpecFlow já:
+- mostra mensagem de confirmação no `/cadastro`;
+- bloqueia login sem e-mail confirmado;
+- redireciona contas pendentes para `/aguardando-confirmacao` (com reenvio de e-mail).
 
-5. **Evitar links `localhost` em produção:** em **URL Configuration**, o **Site URL** deve ser o domínio público (ex.: `https://app.specflow.com.br`). Na Vercel, defina `NEXT_PUBLIC_SITE_URL` com o mesmo valor e faça redeploy.
+**Templates HTML (reset, etc.):** siga `supabase/email-templates.md` (**Sender name = SpecFlow** no SMTP).
 
 ---
 

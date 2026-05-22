@@ -2,19 +2,34 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import {
+  AUTH_ERROR_EMAIL_NOT_CONFIRMED,
+  isEmailConfirmed,
+} from '@/lib/auth/email-confirmation'
+import { sendSignupConfirmationEmail } from '@/lib/auth/send-confirmation-email'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { authCallbackUrl } from '@/lib/site-url'
 
-export async function login(formData: FormData) {
+const SUPABASE_CONFIRM_DISABLED =
+  'A confirmação por e-mail está desativada no Supabase. Em Authentication → Providers → Email, ative "Confirm email". Veja supabase/SETUP.md.'
+
+export async function login(
+  formData: FormData
+): Promise<{ error?: string } | void> {
   const supabase = await createClient()
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
     return { error: error.message }
+  }
+
+  if (data.user && !isEmailConfirmed(data.user)) {
+    await supabase.auth.signOut()
+    return { error: AUTH_ERROR_EMAIL_NOT_CONFIRMED }
   }
 
   revalidatePath('/', 'layout')
@@ -23,15 +38,15 @@ export async function login(formData: FormData) {
 
 export async function signup(
   formData: FormData
-): Promise<{ error: string } | { needsEmailConfirmation: true }> {
+): Promise<{ error: string } | { needsEmailConfirmation: true; email: string }> {
   const supabase = await createClient()
 
   const name = formData.get('name') as string
   const companyName = formData.get('company') as string
-  const email = formData.get('email') as string
+  const email = (formData.get('email') as string).trim()
   const password = formData.get('password') as string
 
-  // 1. Criar usuário
+  // 1. Criar usuário (exige "Confirm email" ativo no Supabase para enviar o e-mail)
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -72,14 +87,37 @@ export async function signup(
     return { error: 'Erro ao configurar perfil.' }
   }
 
-  revalidatePath('/', 'layout')
-
-  // Confirmação de e-mail ativa no Supabase → sem sessão até o utilizador confirmar
-  if (!authData.session) {
-    return { needsEmailConfirmation: true }
+  // Nunca manter sessão após cadastro — evita entrar sem confirmar o e-mail
+  if (authData.session) {
+    await supabase.auth.signOut()
   }
 
-  redirect('/dashboard')
+  revalidatePath('/', 'layout')
+
+  if (isEmailConfirmed(authData.user)) {
+    return { error: SUPABASE_CONFIRM_DISABLED }
+  }
+
+  const mail = await sendSignupConfirmationEmail(email, password)
+  if (!mail.ok) {
+    return {
+      error: `${mail.error} Verifique spam e use "Reenviar" em alguns minutos.`,
+    }
+  }
+
+  return { needsEmailConfirmation: true, email }
+}
+
+/** Reenvia o e-mail de confirmação de cadastro (Supabase Auth). */
+export async function resendSignupConfirmationEmail(
+  email: string
+): Promise<{ error?: string; ok?: boolean }> {
+  const trimmed = email.trim()
+  if (!trimmed) return { error: 'Informe o e-mail.' }
+
+  const mail = await sendSignupConfirmationEmail(trimmed)
+  if (!mail.ok) return { error: mail.error }
+  return { ok: true }
 }
 
 export async function logout() {

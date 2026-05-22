@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { login } from '@/app/actions/auth'
+import { AUTH_ERROR_EMAIL_NOT_CONFIRMED } from '@/lib/auth/email-confirmation'
 import { useI18n } from '@/components/i18n/I18nProvider'
 
 export default function LoginPage() {
@@ -21,11 +22,15 @@ export default function LoginPage() {
     startTransition(async () => {
       const result = await login(formData)
       if (result?.error) {
-        setError(
-          result.error.includes('Invalid login credentials')
-            ? t('auth.login.wrongCredentials')
-            : result.error
-        )
+        if (result.error === AUTH_ERROR_EMAIL_NOT_CONFIRMED) {
+          setError(t('auth.login.emailNotConfirmed'))
+        } else {
+          setError(
+            result.error.includes('Invalid login credentials')
+              ? t('auth.login.wrongCredentials')
+              : result.error
+          )
+        }
       }
     })
   }

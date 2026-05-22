@@ -1,10 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { signup } from '@/app/actions/auth'
+import Link from 'next/link'
+import { signup, resendSignupConfirmationEmail } from '@/app/actions/auth'
 import AuthBrandHeader from '@/components/auth/AuthBrandHeader'
 import { useI18n } from '@/components/i18n/I18nProvider'
 
@@ -12,6 +12,9 @@ export default function CadastroPage() {
   const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState('')
+  const [resendMsg, setResendMsg] = useState<string | null>(null)
+  const [resendPending, startResend] = useTransition()
   const [isPending, startTransition] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
 
@@ -19,6 +22,7 @@ export default function CadastroPage() {
     e.preventDefault()
     setError(null)
     setNeedsEmailConfirmation(false)
+    setResendMsg(null)
     const formData = new FormData(e.currentTarget)
 
     startTransition(async () => {
@@ -29,6 +33,7 @@ export default function CadastroPage() {
       }
       if (result && 'needsEmailConfirmation' in result) {
         setNeedsEmailConfirmation(true)
+        setPendingEmail(result.email)
       }
     })
   }
@@ -58,13 +63,27 @@ export default function CadastroPage() {
             </svg>
             <div className="text-sm text-emerald-900">
               <p className="font-medium">{t('auth.signup.confirmTitle')}</p>
-              <p className="mt-1 text-emerald-800">
-                {t('auth.signup.confirmBody')}{' '}
-                <Link href="/login" className="font-medium text-emerald-900 underline underline-offset-2">
+              <p className="mt-1 text-emerald-800">{t('auth.signup.confirmBody')}</p>
+              {resendMsg && <p className="mt-2 text-emerald-800">{resendMsg}</p>}
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  disabled={resendPending || !pendingEmail}
+                  onClick={() => {
+                    setResendMsg(null)
+                    startResend(async () => {
+                      const res = await resendSignupConfirmationEmail(pendingEmail)
+                      setResendMsg(res.error ? res.error : t('auth.confirm.resendSuccess'))
+                    })
+                  }}
+                  className="text-sm font-medium text-[#1E3A8A] hover:underline disabled:opacity-50"
+                >
+                  {t('auth.confirm.resend')}
+                </button>
+                <Link href="/login" className="text-sm font-medium text-emerald-900 underline underline-offset-2">
                   {t('auth.signup.confirmLogin')}
                 </Link>
-                .
-              </p>
+              </div>
             </div>
           </div>
         )}

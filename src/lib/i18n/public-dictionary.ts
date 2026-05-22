@@ -143,8 +143,16 @@ const pt = {
   'auth.signup.login': 'Entrar',
   'auth.signup.confirmTitle': 'Conta e empresa criadas.',
   'auth.signup.confirmBody':
-    'O próximo passo é confirmar o e-mail (caixa de entrada e spam). Depois de confirmar, aceda a',
-  'auth.signup.confirmLogin': 'Entrar',
+    'Enviamos um link de confirmação para o seu e-mail (verifique também o spam). Só depois de confirmar poderá entrar na plataforma.',
+  'auth.signup.confirmLogin': 'Entrar após confirmar',
+  'auth.login.emailNotConfirmed':
+    'Confirme o e-mail antes de entrar. Verifique a caixa de entrada e o spam, ou reenvie o link no cadastro.',
+  'auth.confirm.awaitingTitle': 'Confirme o seu e-mail',
+  'auth.confirm.awaitingBody':
+    'Enviamos um link de confirmação. Abra o e-mail e clique no botão para ativar a conta SpecFlow. Só depois poderá entrar.',
+  'auth.confirm.resend': 'Reenviar e-mail de confirmação',
+  'auth.confirm.resendSuccess': 'E-mail reenviado. Verifique a caixa de entrada e o spam.',
+  'auth.confirm.loading': 'A confirmar…',
   'auth.signup.footerHelp': 'Ajuda',
   'auth.signup.footerTerms': 'Termos',
   'auth.signup.footerPrivacy': 'Privacidade',
@@ -180,7 +188,6 @@ const pt = {
     'A sua conta SpecFlow está ativa. Pode entrar e começar a transformar demandas em especificações.',
   'auth.confirm.dashboard': 'Ir para o painel',
   'auth.confirm.orLogin': 'Ou entrar com e-mail e senha',
-  'auth.confirm.loading': 'A confirmar…',
 
   'legal.terms.title': 'Termos de uso',
   'legal.terms.intro':
@@ -362,7 +369,15 @@ const en: typeof pt = {
   'auth.signup.confirmTitle': 'Account and company created.',
   'auth.signup.confirmBody':
     'Next, confirm your email (inbox and spam). After confirming, go to',
-  'auth.signup.confirmLogin': 'Sign in',
+  'auth.signup.confirmLogin': 'Sign in after confirming',
+  'auth.login.emailNotConfirmed':
+    'Confirm your email before signing in. Check your inbox and spam, or resend the link from Sign up.',
+  'auth.confirm.awaitingTitle': 'Confirm your email',
+  'auth.confirm.awaitingBody':
+    'We sent a confirmation link. Open the email and click the button to activate your SpecFlow account. You can sign in only after that.',
+  'auth.confirm.resend': 'Resend confirmation email',
+  'auth.confirm.resendSuccess': 'Email resent. Check your inbox and spam folder.',
+  'auth.confirm.loading': 'Loading…',
   'auth.signup.footerHelp': 'Help',
   'auth.signup.footerTerms': 'Terms',
   'auth.signup.footerPrivacy': 'Privacy',
@@ -398,7 +413,6 @@ const en: typeof pt = {
     'Your SpecFlow account is active. Sign in and start turning demands into specifications.',
   'auth.confirm.dashboard': 'Go to dashboard',
   'auth.confirm.orLogin': 'Or sign in with email and password',
-  'auth.confirm.loading': 'Confirming…',
 
   'legal.terms.title': 'Terms of use',
   'legal.terms.intro':
@@ -579,8 +593,16 @@ const es: typeof pt = {
   'auth.signup.login': 'Entrar',
   'auth.signup.confirmTitle': 'Cuenta y empresa creadas.',
   'auth.signup.confirmBody':
-    'Confirme el correo (bandeja y spam). Después vaya a',
-  'auth.signup.confirmLogin': 'Entrar',
+    'Enviamos un enlace de confirmación a su correo (revise también spam). Solo después de confirmar podrá entrar.',
+  'auth.signup.confirmLogin': 'Entrar tras confirmar',
+  'auth.login.emailNotConfirmed':
+    'Confirme el correo antes de entrar. Revise la bandeja y spam, o reenvíe el enlace desde Registro.',
+  'auth.confirm.awaitingTitle': 'Confirme su correo',
+  'auth.confirm.awaitingBody':
+    'Enviamos un enlace de confirmación. Ábralo y pulse el botón para activar su cuenta SpecFlow. Solo después podrá entrar.',
+  'auth.confirm.resend': 'Reenviar correo de confirmación',
+  'auth.confirm.resendSuccess': 'Correo reenviado. Revise bandeja de entrada y spam.',
+  'auth.confirm.loading': 'Cargando…',
   'auth.signup.footerHelp': 'Ayuda',
   'auth.signup.footerTerms': 'Términos',
   'auth.signup.footerPrivacy': 'Privacidad',
@@ -616,7 +638,6 @@ const es: typeof pt = {
     'Su cuenta SpecFlow está activa. Entre y empiece a convertir demandas en especificaciones.',
   'auth.confirm.dashboard': 'Ir al panel',
   'auth.confirm.orLogin': 'O entrar con correo y contraseña',
-  'auth.confirm.loading': 'Confirmando…',
 
   'legal.terms.title': 'Términos de uso',
   'legal.terms.intro':
