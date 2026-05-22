@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { consumeAiRateLimit } from '@/lib/api/ai-rate-limit'
 import { extractAudioFromVideo, videoExtFromMime } from '@/lib/briefing/extract-video-audio'
 import { normalizeBriefingFromTranscription, transcribeAudioBuffer } from '@/lib/briefing/transcribe'
-import { uploadBriefingMedia } from '@/lib/briefing/upload-briefing-media'
+import { isUploadFailure, uploadBriefingMedia } from '@/lib/briefing/upload-briefing-media'
 import { logAudit } from '@/lib/data/audit'
 import { saveBriefing } from '@/lib/data/briefings'
 import { createProject } from '@/lib/data/projects'
@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
 
     const videoBuf = Buffer.from(await video.arrayBuffer())
     const ext = videoExtFromMime(video.type || 'video/webm')
+    const videoObjectName = `briefing-video.${ext}`
 
     const project = await createProject({
       name,
@@ -73,14 +74,6 @@ export async function POST(req: NextRequest) {
       status: 'briefing',
       progress: 0,
     })
-
-    const objectPath = `${project.id}/briefing-video.${ext}`
-    const videoUrl = await uploadBriefingMedia(
-      project.id,
-      videoBuf,
-      `briefing-video.${ext}`,
-      video.type || `video/${ext}`
-    )
 
     let transcriptionText = ''
     try {
@@ -95,7 +88,6 @@ export async function POST(req: NextRequest) {
           video.type || `video/${ext}`
         )
       } catch {
-        await supabase.storage.from('briefing-media').remove([objectPath]).catch(() => {})
         await supabase.from('projects').delete().eq('id', project.id)
         return NextResponse.json(
           {
@@ -107,21 +99,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const briefingContent = normalizeBriefingFromTranscription(
+    const uploadResult = await uploadBriefingMedia(
+      project.id,
+      videoBuf,
+      videoObjectName,
+      video.type || `video/${ext}`
+    )
+
+    const videoStored = !isUploadFailure(uploadResult)
+    const videoStorageRef = videoStored ? uploadResult.storageRef : null
+
+    let briefingContent = normalizeBriefingFromTranscription(
       transcriptionText,
       'Briefing por vídeo'
     )
+
+    if (!videoStored) {
+      briefingContent += `\n\n[O vídeo não foi guardado no servidor: ${uploadResult.message}]`
+    }
 
     try {
       await saveBriefing({
         project_id: project.id,
         input_type: 'video',
         content: briefingContent,
-        document_url: videoUrl,
+        document_url: videoStorageRef,
       })
     } catch (saveErr) {
       console.error('saveBriefing video:', saveErr)
-      await supabase.storage.from('briefing-media').remove([objectPath]).catch(() => {})
       await supabase.from('projects').delete().eq('id', project.id)
       return NextResponse.json({ error: 'Erro ao gravar o briefing no banco.' }, { status: 500 })
     }
@@ -131,13 +136,17 @@ export async function POST(req: NextRequest) {
       entityType: 'project',
       entityId: project.id,
       companyId: project.company_id,
-      metadata: { name: project.name, inputType: 'video' },
+      metadata: { name: project.name, inputType: 'video', videoStored },
     })
 
     revalidatePath('/projetos')
     revalidatePath(`/projetos/${project.id}`)
 
-    return NextResponse.json({ projectId: project.id })
+    return NextResponse.json({
+      projectId: project.id,
+      videoStored,
+      warning: videoStored ? undefined : uploadResult.message,
+    })
   } catch (error) {
     if (error instanceof ProjectLimitError) {
       return NextResponse.json(
@@ -146,6 +155,7 @@ export async function POST(req: NextRequest) {
       )
     }
     console.error('from-video route:', error)
-    return NextResponse.json({ error: 'Erro ao criar projeto com vídeo.' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Erro ao criar projeto com vídeo.'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

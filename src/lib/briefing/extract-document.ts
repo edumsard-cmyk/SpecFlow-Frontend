@@ -9,12 +9,17 @@ function trimExtracted(text: string): string {
   return `${normalized.slice(0, MAX_EXTRACTED_CHARS)}\n\n[… texto truncado por limite de tamanho …]`
 }
 
+/** pdf-parse v2 usa pdfjs-dist, que exige CanvasFactory/DOMMatrix no Node (ver docs do pacote). */
 async function extractPdf(buffer: Buffer): Promise<string> {
-  const pdfParse = (await import('pdf-parse')).default as (
-    data: Buffer
-  ) => Promise<{ text?: string }>
-  const result = await pdfParse(buffer)
-  return result.text?.trim() ?? ''
+  const { CanvasFactory } = await import('pdf-parse/worker')
+  const { PDFParse } = await import('pdf-parse')
+  const parser = new PDFParse({ data: buffer, CanvasFactory })
+  try {
+    const result = await parser.getText()
+    return result.text?.trim() ?? ''
+  } finally {
+    await parser.destroy()
+  }
 }
 
 async function extractDocx(buffer: Buffer): Promise<string> {

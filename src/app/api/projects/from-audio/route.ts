@@ -6,6 +6,7 @@ import { logAudit } from '@/lib/data/audit'
 import { saveBriefing } from '@/lib/data/briefings'
 import { createProject } from '@/lib/data/projects'
 import { ProjectLimitError, PROJECT_LIMIT_REACHED_CODE } from '@/lib/projects/quota'
+import { isUploadFailure, uploadBriefingMedia } from '@/lib/briefing/upload-briefing-media'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
@@ -124,30 +125,24 @@ export async function POST(req: NextRequest) {
         ? transcriptionText
         : `[Briefing por áudio — transcrição vazia ou inaudível. Descreva a demanda na aba Briefing ou grave novamente.]\n\n${transcriptionText}`.trim()
 
-    let audioPublicUrl: string | null = null
-    try {
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(objectPath, audioBuf, {
-          contentType: audio.type || `audio/${ext}`,
-          upsert: true,
-        })
-      if (!upErr) {
-        const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(objectPath)
-        audioPublicUrl = pub.publicUrl
-      } else {
-        console.warn('Briefing audio upload skipped:', upErr.message)
-      }
-    } catch (e) {
-      console.warn('Briefing audio upload failed:', e)
+    const uploadResult = await uploadBriefingMedia(
+      project.id,
+      audioBuf,
+      `briefing.${ext}`,
+      audio.type || `audio/${ext}`
+    )
+    const audioStored = !isUploadFailure(uploadResult)
+    let contentToSave = briefingContent
+    if (!audioStored) {
+      contentToSave += `\n\n[O áudio não foi guardado no servidor: ${uploadResult.message}]`
     }
 
     try {
       await saveBriefing({
         project_id: project.id,
         input_type: 'audio',
-        content: briefingContent,
-        audio_url: audioPublicUrl,
+        content: contentToSave,
+        audio_url: audioStored ? uploadResult.storageRef : null,
       })
     } catch (saveErr) {
       console.error('saveBriefing:', saveErr)

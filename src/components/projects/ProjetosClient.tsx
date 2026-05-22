@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
+import CreateDemoProjectButton from '@/components/dashboard/CreateDemoProjectButton'
 import Input from '@/components/ui/Input'
 import ProjectCard from '@/components/projects/ProjectCard'
 import { useI18n } from '@/components/i18n/I18nProvider'
@@ -26,9 +27,11 @@ function fillTemplate(template: string, vars: Record<string, string | number>) {
 export default function ProjetosClient({
   projects,
   projectQuota,
+  existingDemoProjectId,
 }: {
   projects: ProjectRow[]
   projectQuota: ProjectQuota | null
+  existingDemoProjectId?: string | null
 }) {
   const { t } = useI18n()
   const [search, setSearch] = useState('')
@@ -207,11 +210,16 @@ export default function ProjetosClient({
             </p>
             {!search && (
               <div className="flex flex-col sm:flex-row items-center gap-3">
+                <CreateDemoProjectButton
+                  variant="primary"
+                  size="md"
+                  existingDemoProjectId={existingDemoProjectId}
+                />
                 <Link href="/projetos/novo">
-                  <Button>{t('projects.createProject')}</Button>
+                  <Button variant="outline">{t('projects.createProject')}</Button>
                 </Link>
                 <Link
-                  href="/ajuda"
+                  href="/ajuda#comecar"
                   className="text-sm text-[#1E3A8A] font-medium hover:underline"
                 >
                   {t('projects.firstUseGuide')}

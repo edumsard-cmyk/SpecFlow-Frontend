@@ -7,6 +7,10 @@ import Header from '@/components/layout/Header'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
+import BriefingOriginalSource, {
+  type BriefingMediaInfo,
+} from '@/components/projects/BriefingOriginalSource'
+import GuidedImagesBriefingView from '@/components/projects/GuidedImagesBriefingView'
 import RefinamentoTab from '@/components/projects/RefinamentoTab'
 import ConclusaoTab from '@/components/projects/ConclusaoTab'
 import ProjectExportButtons from '@/components/projects/ProjectExportButtons'
@@ -24,6 +28,7 @@ import {
 } from '@/types'
 import {
   defaultProjectTab,
+  nextWorkflowStep,
   resolveWorkflowStatus,
 } from '@/lib/projects/workflow-status'
 import { getStatusColor } from '@/lib/utils'
@@ -45,13 +50,15 @@ function formatBriefingFooter(iso: string | null | undefined, locale: Locale): s
 function BriefingTab({
   projectId,
   briefing,
-  audioUrl,
+  briefingInputType,
+  briefingMedia,
   briefingCreatedAt,
   onBriefingSaved,
 }: {
   projectId: string
   briefing: string | null
-  audioUrl?: string | null
+  briefingInputType?: 'text' | 'audio' | 'document' | 'form' | 'video' | 'images' | null
+  briefingMedia?: BriefingMediaInfo | null
   briefingCreatedAt?: string | null
   onBriefingSaved?: (content: string) => void
 }) {
@@ -90,12 +97,53 @@ function BriefingTab({
   }
 
   const footerLabel = formatBriefingFooter(briefingCreatedAt, locale)
+  const isGuidedImages = briefingInputType === 'images'
+  const showCompareLayout =
+    !isGuidedImages &&
+    !editing &&
+    !!briefingMedia?.available &&
+    (briefingMedia.kind === 'audio' ||
+      briefingMedia.kind === 'video' ||
+      briefingMedia.kind === 'document')
+
+  const transcriptBlock = editing ? (
+    <div className="space-y-3">
+      <textarea
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        rows={showCompareLayout ? 10 : 8}
+        autoFocus
+        className="w-full rounded-lg border border-[#3B82F6] bg-white px-4 py-3 text-sm text-[#111827] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 resize-none"
+      />
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-[#9CA3AF]">
+          {t('briefing.charCount').replace('{{n}}', String(draft.length))}
+        </span>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={cancel} disabled={savePending}>
+            {t('common.cancel')}
+          </Button>
+          <Button size="sm" onClick={save} loading={savePending}>
+            {!savePending && t('briefing.saveServer')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="text-sm leading-relaxed bg-[#F8FAFC] rounded-lg p-4 border border-[#E5E7EB] min-h-[120px]">
+      {text.trim() ? (
+        <p className="text-[#374151] whitespace-pre-wrap">{text}</p>
+      ) : (
+        <p className="text-[#9CA3AF] italic">{t('briefing.emptyReadonly')}</p>
+      )}
+    </div>
+  )
 
   return (
     <Card padding="lg" className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[#374151]">{t('briefing.receivedTitle')}</h3>
-        {!editing && (
+        {!editing && !isGuidedImages && (
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -105,16 +153,21 @@ function BriefingTab({
         )}
       </div>
 
-      <p className="text-xs text-[#6B7280] leading-relaxed border border-[#E5E7EB] rounded-lg px-3 py-2 bg-[#F9FAFB]">
-        {t('briefing.aiHint')}
-      </p>
-
-      {audioUrl ? (
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-[#6B7280]">{t('briefing.audioOriginal')}</p>
-          <audio controls src={audioUrl} className="w-full rounded-lg" />
-        </div>
-      ) : null}
+      {showCompareLayout ? (
+        <p className="text-xs text-[#6B7280] leading-relaxed border border-[#DBEAFE] rounded-lg px-3 py-2 bg-[#EFF6FF]">
+          {briefingMedia?.kind === 'video'
+            ? t('briefing.compareHintVideo')
+            : t('briefing.compareHint')}
+        </p>
+      ) : isGuidedImages ? (
+        <p className="text-xs text-[#6B7280] leading-relaxed border border-[#E0E7FF] rounded-lg px-3 py-2 bg-[#EFF6FF]">
+          {t('briefing.imagesHint')}
+        </p>
+      ) : (
+        <p className="text-xs text-[#6B7280] leading-relaxed border border-[#E5E7EB] rounded-lg px-3 py-2 bg-[#F9FAFB]">
+          {t('briefing.aiHint')}
+        </p>
+      )}
 
       {saveError && (
         <div role="alert" className="text-xs text-[#EF4444] px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
@@ -122,40 +175,65 @@ function BriefingTab({
         </div>
       )}
 
-      {editing ? (
-        <div className="space-y-3">
-          <textarea
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            rows={8}
-            autoFocus
-            className="w-full rounded-lg border border-[#3B82F6] bg-white px-4 py-3 text-sm text-[#111827] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/30 resize-none"
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-[#9CA3AF]">
-              {t('briefing.charCount').replace('{{n}}', String(draft.length))}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={cancel} disabled={savePending}>
-                {t('common.cancel')}
-              </Button>
-              <Button size="sm" onClick={save} loading={savePending}>
-                {!savePending && t('briefing.saveServer')}
-              </Button>
-            </div>
+      {showCompareLayout && briefingMedia ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          <div className="rounded-xl border border-[#E0E7FF] bg-[#F8FAFF] p-4 space-y-3">
+            <p className="text-xs font-semibold text-[#1E3A8A]">
+              {briefingMedia.kind === 'video'
+                ? t('briefing.videoOriginal')
+                : briefingMedia.kind === 'document'
+                  ? t('briefing.documentOriginal')
+                  : t('briefing.audioOriginal')}
+            </p>
+            <BriefingOriginalSource projectId={projectId} media={briefingMedia} compact />
+            <a
+              href={`/api/projects/${projectId}/briefing-media?download=1`}
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#1D4ED8] hover:underline"
+              download
+            >
+              {t('briefing.downloadOriginal')}
+            </a>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-[#374151]">{t('briefing.transcriptTitle')}</p>
+            {transcriptBlock}
           </div>
         </div>
       ) : (
-        <div className="text-sm leading-relaxed bg-[#F8FAFC] rounded-lg p-4 border border-[#E5E7EB]">
-          {text.trim() ? (
-            <p className="text-[#6B7280] whitespace-pre-wrap">{text}</p>
-          ) : (
-            <p className="text-[#9CA3AF] italic">
-              {t('briefing.emptyReadonly')}
+        <>
+          {briefingMedia?.available && !editing ? (
+            <BriefingOriginalSource projectId={projectId} media={briefingMedia} />
+          ) : null}
+          {!editing &&
+          briefingMedia &&
+          !briefingMedia.available &&
+          (briefingInputType === 'video' ||
+            briefingInputType === 'audio' ||
+            briefingInputType === 'document') ? (
+            <p className="text-xs text-[#6B7280] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-3 py-2">
+              {t('briefing.mediaUnavailable')}
             </p>
+          ) : null}
+          {isGuidedImages && text.trim() && !editing ? (
+            <GuidedImagesBriefingView projectId={projectId} content={text} />
+          ) : (
+            transcriptBlock
           )}
-        </div>
+        </>
       )}
+
+      {editing && briefingMedia?.available ? (
+        <div className="pt-2 border-t border-[#F1F5F9]">
+          <p className="text-xs font-medium text-[#6B7280] mb-2">
+            {briefingMedia.kind === 'video'
+              ? t('briefing.videoOriginal')
+              : briefingMedia.kind === 'document'
+                ? t('briefing.documentOriginal')
+                : t('briefing.audioOriginal')}
+          </p>
+          <BriefingOriginalSource projectId={projectId} media={briefingMedia} compact />
+        </div>
+      ) : null}
 
       {footerLabel ? (
         <div className="flex items-center gap-2 text-xs text-[#9CA3AF]">
@@ -1611,7 +1689,10 @@ export default function ProjetoPage() {
   )
 
   const [realBriefing, setRealBriefing] = useState<string | null>(null)
-  const [briefingAudioUrl, setBriefingAudioUrl] = useState<string | null>(null)
+  const [briefingInputType, setBriefingInputType] = useState<
+    'text' | 'audio' | 'document' | 'form' | 'video' | null
+  >(null)
+  const [briefingMedia, setBriefingMedia] = useState<BriefingMediaInfo | null>(null)
   const [briefingCreatedAt, setBriefingCreatedAt] = useState<string | null>(null)
   const [refinementMessages, setRefinementMessages] = useState<
     { role: 'ai' | 'user'; content: string }[]
@@ -1624,7 +1705,7 @@ export default function ProjetoPage() {
   const [conclusionLoading, setConclusionLoading] = useState(false)
   const [conclusionError, setConclusionError] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState<string>('refinement')
+  const [activeTab, setActiveTab] = useState<string>('briefing')
   const [projectStatus, setProjectStatus] = useState<ProjectStatus>('briefing')
   const [projectName, setProjectName] = useState('')
   const [projectDesc, setProjectDesc] = useState('')
@@ -1649,12 +1730,36 @@ export default function ProjetoPage() {
         }
         if (data.briefing) {
           setRealBriefing(data.briefing.content ?? null)
-          const url = data.briefing.audio_url
-          setBriefingAudioUrl(typeof url === 'string' && url.trim() ? url.trim() : null)
+          const it = data.briefing.input_type
+          setBriefingInputType(
+            it === 'audio' ||
+              it === 'document' ||
+              it === 'video' ||
+              it === 'text' ||
+              it === 'form' ||
+              it === 'images'
+              ? it
+              : null
+          )
           setBriefingCreatedAt(typeof data.briefing.created_at === 'string' ? data.briefing.created_at : null)
+          const bm = data.briefingMedia
+          if (
+            bm &&
+            (bm.kind === 'audio' || bm.kind === 'video' || bm.kind === 'document') &&
+            typeof bm.fileName === 'string'
+          ) {
+            setBriefingMedia({
+              kind: bm.kind,
+              fileName: bm.fileName,
+              available: bm.available === true,
+            })
+          } else {
+            setBriefingMedia(null)
+          }
         } else {
           setRealBriefing(null)
-          setBriefingAudioUrl(null)
+          setBriefingInputType(null)
+          setBriefingMedia(null)
           setBriefingCreatedAt(null)
         }
         if (Array.isArray(data.refinementMessages) && data.refinementMessages.length > 0) {
@@ -1747,10 +1852,14 @@ export default function ProjetoPage() {
       return
     }
 
-    const nextTab = tabs[currentTabIndex + 1]
-    const nextStatus = nextTab ? (nextTab.id as ProjectStatus) : 'done'
+    const nextStatus = nextWorkflowStep(projectStatus)
+    if (nextStatus === 'done') {
+      setProjectStatus('done')
+      void updateProjectStatusAction(projectId, 'done')
+      return
+    }
     setProjectStatus(nextStatus)
-    if (nextTab) setActiveTab(nextTab.id)
+    setActiveTab(nextStatus)
     void updateProjectStatusAction(projectId, nextStatus)
   }
 
@@ -1934,14 +2043,19 @@ export default function ProjetoPage() {
           {tabs.map(tab => {
             const tabIdx = STATUS_STEPS.indexOf(tab.id as ProjectStatus)
             const isDone = tabIdx !== -1 && tabIdx < statusIndex
+            const canOpen = tabIdx !== -1 && tabIdx <= statusIndex
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                type="button"
+                disabled={!canOpen}
+                onClick={() => canOpen && setActiveTab(tab.id)}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150 flex items-center gap-1.5 ${
-                  activeTab === tab.id
-                    ? 'border-[#1E3A8A] text-[#1E3A8A]'
-                    : 'border-transparent text-[#6B7280] hover:text-[#374151] hover:border-[#D1D5DB]'
+                  !canOpen
+                    ? 'border-transparent text-[#D1D5DB] cursor-not-allowed'
+                    : activeTab === tab.id
+                      ? 'border-[#1E3A8A] text-[#1E3A8A]'
+                      : 'border-transparent text-[#6B7280] hover:text-[#374151] hover:border-[#D1D5DB]'
                 }`}
               >
                 {isDone && (
@@ -1962,19 +2076,20 @@ export default function ProjetoPage() {
           <BriefingTab
             projectId={projectId}
             briefing={realBriefing}
-            audioUrl={briefingAudioUrl}
+            briefingInputType={briefingInputType}
+            briefingMedia={briefingMedia}
             briefingCreatedAt={briefingCreatedAt}
             onBriefingSaved={content => setRealBriefing(content)}
           />
         )}
-        <div className={activeTab === 'refinement' ? 'block' : 'hidden'}>
+        {activeTab === 'refinement' && (
           <RefinamentoTab
             projectId={projectId}
             initialMessages={refinementMessages}
             autoStart={refinementMessages.length === 0}
             onMessagesChange={handleRefinementMessagesChange}
           />
-        </div>
+        )}
         {!loadingData && activeTab === 'conclusion' && (
           <ConclusaoTab
             conclusion={projectConclusion}
@@ -2029,8 +2144,9 @@ export default function ProjetoPage() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            {currentTabIndex < tabs.length - 1 && (
-              <Button variant="outline" size="sm" onClick={() => setActiveTab(tabs[currentTabIndex + 1].id)}>
+            {currentTabIndex < tabs.length - 1 &&
+              STATUS_STEPS.indexOf(activeTab as ProjectStatus) === statusIndex && (
+              <Button variant="outline" size="sm" onClick={() => void advanceStep()}>
                 {tabs[currentTabIndex + 1].label}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -2053,14 +2169,25 @@ export default function ProjetoPage() {
                   {t('detail.finishProject')}
                 </Button>
               )
-              if (isAlreadyDone) return (
-                <span className="flex items-center gap-1.5 text-sm text-[#10B981] font-medium">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  {t('detail.stageDone')}
-                </span>
-              )
+              if (isAlreadyDone) {
+                const nextTab = tabs[currentTabIndex + 1]
+                const nextTabIdx = nextTab
+                  ? STATUS_STEPS.indexOf(nextTab.id as ProjectStatus)
+                  : -1
+                const target =
+                  nextTab && nextTabIdx !== -1 && nextTabIdx <= statusIndex
+                    ? nextTab
+                    : currentTabForStatus
+                if (!target || target.id === activeTab) return null
+                return (
+                  <Button size="sm" onClick={() => setActiveTab(target.id)}>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                    {t('detail.goToNextStage').replace('{{stage}}', target.label)}
+                  </Button>
+                )
+              }
               const hasRefinementReply = refinementMessages.some(
                 m => m.role === 'ai' && m.content.trim()
               )

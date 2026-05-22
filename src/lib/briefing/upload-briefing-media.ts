@@ -1,4 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import {
+  uploadBriefingObject,
+  type BriefingUploadFailure,
+  type BriefingUploadResult,
+} from '@/lib/briefing/storage-access'
 
 export const BRIEFING_MEDIA_BUCKET = 'briefing-media'
 
@@ -7,20 +11,13 @@ export async function uploadBriefingMedia(
   buffer: Buffer,
   objectName: string,
   contentType: string
-): Promise<string | null> {
-  const supabase = await createClient()
+): Promise<BriefingUploadResult | BriefingUploadFailure> {
   const objectPath = `${projectId}/${objectName}`
+  return uploadBriefingObject(objectPath, buffer, contentType)
+}
 
-  const { error } = await supabase.storage.from(BRIEFING_MEDIA_BUCKET).upload(objectPath, buffer, {
-    contentType,
-    upsert: true,
-  })
-
-  if (error) {
-    console.warn('Briefing media upload skipped:', error.message)
-    return null
-  }
-
-  const { data } = supabase.storage.from(BRIEFING_MEDIA_BUCKET).getPublicUrl(objectPath)
-  return data.publicUrl
+export function isUploadFailure(
+  r: BriefingUploadResult | BriefingUploadFailure
+): r is BriefingUploadFailure {
+  return 'ok' in r && r.ok === false
 }

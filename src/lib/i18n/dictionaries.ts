@@ -70,6 +70,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'dashboard.recentTitle': 'Projetos Recentes',
     'dashboard.viewAll': 'Ver todos →',
     'dashboard.emptyRecent': 'Nenhum projeto criado ainda',
+    'dashboard.emptyRecentHint':
+      'Experimente o projeto de exemplo com briefing, histórias e refinamento já preenchidos — ou crie o seu do zero.',
     'dashboard.createFirst': 'Criar primeiro projeto',
 
     'projects.title': 'Projetos',
@@ -86,7 +88,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'projects.filterDone': 'Concluídos',
     'projects.emptyTitle': 'Nenhum projeto encontrado',
     'projects.emptySearch': 'Nenhum resultado para "{{q}}"',
-    'projects.emptyHint': 'Crie seu primeiro projeto para começar',
+    'projects.emptyHint':
+      'Use o projeto de exemplo para ver o fluxo completo ou crie um projeto com sua demanda real.',
     'projects.createProject': 'Criar projeto',
     'projects.firstUseGuide': 'Ver guia de primeiro uso',
     'projects.showing': 'Exibindo {{shown}} de {{total}} projetos',
@@ -116,6 +119,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.viewAllProjects': 'Ver todos os projetos',
     'detail.finishProject': 'Concluir projeto',
     'detail.stageDone': 'Etapa concluída',
+    'detail.goToNextStage': 'Continuar para {{stage}}',
     'detail.finishStage': 'Concluir etapa',
     'detail.currentStageLabel': 'Etapa atual:',
     'detail.goToCurrentStage': 'Ir para etapa atual',
@@ -137,9 +141,33 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'conclusion.errorGenerate': 'Não foi possível gerar a conclusão. Tente novamente.',
 
     'briefing.receivedTitle': 'Briefing recebido',
+    'briefing.guidedImageAlt': 'Imagem {{n}} do briefing',
+    'briefing.guidedImageCaption': 'Descrição — imagem {{n}}',
+    'briefing.guidedImageMissing': 'Imagem não disponível no servidor',
+    'briefing.imagesHint':
+      'Briefing enviado como pares imagem + texto. As descrições abaixo alimentam a IA nas próximas etapas.',
     'briefing.aiHint':
       'Este texto é o que a IA usa nas etapas seguintes (especificação, manual e, por último, refinamento para revisão final). Guarde sempre que alterar.',
     'briefing.audioOriginal': 'Áudio original do briefing',
+    'briefing.originalTitle': 'Fonte original (áudio, vídeo ou documento)',
+    'briefing.originalHint':
+      'Ouça ou abra o que foi enviado e compare com o texto transcrito pela IA ao lado.',
+    'briefing.compareHint':
+      'Ouça o áudio à esquerda e leia a transcrição da IA à direita — assim dá para conferir se o texto bate com o que foi dito.',
+    'briefing.transcriptTitle': 'Texto transcrito pela IA',
+    'briefing.videoOriginal': 'Vídeo enviado / gravado',
+    'briefing.documentOriginal': 'Documento enviado',
+    'briefing.compareHintVideo':
+      'Assista ao vídeo à esquerda e leia a transcrição da IA à direita para conferir se o texto corresponde ao que foi dito.',
+    'briefing.mediaUnavailable':
+      'O vídeo ou áudio original não está guardado no servidor (projeto criado antes do storage ou upload falhou). A transcrição abaixo permanece disponível — para ver o ficheiro, crie um novo projeto e envie o vídeo outra vez.',
+    'briefing.mediaMissing':
+      'O arquivo de áudio/vídeo não foi encontrado no servidor. O texto abaixo é a transcrição guardada; para ter o áudio de novo, crie um novo projeto com gravação.',
+    'briefing.downloadOriginal': 'Baixar original',
+    'briefing.openDocument': 'Abrir documento',
+    'briefing.documentPreview': 'Pré-visualização do documento',
+    'briefing.documentPreviewMobile': 'Use “Abrir documento” para ver o arquivo no telemóvel.',
+    'briefing.mediaUnsupported': 'O seu navegador não suporta a reprodução deste formato.',
     'briefing.saveServer': 'Guardar no servidor',
     'briefing.charCount': '{{n}} caracteres (mín. 15)',
     'briefing.emptyPlaceholder': '(Sem texto no briefing — edite para preencher)',
@@ -290,17 +318,42 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'onboarding.welcomeTitle': 'Bem-vindo ao SpecFlow!',
     'onboarding.welcomeSubtitle':
-      'Em 3 passos você transforma uma demanda em especificação completa. Veja como:',
-    'onboarding.step1Title': 'Crie seu primeiro projeto',
-    'onboarding.step1Desc': 'Dê um nome e escolha como quer inserir a demanda.',
+      'Comece pelo projeto de exemplo (2 min) ou crie o seu — briefing, especificação, refinamento e conclusão.',
+    'onboarding.step1Title': 'Projeto de exemplo',
+    'onboarding.step1Desc':
+      'Briefing, histórias US-01/US-02 e mensagem de refinamento já prontos para explorar.',
     'onboarding.step2Title': 'Especificação e manual',
     'onboarding.step2Desc':
-      'Gere histórias de usuário e manual com IA a partir do briefing.',
-    'onboarding.step3Title': 'Refinar e exportar',
+      'Gere ou edite histórias e manual com IA a partir do briefing salvo.',
+    'onboarding.step3Title': 'Refinar, concluir e exportar',
     'onboarding.step3Desc':
-      'Na página do projeto, use o refinamento para revisar o conjunto e baixe o pacote (.md ou PDF) com o que já foi salvo.',
-    'onboarding.cta': 'Criar primeiro projeto',
+      'Refine com IA, gere a conclusão do projeto e exporte CSV (Jira) ou Markdown (Notion).',
+    'onboarding.cta': 'Ver projeto de exemplo',
+    'onboarding.ctaNew': 'Criar meu projeto',
     'onboarding.dismissAria': 'Fechar',
+
+    'demo.create': 'Ver projeto de exemplo',
+    'demo.openExisting': 'Abrir exemplo',
+
+    'checklist.title': 'Primeiros passos',
+    'checklist.subtitle': 'Complete o fluxo uma vez para dominar o SpecFlow.',
+    'checklist.progress': '{{n}} de {{total}} concluídos',
+    'checklist.dismiss': 'Ocultar checklist',
+    'checklist.go': 'Ir para o projeto →',
+    'checklist.helpLink': 'Guia: começar em 5 minutos',
+    'checklist.newProject': 'Novo projeto do zero',
+    'checklist.step.project.title': 'Ter um projeto',
+    'checklist.step.project.desc':
+      'Abra o exemplo pré-preenchido ou crie um projeto com sua demanda.',
+    'checklist.step.stories.title': 'Histórias de usuário',
+    'checklist.step.stories.desc':
+      'Na aba Especificação, gere ou revise as histórias a partir do briefing.',
+    'checklist.step.refinement.title': 'Refinamento com IA',
+    'checklist.step.refinement.desc':
+      'Na aba Refinamento, converse com a IA para esclarecer pontos do escopo.',
+    'checklist.step.finish.title': 'Conclusão ou exportação',
+    'checklist.step.finish.desc':
+      'Gere a conclusão na última etapa ou exporte Jira/Notion no cabeçalho do projeto.',
 
     'auth.login.tagline': 'Da ideia ao uso, sem ruído.',
     'auth.login.title': 'Entrar na plataforma',
@@ -348,6 +401,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.input.video.label': 'Vídeo',
     'newProject.input.video.desc':
       'Grave ou envie um vídeo explicando a demanda',
+    'newProject.input.images.label': 'Imagens guiadas',
+    'newProject.input.images.desc':
+      'Envie imagens e descreva cada uma em texto',
     'newProject.briefingTitle': 'Briefing inicial',
     'newProject.briefingIntro':
       'Conte tudo que você sabe sobre a demanda. Não precisa ser perfeito — a IA vai refinar depois.',
@@ -368,6 +424,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.audioReady': 'Áudio pronto',
     'newProject.discard': 'Descartar',
     'newProject.resetRecording': 'Remover e gravar novamente',
+    'newProject.clearAudio': 'Apagar áudio e gravar ou enviar outro',
+    'newProject.clearVideo': 'Apagar vídeo e gravar ou enviar outro',
+    'newProject.clearDocument': 'Apagar documento e escolher outro',
     'newProject.videoTitle': 'Briefing em vídeo',
     'newProject.videoIntro':
       'Grave pela câmera ou envie um arquivo de vídeo explicando a demanda.',
@@ -422,6 +481,27 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Responda às perguntas — geramos um texto estruturado para o projeto.',
     'newProject.guided.footer':
       'As 3 primeiras perguntas são obrigatórias (mínimo 10 caracteres cada).',
+    'newProject.guidedImages.title': 'Briefing por imagens',
+    'newProject.guidedImages.intro':
+      'Para cada imagem, explique o que ela representa na demanda — telas, fluxos, referências ou anotações.',
+    'newProject.guidedImages.blockTitle': 'Bloco {{n}}',
+    'newProject.guidedImages.removeBlock': 'Remover bloco',
+    'newProject.guidedImages.addImage': 'Clique para enviar uma imagem',
+    'newProject.guidedImages.imageHint': 'JPG, PNG, WebP ou GIF — até 5 MB',
+    'newProject.guidedImages.clearImage': 'Apagar imagem e escolher outra',
+    'newProject.guidedImages.textLabel': 'Descrição desta imagem',
+    'newProject.guidedImages.textPlaceholder':
+      'Ex: Tela inicial do app — o paciente vê os próximos agendamentos e um botão para marcar consulta.',
+    'newProject.guidedImages.textMinHint': 'Mínimo {{n}} caracteres neste bloco',
+    'newProject.guidedImages.addBlock': 'Adicionar outra imagem + texto',
+    'newProject.guidedImages.footer':
+      'Pelo menos um bloco completo (imagem + descrição com 10+ caracteres). Você pode adicionar quantos blocos precisar.',
+    'newProject.errorImagesCreate':
+      'Não foi possível criar o projeto com estas imagens.',
+    'newProject.errorImagesSend':
+      'Falha ao enviar as imagens. Verifique sua conexão e tente de novo.',
+    'newProject.errorImagesDbMigration':
+      'O banco precisa da migração de imagens guiadas. No Supabase → SQL Editor, execute supabase/migrations/010_input_type_images.sql e tente novamente.',
     'newProject.placeholderVideo': '[Briefing enviado por vídeo]',
     'newProject.placeholderDoc': '[Briefing enviado por documento]',
   },
@@ -493,6 +573,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'dashboard.recentTitle': 'Recent projects',
     'dashboard.viewAll': 'View all →',
     'dashboard.emptyRecent': 'No projects created yet',
+    'dashboard.emptyRecentHint':
+      'Try the sample project with briefing, stories, and refinement already filled in — or start from scratch.',
     'dashboard.createFirst': 'Create your first project',
 
     'projects.title': 'Projects',
@@ -509,7 +591,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'projects.filterDone': 'Completed',
     'projects.emptyTitle': 'No projects found',
     'projects.emptySearch': 'No results for "{{q}}"',
-    'projects.emptyHint': 'Create your first project to get started',
+    'projects.emptyHint':
+      'Use the sample project to see the full flow or create one with your real request.',
     'projects.createProject': 'Create project',
     'projects.firstUseGuide': 'View getting-started guide',
     'projects.showing': 'Showing {{shown}} of {{total}} projects',
@@ -538,6 +621,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.viewAllProjects': 'View all projects',
     'detail.finishProject': 'Finish project',
     'detail.stageDone': 'Step completed',
+    'detail.goToNextStage': 'Continue to {{stage}}',
     'detail.finishStage': 'Complete step',
     'detail.currentStageLabel': 'Current step:',
     'detail.goToCurrentStage': 'Go to current step',
@@ -559,9 +643,33 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'conclusion.errorGenerate': 'Could not generate the conclusion. Try again.',
 
     'briefing.receivedTitle': 'Briefing received',
+    'briefing.guidedImageAlt': 'Briefing image {{n}}',
+    'briefing.guidedImageCaption': 'Description — image {{n}}',
+    'briefing.guidedImageMissing': 'Image not available on the server',
+    'briefing.imagesHint':
+      'Briefing submitted as image + text pairs. The descriptions below feed the AI in later steps.',
     'briefing.aiHint':
       'This text is what the AI uses in the following steps (specification, manual, and finally refinement for a last polish). Always save after changes.',
     'briefing.audioOriginal': 'Original briefing audio',
+    'briefing.originalTitle': 'Original source (audio, video, or document)',
+    'briefing.originalHint':
+      'Listen or open what was uploaded and compare it with the AI transcript beside it.',
+    'briefing.compareHint':
+      'Play the audio (or watch the video) on the left and read the AI transcript on the right to verify they match.',
+    'briefing.transcriptTitle': 'AI transcript',
+    'briefing.videoOriginal': 'Uploaded / recorded video',
+    'briefing.documentOriginal': 'Uploaded document',
+    'briefing.compareHintVideo':
+      'Watch the video on the left and read the AI transcript on the right to verify they match.',
+    'briefing.mediaUnavailable':
+      'The original video or audio is not stored on the server. The transcript below is still available — create a new project and upload the file again to watch it.',
+    'briefing.mediaMissing':
+      'The audio/video file was not found on the server. The text below is the saved transcript; record again in a new project to keep the original file.',
+    'briefing.downloadOriginal': 'Download original',
+    'briefing.openDocument': 'Open document',
+    'briefing.documentPreview': 'Document preview',
+    'briefing.documentPreviewMobile': 'Use “Open document” to view the file on mobile.',
+    'briefing.mediaUnsupported': 'Your browser cannot play this format.',
     'briefing.saveServer': 'Save to server',
     'briefing.charCount': '{{n}} characters (min. 15)',
     'briefing.emptyPlaceholder': '(No briefing text yet — edit to add content)',
@@ -712,17 +820,42 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'onboarding.welcomeTitle': 'Welcome to SpecFlow!',
     'onboarding.welcomeSubtitle':
-      'In three steps you turn a request into a full specification. Here is how:',
-    'onboarding.step1Title': 'Create your first project',
-    'onboarding.step1Desc': 'Name it and choose how to capture the request.',
+      'Start with the sample project (2 min) or create your own — briefing, spec, refinement, and conclusion.',
+    'onboarding.step1Title': 'Sample project',
+    'onboarding.step1Desc':
+      'Briefing, US-01/US-02 stories, and a refinement message ready to explore.',
     'onboarding.step2Title': 'Specification and manual',
     'onboarding.step2Desc':
-      'Generate user stories and the manual from the briefing with AI.',
-    'onboarding.step3Title': 'Refine and export',
+      'Generate or edit stories and manual with AI from the saved briefing.',
+    'onboarding.step3Title': 'Refine, conclude, export',
     'onboarding.step3Desc':
-      'On the project page, use refinement to review the package and download the bundle (.md or PDF) with everything saved.',
-    'onboarding.cta': 'Create first project',
+      'Refine with AI, generate project conclusion, and export CSV (Jira) or Markdown (Notion).',
+    'onboarding.cta': 'Open sample project',
+    'onboarding.ctaNew': 'Create my project',
     'onboarding.dismissAria': 'Dismiss',
+
+    'demo.create': 'Open sample project',
+    'demo.openExisting': 'Open sample',
+
+    'checklist.title': 'Getting started',
+    'checklist.subtitle': 'Complete the flow once to learn SpecFlow.',
+    'checklist.progress': '{{n}} of {{total}} done',
+    'checklist.dismiss': 'Hide checklist',
+    'checklist.go': 'Go to project →',
+    'checklist.helpLink': 'Guide: start in 5 minutes',
+    'checklist.newProject': 'New project from scratch',
+    'checklist.step.project.title': 'Have a project',
+    'checklist.step.project.desc':
+      'Open the pre-filled sample or create a project with your request.',
+    'checklist.step.stories.title': 'User stories',
+    'checklist.step.stories.desc':
+      'On the Specification tab, generate or review stories from the briefing.',
+    'checklist.step.refinement.title': 'AI refinement',
+    'checklist.step.refinement.desc':
+      'On the Refinement tab, chat with AI to clarify scope.',
+    'checklist.step.finish.title': 'Conclusion or export',
+    'checklist.step.finish.desc':
+      'Generate conclusion in the last step or export Jira/Notion from the project header.',
 
     'auth.login.tagline': 'From idea to usage, without noise.',
     'auth.login.title': 'Sign in',
@@ -768,6 +901,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.input.video.label': 'Video',
     'newProject.input.video.desc':
       'Record or upload a video explaining the request',
+    'newProject.input.images.label': 'Guided images',
+    'newProject.input.images.desc':
+      'Upload images and describe each one in text',
     'newProject.briefingTitle': 'Initial briefing',
     'newProject.briefingIntro':
       'Share everything you know about the request. It does not need to be perfect — AI will refine later.',
@@ -788,6 +924,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.audioReady': 'Audio ready',
     'newProject.discard': 'Discard',
     'newProject.resetRecording': 'Remove and record again',
+    'newProject.clearAudio': 'Remove audio and record or upload again',
+    'newProject.clearVideo': 'Remove video and record or upload again',
+    'newProject.clearDocument': 'Remove document and choose another',
     'newProject.videoTitle': 'Video briefing',
     'newProject.videoIntro':
       'Record with your camera or upload a video explaining the request.',
@@ -834,6 +973,26 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Answer the questions — we build structured text for the project.',
     'newProject.guided.footer':
       'The first 3 questions are required (min. 10 characters each).',
+    'newProject.guidedImages.title': 'Image-based briefing',
+    'newProject.guidedImages.intro':
+      'For each image, explain what it shows in the request — screens, flows, references or notes.',
+    'newProject.guidedImages.blockTitle': 'Block {{n}}',
+    'newProject.guidedImages.removeBlock': 'Remove block',
+    'newProject.guidedImages.addImage': 'Click to upload an image',
+    'newProject.guidedImages.imageHint': 'JPG, PNG, WebP or GIF — up to 5 MB',
+    'newProject.guidedImages.clearImage': 'Remove image and choose another',
+    'newProject.guidedImages.textLabel': 'Description for this image',
+    'newProject.guidedImages.textPlaceholder':
+      'e.g. App home screen — patient sees upcoming appointments and a button to book.',
+    'newProject.guidedImages.textMinHint': 'At least {{n}} characters in this block',
+    'newProject.guidedImages.addBlock': 'Add another image + text',
+    'newProject.guidedImages.footer':
+      'At least one complete block (image + description with 10+ characters). Add as many as you need.',
+    'newProject.errorImagesCreate': 'Could not create the project with these images.',
+    'newProject.errorImagesSend':
+      'Failed to upload images. Check your connection and try again.',
+    'newProject.errorImagesDbMigration':
+      'The database needs the guided-images migration. In Supabase → SQL Editor, run supabase/migrations/010_input_type_images.sql and try again.',
     'newProject.placeholderVideo': '[Briefing submitted as video]',
     'newProject.placeholderDoc': '[Briefing submitted as document]',
   },
@@ -905,6 +1064,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'dashboard.recentTitle': 'Proyectos recientes',
     'dashboard.viewAll': 'Ver todos →',
     'dashboard.emptyRecent': 'Aún no hay proyectos',
+    'dashboard.emptyRecentHint':
+      'Pruebe el proyecto de ejemplo con briefing, historias y refinamiento listos — o cree el suyo desde cero.',
     'dashboard.createFirst': 'Crear primer proyecto',
 
     'projects.title': 'Proyectos',
@@ -921,7 +1082,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'projects.filterDone': 'Completados',
     'projects.emptyTitle': 'No se encontraron proyectos',
     'projects.emptySearch': 'Sin resultados para "{{q}}"',
-    'projects.emptyHint': 'Crea tu primer proyecto para empezar',
+    'projects.emptyHint':
+      'Use el proyecto de ejemplo para ver el flujo completo o cree uno con su demanda real.',
     'projects.createProject': 'Crear proyecto',
     'projects.firstUseGuide': 'Ver guía de primer uso',
     'projects.showing': 'Mostrando {{shown}} de {{total}} proyectos',
@@ -951,6 +1113,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.viewAllProjects': 'Ver todos los proyectos',
     'detail.finishProject': 'Finalizar proyecto',
     'detail.stageDone': 'Etapa completada',
+    'detail.goToNextStage': 'Continuar a {{stage}}',
     'detail.finishStage': 'Completar etapa',
     'detail.currentStageLabel': 'Etapa actual:',
     'detail.goToCurrentStage': 'Ir a la etapa actual',
@@ -972,9 +1135,33 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'conclusion.errorGenerate': 'No se pudo generar la conclusión. Inténtelo de nuevo.',
 
     'briefing.receivedTitle': 'Briefing recibido',
+    'briefing.guidedImageAlt': 'Imagen {{n}} del briefing',
+    'briefing.guidedImageCaption': 'Descripción — imagen {{n}}',
+    'briefing.guidedImageMissing': 'Imagen no disponible en el servidor',
+    'briefing.imagesHint':
+      'Briefing enviado como pares imagen + texto. Las descripciones alimentan la IA en las siguientes etapas.',
     'briefing.aiHint':
       'Este texto es el que la IA usa en las siguientes etapas (especificación, manual y, al final, refinamiento para una última revisión). Guarde siempre tras cambiar.',
     'briefing.audioOriginal': 'Audio original del briefing',
+    'briefing.originalTitle': 'Fuente original (audio, vídeo o documento)',
+    'briefing.originalHint':
+      'Escuche o abra lo enviado y compárelo con el texto transcrito por la IA al lado.',
+    'briefing.compareHint':
+      'Escuche el audio (o vea el vídeo) a la izquierda y lea la transcripción de la IA a la derecha para comprobar que coinciden.',
+    'briefing.transcriptTitle': 'Texto transcrito por la IA',
+    'briefing.videoOriginal': 'Vídeo enviado / grabado',
+    'briefing.documentOriginal': 'Documento enviado',
+    'briefing.compareHintVideo':
+      'Vea el vídeo a la izquierda y lea la transcripción de la IA a la derecha para comprobar que coinciden.',
+    'briefing.mediaUnavailable':
+      'El vídeo o audio original no está guardado en el servidor. La transcripción sigue disponible — cree un proyecto nuevo y suba el archivo de nuevo.',
+    'briefing.mediaMissing':
+      'No se encontró el archivo de audio/vídeo en el servidor. El texto abajo es la transcripción guardada; cree un proyecto nuevo con grabación para conservar el original.',
+    'briefing.downloadOriginal': 'Descargar original',
+    'briefing.openDocument': 'Abrir documento',
+    'briefing.documentPreview': 'Vista previa del documento',
+    'briefing.documentPreviewMobile': 'Use “Abrir documento” para ver el archivo en el móvil.',
+    'briefing.mediaUnsupported': 'Su navegador no puede reproducir este formato.',
     'briefing.saveServer': 'Guardar en el servidor',
     'briefing.charCount': '{{n}} caracteres (mín. 15)',
     'briefing.emptyPlaceholder': '(Sin texto en el briefing — edite para completar)',
@@ -1127,17 +1314,42 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     'onboarding.welcomeTitle': '¡Bienvenido a SpecFlow!',
     'onboarding.welcomeSubtitle':
-      'En 3 pasos convierte una demanda en una especificación completa:',
-    'onboarding.step1Title': 'Cree su primer proyecto',
-    'onboarding.step1Desc': 'Póngale nombre y elija cómo capturar la demanda.',
+      'Empiece con el proyecto de ejemplo (2 min) o cree el suyo — briefing, especificación, refinamiento y conclusión.',
+    'onboarding.step1Title': 'Proyecto de ejemplo',
+    'onboarding.step1Desc':
+      'Briefing, historias US-01/US-02 y mensaje de refinamiento listos para explorar.',
     'onboarding.step2Title': 'Especificación y manual',
     'onboarding.step2Desc':
-      'Genere historias de usuario y manual con IA a partir del briefing.',
-    'onboarding.step3Title': 'Refinar y exportar',
+      'Genere o edite historias y manual con IA desde el briefing guardado.',
+    'onboarding.step3Title': 'Refinar, concluir y exportar',
     'onboarding.step3Desc':
-      'En la página del proyecto, use el refinamiento para revisar el conjunto y descargue el paquete (.md o PDF) con lo guardado.',
-    'onboarding.cta': 'Crear primer proyecto',
+      'Refine con IA, genere la conclusión del proyecto y exporte CSV (Jira) o Markdown (Notion).',
+    'onboarding.cta': 'Ver proyecto de ejemplo',
+    'onboarding.ctaNew': 'Crear mi proyecto',
     'onboarding.dismissAria': 'Cerrar',
+
+    'demo.create': 'Ver proyecto de ejemplo',
+    'demo.openExisting': 'Abrir ejemplo',
+
+    'checklist.title': 'Primeros pasos',
+    'checklist.subtitle': 'Complete el flujo una vez para dominar SpecFlow.',
+    'checklist.progress': '{{n}} de {{total}} completados',
+    'checklist.dismiss': 'Ocultar lista',
+    'checklist.go': 'Ir al proyecto →',
+    'checklist.helpLink': 'Guía: empezar en 5 minutos',
+    'checklist.newProject': 'Nuevo proyecto desde cero',
+    'checklist.step.project.title': 'Tener un proyecto',
+    'checklist.step.project.desc':
+      'Abra el ejemplo prellenado o cree un proyecto con su demanda.',
+    'checklist.step.stories.title': 'Historias de usuario',
+    'checklist.step.stories.desc':
+      'En Especificación, genere o revise historias desde el briefing.',
+    'checklist.step.refinement.title': 'Refinamiento con IA',
+    'checklist.step.refinement.desc':
+      'En Refinamiento, converse con la IA para aclarar el alcance.',
+    'checklist.step.finish.title': 'Conclusión o exportación',
+    'checklist.step.finish.desc':
+      'Genere la conclusión en la última etapa o exporte Jira/Notion desde el encabezado del proyecto.',
 
     'auth.login.tagline': 'De la idea al uso, sin ruido.',
     'auth.login.title': 'Entrar en la plataforma',
@@ -1185,6 +1397,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.input.video.label': 'Vídeo',
     'newProject.input.video.desc':
       'Grabe o envíe un vídeo explicando la demanda',
+    'newProject.input.images.label': 'Imágenes guiadas',
+    'newProject.input.images.desc':
+      'Suba imágenes y describa cada una en texto',
     'newProject.briefingTitle': 'Briefing inicial',
     'newProject.briefingIntro':
       'Cuente todo lo que sepa sobre la demanda. No tiene que ser perfecto — la IA refinará después.',
@@ -1205,6 +1420,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'newProject.audioReady': 'Audio listo',
     'newProject.discard': 'Descartar',
     'newProject.resetRecording': 'Eliminar y grabar de nuevo',
+    'newProject.clearAudio': 'Eliminar audio y grabar o subir otro',
+    'newProject.clearVideo': 'Eliminar vídeo y grabar o subir otro',
+    'newProject.clearDocument': 'Eliminar documento y elegir otro',
     'newProject.videoTitle': 'Briefing en vídeo',
     'newProject.videoIntro':
       'Grabe con la cámara o suba un vídeo explicando la demanda.',
@@ -1258,6 +1476,27 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'Responda las preguntas — generamos texto estructurado para el proyecto.',
     'newProject.guided.footer':
       'Las 3 primeras preguntas son obligatorias (mín. 10 caracteres cada una).',
+    'newProject.guidedImages.title': 'Briefing por imágenes',
+    'newProject.guidedImages.intro':
+      'Para cada imagen, explique qué representa en la demanda — pantallas, flujos, referencias o anotaciones.',
+    'newProject.guidedImages.blockTitle': 'Bloque {{n}}',
+    'newProject.guidedImages.removeBlock': 'Eliminar bloque',
+    'newProject.guidedImages.addImage': 'Pulse para subir una imagen',
+    'newProject.guidedImages.imageHint': 'JPG, PNG, WebP o GIF — hasta 5 MB',
+    'newProject.guidedImages.clearImage': 'Eliminar imagen y elegir otra',
+    'newProject.guidedImages.textLabel': 'Descripción de esta imagen',
+    'newProject.guidedImages.textPlaceholder':
+      'Ej.: Pantalla inicial — el paciente ve las próximas citas y un botón para reservar.',
+    'newProject.guidedImages.textMinHint': 'Mínimo {{n}} caracteres en este bloque',
+    'newProject.guidedImages.addBlock': 'Añadir otra imagen + texto',
+    'newProject.guidedImages.footer':
+      'Al menos un bloque completo (imagen + descripción con 10+ caracteres). Añada los que necesite.',
+    'newProject.errorImagesCreate':
+      'No se pudo crear el proyecto con estas imágenes.',
+    'newProject.errorImagesSend':
+      'Error al subir las imágenes. Revise la conexión e inténtelo de nuevo.',
+    'newProject.errorImagesDbMigration':
+      'La base de datos necesita la migración de imágenes guiadas. En Supabase → SQL Editor, ejecute supabase/migrations/010_input_type_images.sql e inténtelo de nuevo.',
     'newProject.placeholderVideo': '[Briefing enviado en vídeo]',
     'newProject.placeholderDoc': '[Briefing enviado como documento]',
   },

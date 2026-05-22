@@ -12,7 +12,7 @@ import { createProjectAction, getProjectQuotaAction } from '@/app/actions/projec
 import { PROJECT_LIMIT_REACHED_CODE, type ProjectQuota } from '@/lib/projects/quota-constants'
 import { useI18n } from '@/components/i18n/I18nProvider'
 
-type InputTypeId = 'text' | 'audio' | 'document' | 'form' | 'video'
+type InputTypeId = 'text' | 'audio' | 'document' | 'form' | 'video' | 'images'
 
 const INPUT_TYPE_ITEMS: { id: InputTypeId; icon: ReactNode }[] = [
   {
@@ -55,9 +55,43 @@ const INPUT_TYPE_ITEMS: { id: InputTypeId; icon: ReactNode }[] = [
       </svg>
     ),
   },
+  {
+    id: 'images',
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z"
+        />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 8.25h.008v.008H6.75V8.25Z" />
+      </svg>
+    ),
+  },
 ]
 
 const GUIDED_IDS = ['goal', 'users', 'features', 'deadline', 'integrations'] as const
+
+function ClearMediaButton({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onClear}
+      className="border-[#FECACA] text-[#B91C1C] hover:bg-red-50 hover:border-[#F87171] hover:text-[#991B1B]"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+        />
+      </svg>
+      {label}
+    </Button>
+  )
+}
 
 /* ── Áudio ───────────────────────────────────────────────────── */
 
@@ -121,10 +155,20 @@ function AudioInput({ onReady }: { onReady: (file: File | Blob | null) => void }
   }
 
   const reset = () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop()
+      setIsRecording(false)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
     if (audioUrl) URL.revokeObjectURL(audioUrl)
     setAudioUrl(null)
     onReady(null)
     setRecordingTime(0)
+    setError(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
@@ -197,9 +241,7 @@ function AudioInput({ onReady }: { onReady: (file: File | Blob | null) => void }
             <span className="text-sm text-[#065F46] font-medium">{t('newProject.audioReady')}</span>
           </div>
           <audio controls src={audioUrl} className="w-full rounded-lg" />
-          <button type="button" onClick={reset} className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors">
-            {t('newProject.resetRecording')}
-          </button>
+          <ClearMediaButton label={t('newProject.clearAudio')} onClear={reset} />
         </div>
       )}
     </Card>
@@ -272,10 +314,23 @@ function VideoInput({ onReady }: { onReady: (file: File | Blob | null) => void }
   }
 
   const reset = () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop()
+      setIsRecording(false)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      if (previewRef.current) {
+        previewRef.current.srcObject = null
+      }
+    }
     if (videoUrl) URL.revokeObjectURL(videoUrl)
     setVideoUrl(null)
     onReady(null)
     setRecordingTime(0)
+    setError(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
@@ -350,9 +405,7 @@ function VideoInput({ onReady }: { onReady: (file: File | Blob | null) => void }
             <span className="text-sm text-[#065F46] font-medium">{t('newProject.videoReady')}</span>
           </div>
           <video controls src={videoUrl} className="w-full rounded-lg bg-black max-h-64" />
-          <button type="button" onClick={reset} className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors">
-            {t('newProject.resetRecording')}
-          </button>
+          <ClearMediaButton label={t('newProject.clearVideo')} onClear={reset} />
         </div>
       )}
     </Card>
@@ -368,6 +421,12 @@ function DocumentInput({ onReady }: { onReady: (file: File | null) => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt'
+
+  const clearFile = () => {
+    setFile(null)
+    onReady(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const handleFile = (f: File) => {
     setFile(f)
@@ -428,15 +487,203 @@ function DocumentInput({ onReady }: { onReady: (file: File | null) => void }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>
-          <button
-            type="button"
-            onClick={() => { setFile(null); onReady(null) }}
-            className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors"
-          >
-            {t('newProject.removeFile')}
-          </button>
+          <ClearMediaButton label={t('newProject.clearDocument')} onClear={clearFile} />
         </div>
       )}
+    </Card>
+  )
+}
+
+/* ── Imagens guiadas ─────────────────────────────────────────── */
+
+const MAX_GUIDED_IMAGE_BLOCKS = 10
+const MIN_GUIDED_IMAGE_TEXT = 10
+
+type GuidedImageBlockState = {
+  id: string
+  imageFile: File | null
+  previewUrl: string | null
+  text: string
+}
+
+function newGuidedImageBlock(): GuidedImageBlockState {
+  return { id: crypto.randomUUID(), imageFile: null, previewUrl: null, text: '' }
+}
+
+function GuidedImagesInput({
+  onValid,
+  onBlocksChange,
+}: {
+  onValid: (ok: boolean) => void
+  onBlocksChange: (blocks: { imageFile: File; text: string }[]) => void
+}) {
+  const { t } = useI18n()
+  const [blocks, setBlocks] = useState<GuidedImageBlockState[]>(() => [
+    newGuidedImageBlock(),
+    newGuidedImageBlock(),
+  ])
+
+  useEffect(() => {
+    return () => {
+      blocks.forEach(b => {
+        if (b.previewUrl) URL.revokeObjectURL(b.previewUrl)
+      })
+    }
+  }, [blocks])
+
+  useEffect(() => {
+    const complete = blocks.filter(
+      b => b.imageFile && b.text.trim().length >= MIN_GUIDED_IMAGE_TEXT
+    )
+    onValid(complete.length > 0)
+    onBlocksChange(
+      complete.map(b => ({ imageFile: b.imageFile!, text: b.text.trim() }))
+    )
+  }, [blocks, onValid, onBlocksChange])
+
+  const updateBlocks = (updater: (prev: GuidedImageBlockState[]) => GuidedImageBlockState[]) => {
+    setBlocks(updater)
+  }
+
+  const setImage = (id: string, file: File) => {
+    updateBlocks(prev =>
+      prev.map(b => {
+        if (b.id !== id) return b
+        if (b.previewUrl) URL.revokeObjectURL(b.previewUrl)
+        return {
+          ...b,
+          imageFile: file,
+          previewUrl: URL.createObjectURL(file),
+        }
+      })
+    )
+  }
+
+  const clearImage = (id: string) => {
+    updateBlocks(prev =>
+      prev.map(b => {
+        if (b.id !== id) return b
+        if (b.previewUrl) URL.revokeObjectURL(b.previewUrl)
+        return { ...b, imageFile: null, previewUrl: null }
+      })
+    )
+  }
+
+  const setText = (id: string, text: string) => {
+    updateBlocks(prev => prev.map(b => (b.id === id ? { ...b, text } : b)))
+  }
+
+  const removeBlock = (id: string) => {
+    updateBlocks(prev => {
+      if (prev.length <= 1) return prev
+      const target = prev.find(b => b.id === id)
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter(b => b.id !== id)
+    })
+  }
+
+  const addBlock = () => {
+    updateBlocks(prev =>
+      prev.length >= MAX_GUIDED_IMAGE_BLOCKS ? prev : [...prev, newGuidedImageBlock()]
+    )
+  }
+
+  return (
+    <Card padding="lg">
+      <h2 className="text-base font-semibold text-[#111827] mb-1">{t('newProject.guidedImages.title')}</h2>
+      <p className="text-sm text-[#6B7280] mb-5">{t('newProject.guidedImages.intro')}</p>
+
+      <div className="space-y-6">
+        {blocks.map((block, index) => (
+          <div
+            key={block.id}
+            className="rounded-xl border border-[#E5E7EB] bg-[#FAFBFC] p-4 space-y-4"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-[#374151]">
+                {t('newProject.guidedImages.blockTitle').replace('{{n}}', String(index + 1))}
+              </span>
+              {blocks.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeBlock(block.id)}
+                  className="text-xs text-[#9CA3AF] hover:text-[#EF4444] transition-colors"
+                >
+                  {t('newProject.guidedImages.removeBlock')}
+                </button>
+              )}
+            </div>
+
+            {!block.previewUrl ? (
+              <label className="flex flex-col items-center justify-center gap-2 py-8 border-2 border-dashed border-[#E5E7EB] rounded-xl cursor-pointer hover:border-[#93C5FD] hover:bg-white transition-all">
+                <svg className="w-8 h-8 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                </svg>
+                <span className="text-sm text-[#6B7280]">{t('newProject.guidedImages.addImage')}</span>
+                <span className="text-xs text-[#9CA3AF]">{t('newProject.guidedImages.imageHint')}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0]
+                    if (f) setImage(block.id, f)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            ) : (
+              <div className="space-y-2">
+                <img
+                  src={block.previewUrl}
+                  alt=""
+                  className="w-full max-h-48 object-contain rounded-lg bg-[#F3F4F6] border border-[#E5E7EB]"
+                />
+                <ClearMediaButton
+                  label={t('newProject.guidedImages.clearImage')}
+                  onClear={() => clearImage(block.id)}
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium text-[#374151] mb-1.5 block">
+                {t('newProject.guidedImages.textLabel')}
+              </label>
+              <textarea
+                value={block.text}
+                onChange={e => setText(block.id, e.target.value)}
+                placeholder={t('newProject.guidedImages.textPlaceholder')}
+                rows={3}
+                className="w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] resize-none leading-relaxed"
+              />
+              {block.text.length > 0 && block.text.trim().length < MIN_GUIDED_IMAGE_TEXT && (
+                <p className="text-xs text-[#F59E0B] mt-1">
+                  {t('newProject.guidedImages.textMinHint').replace(
+                    '{{n}}',
+                    String(MIN_GUIDED_IMAGE_TEXT)
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {blocks.length < MAX_GUIDED_IMAGE_BLOCKS && (
+        <button
+          type="button"
+          onClick={addBlock}
+          className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-[#CBD5E1] rounded-lg text-sm font-medium text-[#1E3A8A] hover:border-[#93C5FD] hover:bg-[#F8FAFC] transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          {t('newProject.guidedImages.addBlock')}
+        </button>
+      )}
+
+      <p className="text-xs text-[#9CA3AF] mt-4">{t('newProject.guidedImages.footer')}</p>
     </Card>
   )
 }
@@ -518,6 +765,8 @@ export default function NovoProjeto() {
   const [videoFile, setVideoFile] = useState<File | Blob | null>(null)
   const [hasForm, setHasForm] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, string>>({})
+  const [hasGuidedImages, setHasGuidedImages] = useState(false)
+  const [guidedImageBlocks, setGuidedImageBlocks] = useState<{ imageFile: File; text: string }[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const guidedQuestions = useMemo(
@@ -558,6 +807,7 @@ export default function NovoProjeto() {
     if (inputType === 'document') return documentFile !== null
     if (inputType === 'form') return hasForm
     if (inputType === 'video') return videoFile !== null
+    if (inputType === 'images') return hasGuidedImages && guidedImageBlocks.length > 0
     return false
   }
 
@@ -644,6 +894,50 @@ export default function NovoProjeto() {
       return
     }
 
+    if (inputType === 'images') {
+      if (!guidedImageBlocks.length) return
+      startTransition(async () => {
+        try {
+          const fd = new FormData()
+          fd.append('name', name.trim())
+          fd.append('description', description.trim())
+          fd.append(
+            'payload',
+            JSON.stringify({
+              blocks: guidedImageBlocks.map(b => ({ text: b.text })),
+            })
+          )
+          guidedImageBlocks.forEach((b, i) => {
+            fd.append(`image-${i}`, b.imageFile)
+          })
+          const res = await fetch('/api/projects/from-images', { method: 'POST', body: fd })
+          const data = (await res.json()) as {
+            projectId?: string
+            error?: string
+            code?: string
+            warning?: string
+          }
+          if (!res.ok || !data.projectId) {
+            setError(
+              data.code === PROJECT_LIMIT_REACHED_CODE
+                ? fillTemplate(t('newProject.limitBannerBody'), {
+                    used: String(quota?.used ?? 3),
+                    limit: String(quota?.limit ?? 3),
+                  })
+                : data.code === 'INPUT_TYPE_IMAGES_MISSING'
+                  ? t('newProject.errorImagesDbMigration')
+                  : (data.error ?? t('newProject.errorImagesCreate'))
+            )
+            return
+          }
+          router.push(`/projetos/${data.projectId}`)
+        } catch {
+          setError(t('newProject.errorImagesSend'))
+        }
+      })
+      return
+    }
+
     if (inputType === 'video') {
       if (!videoFile) return
       startTransition(async () => {
@@ -661,6 +955,8 @@ export default function NovoProjeto() {
             projectId?: string
             error?: string
             code?: string
+            warning?: string
+            videoStored?: boolean
           }
           if (!res.ok || !data.projectId) {
             setError(
@@ -834,7 +1130,16 @@ export default function NovoProjeto() {
                   <button
                     key={type.id}
                     type="button"
-                    onClick={() => setInputType(type.id)}
+                    onClick={() => {
+                      setInputType(type.id)
+                      setAudioFile(null)
+                      setVideoFile(null)
+                      setDocumentFile(null)
+                      setHasGuidedImages(false)
+                      setGuidedImageBlocks([])
+                      setHasForm(false)
+                      setFormAnswers({})
+                    }}
                     className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
                       inputType === type.id
                         ? 'border-[#1E3A8A] bg-blue-50'
@@ -878,11 +1183,18 @@ export default function NovoProjeto() {
               </Card>
             )}
 
-            {inputType === 'audio' && <AudioInput onReady={setAudioFile} />}
-            {inputType === 'video' && <VideoInput onReady={setVideoFile} />}
-            {inputType === 'document' && <DocumentInput onReady={setDocumentFile} />}
+            {inputType === 'audio' && <AudioInput key="briefing-audio" onReady={setAudioFile} />}
+            {inputType === 'video' && <VideoInput key="briefing-video" onReady={setVideoFile} />}
+            {inputType === 'document' && <DocumentInput key="briefing-document" onReady={setDocumentFile} />}
             {inputType === 'form' && (
               <GuidedFormInput questions={guidedQuestions} onChange={setHasForm} onAnswers={setFormAnswers} />
+            )}
+            {inputType === 'images' && (
+              <GuidedImagesInput
+                key="briefing-images"
+                onValid={setHasGuidedImages}
+                onBlocksChange={setGuidedImageBlocks}
+              />
             )}
 
             {error && (

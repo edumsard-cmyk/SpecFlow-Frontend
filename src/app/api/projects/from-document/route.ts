@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { consumeAiRateLimit } from '@/lib/api/ai-rate-limit'
 import { documentExtFromName, extractTextFromDocument } from '@/lib/briefing/extract-document'
-import { uploadBriefingMedia } from '@/lib/briefing/upload-briefing-media'
+import { isUploadFailure, uploadBriefingMedia } from '@/lib/briefing/upload-briefing-media'
 import { logAudit } from '@/lib/data/audit'
 import { saveBriefing } from '@/lib/data/briefings'
 import { createProject } from '@/lib/data/projects'
@@ -81,19 +81,24 @@ export async function POST(req: NextRequest) {
 
     const ext = documentExtFromName(document.name) || 'bin'
     const objectName = `briefing-document.${ext}`
-    const documentUrl = await uploadBriefingMedia(
+    const uploadResult = await uploadBriefingMedia(
       project.id,
       buf,
       objectName,
       document.type || MIME_BY_EXT[ext] || 'application/octet-stream'
     )
+    const docStored = !isUploadFailure(uploadResult)
+    let contentToSave = briefingContent
+    if (!docStored && isUploadFailure(uploadResult)) {
+      contentToSave += `\n\n[O documento original não foi guardado no servidor: ${uploadResult.message}]`
+    }
 
     try {
       await saveBriefing({
         project_id: project.id,
         input_type: 'document',
-        content: briefingContent,
-        document_url: documentUrl,
+        content: contentToSave,
+        document_url: docStored ? uploadResult.storageRef : null,
       })
     } catch (saveErr) {
       console.error('saveBriefing document:', saveErr)

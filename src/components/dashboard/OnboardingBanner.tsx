@@ -3,10 +3,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useI18n } from '@/components/i18n/I18nProvider'
+import CreateDemoProjectButton from '@/components/dashboard/CreateDemoProjectButton'
 
 const STORAGE_KEY = 'specflow_onboarding_dismissed'
 
-export default function OnboardingBanner() {
+export default function OnboardingBanner({
+  existingDemoProjectId,
+}: {
+  existingDemoProjectId?: string | null
+}) {
   const { t } = useI18n()
   const [visible, setVisible] = useState(false)
 
@@ -15,7 +20,7 @@ export default function OnboardingBanner() {
       {
         icon: (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
           </svg>
         ),
         title: t('onboarding.step1Title'),
@@ -24,7 +29,7 @@ export default function OnboardingBanner() {
       {
         icon: (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c1.07.148 2.018.64 2.618 1.44M12 6.75V4.5" />
           </svg>
         ),
         title: t('onboarding.step2Title'),
@@ -83,15 +88,25 @@ export default function OnboardingBanner() {
               </div>
             ))}
           </div>
-          <Link
-            href="/projetos/novo"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#1E3A8A] to-[#7C3AED] hover:opacity-90 rounded-lg transition-opacity shadow-sm"
-          >
-            {t('onboarding.cta')}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <CreateDemoProjectButton
+              variant="primary"
+              size="md"
+              existingDemoProjectId={existingDemoProjectId}
+            />
+            <Link
+              href="/projetos/novo"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#1E3A8A] bg-white border border-[#E5E7EB] hover:bg-[#F8FAFC] rounded-lg transition-colors shadow-sm"
+            >
+              {t('onboarding.ctaNew')}
+            </Link>
+            <Link
+              href="/ajuda#comecar"
+              className="text-sm font-medium text-[#6B7280] hover:text-[#1E3A8A] hover:underline"
+            >
+              {t('checklist.helpLink')}
+            </Link>
+          </div>
         </div>
         <button
           onClick={dismiss}

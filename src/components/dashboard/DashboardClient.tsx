@@ -6,6 +6,9 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import OnboardingBanner from '@/components/dashboard/OnboardingBanner'
+import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist'
+import CreateDemoProjectButton from '@/components/dashboard/CreateDemoProjectButton'
+import type { OnboardingProgress } from '@/lib/data/onboarding'
 import { type ProjectStatus } from '@/types'
 import { getStatusColor, formatDate } from '@/lib/utils'
 import { useI18n } from '@/components/i18n/I18nProvider'
@@ -28,7 +31,13 @@ function labelStatus(localeKey: string, t: (k: string) => string): string {
   return t(`status.${localeKey}`)
 }
 
-export default function DashboardClient({ projects }: { projects: ProjectRow[] }) {
+export default function DashboardClient({
+  projects,
+  onboardingProgress,
+}: {
+  projects: ProjectRow[]
+  onboardingProgress: OnboardingProgress
+}) {
   const { t, locale } = useI18n()
 
   const total = projects.length
@@ -104,19 +113,26 @@ export default function DashboardClient({ projects }: { projects: ProjectRow[] }
         title={t('dashboard.title')}
         subtitle={t('dashboard.subtitle')}
         actions={
-          <Link href="/projetos/novo">
-            <Button>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              {t('dashboard.newProject')}
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <CreateDemoProjectButton
+              existingDemoProjectId={onboardingProgress.existingDemoProjectId}
+              variant={projects.length === 0 ? 'primary' : 'outline'}
+            />
+            <Link href="/projetos/novo">
+              <Button variant={projects.length === 0 ? 'outline' : 'primary'}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                {t('dashboard.newProject')}
+              </Button>
+            </Link>
+          </div>
         }
       />
 
       <div className="flex-1 p-4 md:p-6 space-y-6">
-        <OnboardingBanner />
+        <GettingStartedChecklist progress={onboardingProgress} />
+        <OnboardingBanner existingDemoProjectId={onboardingProgress.existingDemoProjectId} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATS.map(stat => (
             <Card key={stat.label} padding="md">
@@ -144,9 +160,20 @@ export default function DashboardClient({ projects }: { projects: ProjectRow[] }
 
           {recent.length === 0 ? (
             <Card padding="md" className="text-center py-10">
-              <p className="text-sm text-[#9CA3AF] mb-3">{t('dashboard.emptyRecent')}</p>
-              <Link href="/projetos/novo">
-                <Button size="sm">{t('dashboard.createFirst')}</Button>
+              <p className="text-sm text-[#6B7280] mb-1 font-medium">{t('dashboard.emptyRecent')}</p>
+              <p className="text-sm text-[#9CA3AF] mb-5 max-w-sm mx-auto">{t('dashboard.emptyRecentHint')}</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <CreateDemoProjectButton
+                  variant="primary"
+                  size="md"
+                  existingDemoProjectId={onboardingProgress.existingDemoProjectId}
+                />
+                <Link href="/projetos/novo">
+                  <Button size="sm" variant="outline">{t('dashboard.createFirst')}</Button>
+                </Link>
+              </div>
+              <Link href="/ajuda#comecar" className="inline-block mt-4 text-sm text-[#1E3A8A] font-medium hover:underline">
+                {t('checklist.helpLink')}
               </Link>
             </Card>
           ) : (

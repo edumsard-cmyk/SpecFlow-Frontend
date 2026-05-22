@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { getSupabaseAnonOrPublishableKey, getSupabaseSecretKey } from '@/lib/supabase/keys'
 import { type Database } from './types'
 
 export async function createClient() {
@@ -8,7 +9,7 @@ export async function createClient() {
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabaseAnonOrPublishableKey(),
     {
       cookies: {
         getAll() {
@@ -29,9 +30,15 @@ export async function createClient() {
 }
 
 export function createAdminClient() {
+  const secretKey = getSupabaseSecretKey()
+  if (!secretKey) {
+    throw new Error(
+      'Defina SUPABASE_SECRET_KEY (sb_secret_...) ou SUPABASE_SERVICE_ROLE_KEY (legado eyJ...) no .env.local'
+    )
+  }
   return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    secretKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProjectConclusion } from '@/lib/data/conclusion'
 import { getProject } from '@/lib/data/projects'
+import { briefingMediaForUi } from '@/lib/briefing/briefing-media'
 import { getBriefing } from '@/lib/data/briefings'
 import { createClient } from '@/lib/supabase/server'
 
@@ -43,10 +44,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     is_owner: user?.id === c.user_id,
   }))
 
+  const briefingMedia = await briefingMediaForUi(briefing, id)
+
   return NextResponse.json({
     project,
     conclusion,
     briefing,
+    briefingMedia,
     stories: stories ?? [],
     documents: documents ?? [],
     refinementMessages: refinementMessages ?? [],
