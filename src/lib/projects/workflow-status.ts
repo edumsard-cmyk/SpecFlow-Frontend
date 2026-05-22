@@ -21,7 +21,7 @@ export function resolveWorkflowStatus(
   return base
 }
 
-/** Aba inicial = etapa atual do projeto (fluxo linear briefing → … → conclusão). */
+/** Aba inicial = etapa atual do projeto (fluxo linear briefing → … → manual). */
 export function defaultProjectTab(status: ProjectStatus, hasSavedConclusion: boolean): string {
   const resolved = resolveWorkflowStatus(status, hasSavedConclusion)
   if (resolved === 'done') return 'briefing'

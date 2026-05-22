@@ -1,3 +1,8 @@
+import { adminDictionary } from '@/lib/i18n/admin-dictionary'
+import { helpDictionary } from '@/lib/i18n/help-dictionary'
+import { publicDictionary } from '@/lib/i18n/public-dictionary'
+import { settingsDictionary } from '@/lib/i18n/settings-dictionary'
+
 export type Locale = 'pt' | 'en' | 'es'
 
 export const defaultLocale: Locale = 'pt'
@@ -12,6 +17,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'nav.dashboard': 'Dashboard',
     'nav.projects': 'Projetos',
     'nav.settings': 'Configurações',
+    'nav.configSection': 'Config.',
     'nav.help': 'Ajuda',
     'nav.adminSection': 'Admin',
     'nav.adminPanel': 'Painel Admin',
@@ -147,7 +153,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'briefing.imagesHint':
       'Briefing enviado como pares imagem + texto. As descrições abaixo alimentam a IA nas próximas etapas.',
     'briefing.aiHint':
-      'Este texto é o que a IA usa nas etapas seguintes (especificação, manual e, por último, refinamento para revisão final). Guarde sempre que alterar.',
+      'Este texto é o que a IA usa nas etapas seguintes (especificação, refinamento, conclusão e manual). Guarde sempre que alterar.',
     'briefing.audioOriginal': 'Áudio original do briefing',
     'briefing.originalTitle': 'Fonte original (áudio, vídeo ou documento)',
     'briefing.originalHint':
@@ -504,6 +510,10 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'O banco precisa da migração de imagens guiadas. No Supabase → SQL Editor, execute supabase/migrations/010_input_type_images.sql e tente novamente.',
     'newProject.placeholderVideo': '[Briefing enviado por vídeo]',
     'newProject.placeholderDoc': '[Briefing enviado por documento]',
+    ...publicDictionary.pt,
+    ...adminDictionary.pt,
+    ...helpDictionary.pt,
+    ...settingsDictionary.pt,
   },
 
   en: {
@@ -515,6 +525,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'nav.dashboard': 'Dashboard',
     'nav.projects': 'Projects',
     'nav.settings': 'Settings',
+    'nav.configSection': 'Config',
     'nav.help': 'Help',
     'nav.adminSection': 'Admin',
     'nav.adminPanel': 'Admin panel',
@@ -649,7 +660,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'briefing.imagesHint':
       'Briefing submitted as image + text pairs. The descriptions below feed the AI in later steps.',
     'briefing.aiHint':
-      'This text is what the AI uses in the following steps (specification, manual, and finally refinement for a last polish). Always save after changes.',
+      'This text is what the AI uses in the following steps (specification, refinement, conclusion, and manual). Always save after changes.',
     'briefing.audioOriginal': 'Original briefing audio',
     'briefing.originalTitle': 'Original source (audio, video, or document)',
     'briefing.originalHint':
@@ -995,6 +1006,10 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'The database needs the guided-images migration. In Supabase → SQL Editor, run supabase/migrations/010_input_type_images.sql and try again.',
     'newProject.placeholderVideo': '[Briefing submitted as video]',
     'newProject.placeholderDoc': '[Briefing submitted as document]',
+    ...publicDictionary.en,
+    ...adminDictionary.en,
+    ...helpDictionary.en,
+    ...settingsDictionary.en,
   },
 
   es: {
@@ -1006,6 +1021,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'nav.dashboard': 'Panel',
     'nav.projects': 'Proyectos',
     'nav.settings': 'Configuración',
+    'nav.configSection': 'Config.',
     'nav.help': 'Ayuda',
     'nav.adminSection': 'Admin',
     'nav.adminPanel': 'Panel admin',
@@ -1141,7 +1157,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'briefing.imagesHint':
       'Briefing enviado como pares imagen + texto. Las descripciones alimentan la IA en las siguientes etapas.',
     'briefing.aiHint':
-      'Este texto es el que la IA usa en las siguientes etapas (especificación, manual y, al final, refinamiento para una última revisión). Guarde siempre tras cambiar.',
+      'Este texto es el que la IA usa en las siguientes etapas (especificación, refinamiento, conclusión y manual). Guarde siempre tras cambiar.',
     'briefing.audioOriginal': 'Audio original del briefing',
     'briefing.originalTitle': 'Fuente original (audio, vídeo o documento)',
     'briefing.originalHint':
@@ -1499,5 +1515,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
       'La base de datos necesita la migración de imágenes guiadas. En Supabase → SQL Editor, ejecute supabase/migrations/010_input_type_images.sql e inténtelo de nuevo.',
     'newProject.placeholderVideo': '[Briefing enviado en vídeo]',
     'newProject.placeholderDoc': '[Briefing enviado como documento]',
+    ...publicDictionary.es,
+    ...adminDictionary.es,
+    ...helpDictionary.es,
+    ...settingsDictionary.es,
   },
 }

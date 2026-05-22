@@ -8,27 +8,50 @@ import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { updateUserRoleAction, createUserAction, resetUserPasswordAction, deleteUserAction } from '@/app/actions/admin'
+import { useI18n } from '@/components/i18n/I18nProvider'
+import { fill } from '@/lib/i18n/fill'
+import { intlLocaleTag } from '@/lib/i18n/locale-format'
 import { type UserWithStats } from '@/lib/data/admin'
 import { type Database } from '@/lib/supabase/types'
 
 type UserRole = Database['public']['Tables']['profiles']['Row']['role']
 
-const ROLE_LABELS: Record<UserRole, string> = { admin: 'Admin', company: 'Gestor', user: 'Usuário' }
 const ROLE_COLORS: Record<UserRole, 'error' | 'info' | 'default'> = { admin: 'error', company: 'info', user: 'default' }
-const ROLE_FILTERS: { value: UserRole | 'all'; label: string }[] = [
-  { value: 'all', label: 'Todos' },
-  { value: 'admin', label: 'Admins' },
-  { value: 'company', label: 'Gestores' },
-  { value: 'user', label: 'Usuários' },
-]
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date))
+function useRoleLabels() {
+  const { t } = useI18n()
+  return {
+    admin: t('role.admin'),
+    company: t('role.company'),
+    user: t('role.user'),
+  } as Record<UserRole, string>
+}
+
+function useRoleFilters() {
+  const { t } = useI18n()
+  return [
+    { value: 'all' as const, label: t('admin.filter.all') },
+    { value: 'admin' as const, label: t('admin.filter.admins') },
+    { value: 'company' as const, label: t('admin.filter.managers') },
+    { value: 'user' as const, label: t('admin.filter.users') },
+  ]
+}
+
+function useFormatDate() {
+  const { locale } = useI18n()
+  return (date: string) =>
+    new Intl.DateTimeFormat(intlLocaleTag(locale), {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(date))
 }
 
 interface Company { id: string; name: string }
 
 function NovoUsuarioModal({ companies, onClose }: { companies: Company[]; onClose: () => void }) {
+  const { t } = useI18n()
+  const ROLE_LABELS = useRoleLabels()
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -64,7 +87,7 @@ function NovoUsuarioModal({ companies, onClose }: { companies: Company[]; onClos
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-[#111827]">Novo usuário</h3>
+          <h3 className="text-base font-semibold text-[#111827]">{t('admin.users.new')}</h3>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -143,7 +166,7 @@ function NovoUsuarioModal({ companies, onClose }: { companies: Company[]; onClos
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={isPending}>{t('common.cancel')}</Button>
           <Button size="sm" onClick={handleSubmit} loading={isPending} disabled={!isValid}>
             {!isPending && (
               <>
@@ -161,6 +184,7 @@ function NovoUsuarioModal({ companies, onClose }: { companies: Company[]; onClos
 }
 
 function DeleteUserButton({ userId, onDeleted }: { userId: string; onDeleted: () => void }) {
+  const { t } = useI18n()
   const [state, setState] = useState<'idle' | 'confirm' | 'deleting'>('idle')
 
   const handleClick = () => {
@@ -178,7 +202,7 @@ function DeleteUserButton({ userId, onDeleted }: { userId: string; onDeleted: ()
     <div className="flex items-center gap-1">
       <span className="text-xs text-[#374151]">Excluir?</span>
       <button onClick={handleClick} className="text-xs text-[#EF4444] font-medium hover:underline">Sim</button>
-      <button onClick={() => setState('idle')} className="text-xs text-[#9CA3AF] hover:underline">Não</button>
+      <button onClick={() => setState('idle')} className="text-xs text-[#9CA3AF] hover:underline">{t('admin.users.no')}</button>
     </div>
   )
 
@@ -191,12 +215,13 @@ function DeleteUserButton({ userId, onDeleted }: { userId: string; onDeleted: ()
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
       </svg>
-      {state === 'deleting' ? 'Excluindo…' : 'Excluir'}
+      {state === 'deleting' ? t('admin.users.deleting') : t('admin.users.delete')}
     </button>
   )
 }
 
 function ResetPasswordButton({ email }: { email: string }) {
+  const { t } = useI18n()
   const [state, setState] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'error'>('idle')
 
   const handleClick = () => {
@@ -215,15 +240,14 @@ function ResetPasswordButton({ email }: { email: string }) {
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
       </svg>
-      E-mail enviado
+      {t('admin.users.sent')}
     </span>
   )
 
   if (state === 'confirm') return (
     <div className="flex items-center gap-1">
-      <span className="text-xs text-[#374151]">Confirmar?</span>
-      <button onClick={handleClick} className="text-xs text-[#EF4444] font-medium hover:underline">Sim</button>
-      <button onClick={() => setState('idle')} className="text-xs text-[#9CA3AF] hover:underline">Não</button>
+      <button onClick={handleClick} className="text-xs text-[#EF4444] font-medium hover:underline">{t('admin.users.resetPassword')}</button>
+      <button onClick={() => setState('idle')} className="text-xs text-[#9CA3AF] hover:underline">{t('admin.users.no')}</button>
     </div>
   )
 
@@ -236,12 +260,16 @@ function ResetPasswordButton({ email }: { email: string }) {
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
       </svg>
-      {state === 'sending' ? 'Enviando…' : 'Redefinir senha'}
+      {state === 'sending' ? t('admin.users.sending') : t('admin.users.resetPassword')}
     </button>
   )
 }
 
 export default function UsuariosClient({ users: initialUsers, companies }: { users: UserWithStats[]; companies: Company[] }) {
+  const { t } = useI18n()
+  const ROLE_LABELS = useRoleLabels()
+  const ROLE_FILTERS = useRoleFilters()
+  const formatDate = useFormatDate()
   const router = useRouter()
   const [users, setUsers] = useState(initialUsers)
   const [search, setSearch] = useState('')
@@ -281,7 +309,7 @@ export default function UsuariosClient({ users: initialUsers, companies }: { use
         <div className="flex items-center gap-4 flex-wrap">
           <div className="max-w-sm flex-1">
             <Input
-              placeholder="Buscar por nome, e-mail ou empresa..."
+              placeholder={t('admin.users.searchPh')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               icon={
@@ -313,7 +341,7 @@ export default function UsuariosClient({ users: initialUsers, companies }: { use
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
             </svg>
-            Novo usuário
+            {t('admin.users.new')}
           </Button>
         </div>
 
@@ -321,12 +349,12 @@ export default function UsuariosClient({ users: initialUsers, companies }: { use
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#E5E7EB]">
-                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">Usuário</th>
-                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">E-mail</th>
-                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">Empresa</th>
-                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">Perfil</th>
-                <th className="text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">Projetos</th>
-                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">Desde</th>
+                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">{t('admin.users.colUser')}</th>
+                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">{t('admin.users.colEmail')}</th>
+                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">{t('admin.users.colCompany')}</th>
+                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">{t('admin.users.colRole')}</th>
+                <th className="text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">{t('admin.users.colProjects')}</th>
+                <th className="text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider px-6 py-3">{t('admin.users.colSince')}</th>
                 <th className="px-6 py-3" />
               </tr>
             </thead>
@@ -381,13 +409,13 @@ export default function UsuariosClient({ users: initialUsers, companies }: { use
 
           {filtered.length === 0 && (
             <div className="py-12 text-center text-sm text-[#9CA3AF]">
-              {search ? `Nenhum usuário encontrado para "${search}"` : 'Nenhum usuário cadastrado ainda.'}
+              {search ? fill(t('admin.users.emptySearch'), { q: search }) : t('admin.users.empty')}
             </div>
           )}
         </Card>
 
         <p className="text-xs text-[#9CA3AF] text-center">
-          Exibindo {filtered.length} de {users.length} usuários
+          {fill(t('admin.users.showing'), { shown: filtered.length, total: users.length })}
         </p>
       </div>
     </>

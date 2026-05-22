@@ -6,8 +6,10 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { signup } from '@/app/actions/auth'
 import AuthBrandHeader from '@/components/auth/AuthBrandHeader'
+import { useI18n } from '@/components/i18n/I18nProvider'
 
 export default function CadastroPage() {
+  const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -37,8 +39,8 @@ export default function CadastroPage() {
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-2xl p-8">
-        <h2 className="text-xl font-semibold text-[#111827] mb-1">Criar conta</h2>
-        <p className="text-sm text-[#6B7280] mb-6">Comece a transformar suas demandas em especificações</p>
+        <h2 className="text-xl font-semibold text-[#111827] mb-1">{t('auth.signup.title')}</h2>
+        <p className="text-sm text-[#6B7280] mb-6">{t('auth.signup.subtitle')}</p>
 
         {error && (
           <div role="alert" aria-live="polite" className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
@@ -55,11 +57,11 @@ export default function CadastroPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div className="text-sm text-emerald-900">
-              <p className="font-medium">Conta e empresa criadas.</p>
+              <p className="font-medium">{t('auth.signup.confirmTitle')}</p>
               <p className="mt-1 text-emerald-800">
-                O próximo passo é confirmar o e-mail (caixa de entrada e spam). Depois de confirmar, aceda a{' '}
+                {t('auth.signup.confirmBody')}{' '}
                 <Link href="/login" className="font-medium text-emerald-900 underline underline-offset-2">
-                  Entrar
+                  {t('auth.signup.confirmLogin')}
                 </Link>
                 .
               </p>
@@ -69,16 +71,16 @@ export default function CadastroPage() {
 
         <form onSubmit={handleSubmit} className={`space-y-4 ${needsEmailConfirmation ? 'opacity-60 pointer-events-none' : ''}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input id="name" name="name" label="Nome" placeholder="Seu nome" required autoComplete="given-name" />
-            <Input id="company" name="company" label="Empresa" placeholder="Nome da empresa" required />
+            <Input id="name" name="name" label={t('auth.signup.name')} placeholder={t('auth.signup.namePh')} required autoComplete="given-name" />
+            <Input id="company" name="company" label={t('auth.signup.company')} placeholder={t('auth.signup.companyPh')} required />
           </div>
 
           <Input
             id="email"
             name="email"
             type="email"
-            label="E-mail corporativo"
-            placeholder="voce@empresa.com"
+            label={t('auth.signup.email')}
+            placeholder={t('auth.signup.emailPh')}
             required
             autoComplete="email"
             icon={
@@ -92,8 +94,8 @@ export default function CadastroPage() {
             id="password"
             name="password"
             type={showPassword ? 'text' : 'password'}
-            label="Senha"
-            placeholder="Mínimo 8 caracteres"
+            label={t('auth.signup.password')}
+            placeholder={t('auth.signup.passwordPh')}
             required
             minLength={8}
             autoComplete="new-password"
@@ -108,7 +110,7 @@ export default function CadastroPage() {
                 onClick={() => setShowPassword(v => !v)}
                 className="text-[#9CA3AF] hover:text-[#374151] transition-colors"
                 tabIndex={-1}
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-label={showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')}
               >
                 {showPassword ? (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -125,40 +127,40 @@ export default function CadastroPage() {
           />
 
           <p className="text-xs text-[#9CA3AF]">
-            Ao se cadastrar, você concorda com os{' '}
+            {t('auth.signup.termsPrefix')}{' '}
             <Link href="/termos" className="text-[#1D4ED8] hover:underline">
-              Termos de Uso
+              {t('auth.signup.terms')}
             </Link>
-            {' '}e{' '}
+            {' '}{t('auth.signup.and')}{' '}
             <Link href="/privacidade" className="text-[#1D4ED8] hover:underline">
-              Política de Privacidade
+              {t('auth.signup.privacy')}
             </Link>
             .
           </p>
 
           <Button type="submit" className="w-full" size="lg" loading={isPending}>
-            {!isPending && 'Criar conta gratuita'}
+            {!isPending && t('auth.signup.submit')}
           </Button>
         </form>
 
         <p className="text-center text-sm text-[#6B7280] mt-6">
-          Já tem uma conta?{' '}
+          {t('auth.signup.hasAccount')}{' '}
           <Link href="/login" className="text-[#1D4ED8] font-medium hover:underline">
-            Entrar
+            {t('auth.signup.login')}
           </Link>
         </p>
 
         <p className="text-center text-xs text-[#94A3B8] mt-5 flex flex-wrap justify-center gap-x-3 gap-y-1">
           <Link href="/ajuda" className="hover:text-[#64748B] transition-colors">
-            Ajuda
+            {t('auth.signup.footerHelp')}
           </Link>
           <span aria-hidden="true">·</span>
           <Link href="/termos" className="hover:text-[#64748B] transition-colors">
-            Termos
+            {t('auth.signup.footerTerms')}
           </Link>
           <span aria-hidden="true">·</span>
           <Link href="/privacidade" className="hover:text-[#64748B] transition-colors">
-            Privacidade
+            {t('auth.signup.footerPrivacy')}
           </Link>
         </p>
       </div>

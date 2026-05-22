@@ -75,9 +75,9 @@ export const STATUS_LABELS: Record<ProjectStatus, string> = {
 export const STATUS_STEPS: ProjectStatus[] = [
   'briefing',
   'specification',
-  'manual',
   'refinement',
   'conclusion',
+  'manual',
   'done',
 ]
 

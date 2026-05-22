@@ -1681,9 +1681,9 @@ export default function ProjetoPage() {
     (): { id: ProjectStatus | 'briefing'; label: string }[] => [
       { id: 'briefing', label: t('status.briefing') },
       { id: 'specification', label: t('status.specification') },
-      { id: 'manual', label: t('status.manual') },
       { id: 'refinement', label: t('status.refinement') },
       { id: 'conclusion', label: t('status.conclusion') },
+      { id: 'manual', label: t('status.manual') },
     ],
     [t]
   )

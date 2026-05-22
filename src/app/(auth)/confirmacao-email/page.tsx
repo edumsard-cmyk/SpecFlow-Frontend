@@ -5,8 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import Button from '@/components/ui/Button'
 import AuthBrandHeader from '@/components/auth/AuthBrandHeader'
+import { useI18n } from '@/components/i18n/I18nProvider'
 
 function ConfirmacaoEmailContent() {
+  const { t } = useI18n()
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
@@ -20,13 +22,11 @@ function ConfirmacaoEmailContent() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-[#111827] mb-2">Não foi possível confirmar</h1>
-          <p className="text-sm text-[#6B7280] mb-6 leading-relaxed">
-            O link pode ter expirado ou já foi usado. Tente criar a conta novamente ou entre em contacto com o suporte.
-          </p>
+          <h1 className="text-xl font-semibold text-[#111827] mb-2">{t('auth.confirm.errorTitle')}</h1>
+          <p className="text-sm text-[#6B7280] mb-6 leading-relaxed">{t('auth.confirm.errorBody')}</p>
           <Link href="/login">
             <Button className="w-full" size="lg">
-              Ir para o login
+              {t('auth.confirm.errorBtn')}
             </Button>
           </Link>
         </div>
@@ -43,18 +43,16 @@ function ConfirmacaoEmailContent() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-[#111827] mb-2">E-mail confirmado</h1>
-        <p className="text-sm text-[#6B7280] mb-6 leading-relaxed">
-          A sua conta SpecFlow está ativa. Pode entrar e começar a transformar demandas em especificações.
-        </p>
+        <h1 className="text-xl font-semibold text-[#111827] mb-2">{t('auth.confirm.okTitle')}</h1>
+        <p className="text-sm text-[#6B7280] mb-6 leading-relaxed">{t('auth.confirm.okBody')}</p>
         <div className="flex flex-col gap-3">
           <Link href="/dashboard">
             <Button className="w-full" size="lg">
-              Ir para o painel
+              {t('auth.confirm.dashboard')}
             </Button>
           </Link>
           <Link href="/login" className="text-sm text-[#1D4ED8] font-medium hover:underline">
-            Ou entrar com e-mail e senha
+            {t('auth.confirm.orLogin')}
           </Link>
         </div>
       </div>
@@ -63,11 +61,13 @@ function ConfirmacaoEmailContent() {
 }
 
 export default function ConfirmacaoEmailPage() {
+  const { t } = useI18n()
+
   return (
     <Suspense
       fallback={
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center text-sm text-[#6B7280]">
-          A confirmar…
+          {t('auth.confirm.loading')}
         </div>
       }
     >

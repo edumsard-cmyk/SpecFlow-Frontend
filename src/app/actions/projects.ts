@@ -103,9 +103,9 @@ export async function updateProjectStatusAction(
     briefing: 10,
     specification: 35,
     documentation: 55,
-    manual: 55,
-    refinement: 75,
-    conclusion: 90,
+    refinement: 55,
+    conclusion: 75,
+    manual: 90,
     done: 100,
   }
   try {

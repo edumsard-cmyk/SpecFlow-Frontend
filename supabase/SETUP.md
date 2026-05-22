@@ -84,7 +84,7 @@ https://nome-do-projeto.vercel.app/**
 2. Ative o provedor **Email** se estiver desligado.
 3. Opção **“Confirm email”** (ou equivalente): se estiver **ligada**, o utilizador só ganha sessão após clicar no link do e-mail — a página `/cadastro` da SpecFlow já mostra a mensagem nesse caso.
 
-4. **Templates HTML com a marca SpecFlow:** siga `supabase/email-templates.md` e cole o conteúdo de `supabase/templates/confirmation.html` (e `recovery.html` / `invite.html`) em **Authentication → Email Templates**.
+4. **Templates HTML com a marca SpecFlow:** o e-mail de reset **não muda sozinho** — siga o passo a passo em `supabase/email-templates.md` (cole `recovery.html` em **Reset password**, assunto `Redefinir senha — SpecFlow`, e configure **Sender name = SpecFlow** no SMTP).
 
 5. **Evitar links `localhost` em produção:** em **URL Configuration**, o **Site URL** deve ser o domínio público (ex.: `https://app.specflow.com.br`). Na Vercel, defina `NEXT_PUBLIC_SITE_URL` com o mesmo valor e faça redeploy.
 
